@@ -1,0 +1,44 @@
+services:
+  # Development services
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "8090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: gyanburu_fin
+      POSTGRES_PASSWORD: "tEZB-oqzTrDEh8VJMwmvINS4KM3p_pzn"
+    volumes:
+      - gyanburu_fin_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2.6
+    ports:
+      - "8091:6379"
+    command: redis-server --requirepass "Cp6XMqRWKL536EsuseRTqXoTXRytJjLS"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+  # Test services
+  postgres_test:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "9090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: gyanburu_fin_test
+      POSTGRES_PASSWORD: "9wkXNWDTld3wiKR4C7E0Bi6KOW5T80UE"
+    volumes:
+      - gyanburu_fin_test_data:/var/lib/postgresql/data
+
+  redis_test:
+    image: redis:6.2.6
+    ports:
+      - "9091:6379"
+    command: redis-server --requirepass "mqVgNO8FpYlP3mP7YziIVrJuVzNgtxMd"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+volumes:
+  gyanburu_fin_data:
+  gyanburu_fin_test_data:

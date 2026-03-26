@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gyanburu_fin_flutter",
+            "cwd": "${workspaceFolder}/gyanburu_fin_flutter",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart"
+        },
+        {
+            "name": "gyanburu_fin_server",
+            "cwd": "${workspaceFolder}/gyanburu_fin_server",
+            "request": "launch",
+            "type": "dart",
+            "preLaunchTask": "docker_compose_up",
+            "program": "bin/main.dart",
+            "env": {
+                "SERVERPOD_PASSWORD_database": "tEZB-oqzTrDEh8VJMwmvINS4KM3p_pzn"
+            },
+            "args": [
+                "--apply-migrations"
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "gyanburu_fin (full stack)",
+            "configurations": [
+                "gyanburu_fin_server",
+                "gyanburu_fin_flutter"
+            ],
+            "presentation": {
+                "order": 1
+            }
+        }
+    ]
+}
