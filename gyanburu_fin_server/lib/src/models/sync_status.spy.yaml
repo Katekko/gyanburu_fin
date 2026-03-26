@@ -1,0 +1,6 @@
+enum: SyncStatus
+values:
+  - idle
+  - syncing
+  - success
+  - error

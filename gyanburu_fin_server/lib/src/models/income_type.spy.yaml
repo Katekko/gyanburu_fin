@@ -1,0 +1,7 @@
+enum: IncomeType
+values:
+  - salary
+  - freelance
+  - investment
+  - rental
+  - other

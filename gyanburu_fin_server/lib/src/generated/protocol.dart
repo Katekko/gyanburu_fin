@@ -16,8 +16,35 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _i3;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _i4;
-import 'greetings/greeting.dart' as _i5;
+import 'account_type.dart' as _i5;
+import 'bill.dart' as _i6;
+import 'bill_status.dart' as _i7;
+import 'budget_category.dart' as _i8;
+import 'financial_transaction.dart' as _i9;
+import 'greetings/greeting.dart' as _i10;
+import 'income_source.dart' as _i11;
+import 'income_type.dart' as _i12;
+import 'nubank_account.dart' as _i13;
+import 'sync_log.dart' as _i14;
+import 'sync_status.dart' as _i15;
+import 'package:gyanburu_fin_server/src/generated/bill.dart' as _i16;
+import 'package:gyanburu_fin_server/src/generated/budget_category.dart' as _i17;
+import 'package:gyanburu_fin_server/src/generated/financial_transaction.dart'
+    as _i18;
+import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i19;
+import 'package:gyanburu_fin_server/src/generated/nubank_account.dart' as _i20;
+import 'package:gyanburu_fin_server/src/generated/sync_log.dart' as _i21;
+export 'account_type.dart';
+export 'bill.dart';
+export 'bill_status.dart';
+export 'budget_category.dart';
+export 'financial_transaction.dart';
 export 'greetings/greeting.dart';
+export 'income_source.dart';
+export 'income_type.dart';
+export 'nubank_account.dart';
+export 'sync_log.dart';
+export 'sync_status.dart';
 
 class Protocol extends _i1.SerializationManagerServer {
   Protocol._();
@@ -27,6 +54,396 @@ class Protocol extends _i1.SerializationManagerServer {
   static final Protocol _instance = Protocol._();
 
   static final List<_i2.TableDefinition> targetTableDefinitions = [
+    _i2.TableDefinition(
+      name: 'bill',
+      dartName: 'Bill',
+      schema: 'public',
+      module: 'gyanburu_fin',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'bill_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _i2.ColumnDefinition(
+          name: 'merchantName',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'amount',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'dueAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _i2.ColumnDefinition(
+          name: 'status',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:BillStatus',
+        ),
+        _i2.ColumnDefinition(
+          name: 'recurrent',
+          columnType: _i2.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'bill_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'budget_category',
+      dartName: 'BudgetCategory',
+      schema: 'public',
+      module: 'gyanburu_fin',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'budget_category_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _i2.ColumnDefinition(
+          name: 'name',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'icon',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'limitAmount',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'month',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'budget_category_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'financial_transaction',
+      dartName: 'FinancialTransaction',
+      schema: 'public',
+      module: 'gyanburu_fin',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'financial_transaction_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _i2.ColumnDefinition(
+          name: 'nubankAccountId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: true,
+          dartType: 'UuidValue?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'merchantName',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'category',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'amount',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'currency',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'occurredAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _i2.ColumnDefinition(
+          name: 'description',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'financial_transaction_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'income_source',
+      dartName: 'IncomeSource',
+      schema: 'public',
+      module: 'gyanburu_fin',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'income_source_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _i2.ColumnDefinition(
+          name: 'name',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _i2.ColumnDefinition(
+          name: 'type',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:IncomeType',
+        ),
+        _i2.ColumnDefinition(
+          name: 'amount',
+          columnType: _i2.ColumnType.doublePrecision,
+          isNullable: false,
+          dartType: 'double',
+        ),
+        _i2.ColumnDefinition(
+          name: 'month',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'income_source_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'nubank_account',
+      dartName: 'NubankAccount',
+      schema: 'public',
+      module: 'gyanburu_fin',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'nubank_account_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'userId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _i2.ColumnDefinition(
+          name: 'accountType',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:AccountType',
+        ),
+        _i2.ColumnDefinition(
+          name: 'lastSyncAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _i2.ColumnDefinition(
+          name: 'syncStatus',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:SyncStatus',
+        ),
+        _i2.ColumnDefinition(
+          name: 'consentExpiresAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'nubank_account_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
+    _i2.TableDefinition(
+      name: 'sync_log',
+      dartName: 'SyncLog',
+      schema: 'public',
+      module: 'gyanburu_fin',
+      columns: [
+        _i2.ColumnDefinition(
+          name: 'id',
+          columnType: _i2.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'nextval(\'sync_log_id_seq\'::regclass)',
+        ),
+        _i2.ColumnDefinition(
+          name: 'nubankAccountId',
+          columnType: _i2.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _i2.ColumnDefinition(
+          name: 'syncedAt',
+          columnType: _i2.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _i2.ColumnDefinition(
+          name: 'status',
+          columnType: _i2.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:SyncStatus',
+        ),
+        _i2.ColumnDefinition(
+          name: 'errorMessage',
+          columnType: _i2.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _i2.IndexDefinition(
+          indexName: 'sync_log_pkey',
+          tableSpace: null,
+          elements: [
+            _i2.IndexElementDefinition(
+              type: _i2.IndexElementDefinitionType.column,
+              definition: 'id',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: true,
+        ),
+      ],
+      managed: true,
+    ),
     ..._i3.Protocol.targetTableDefinitions,
     ..._i4.Protocol.targetTableDefinitions,
     ..._i2.Protocol.targetTableDefinitions,
@@ -59,11 +476,109 @@ class Protocol extends _i1.SerializationManagerServer {
       }
     }
 
-    if (t == _i5.Greeting) {
-      return _i5.Greeting.fromJson(data) as T;
+    if (t == _i5.AccountType) {
+      return _i5.AccountType.fromJson(data) as T;
     }
-    if (t == _i1.getType<_i5.Greeting?>()) {
-      return (data != null ? _i5.Greeting.fromJson(data) : null) as T;
+    if (t == _i6.Bill) {
+      return _i6.Bill.fromJson(data) as T;
+    }
+    if (t == _i7.BillStatus) {
+      return _i7.BillStatus.fromJson(data) as T;
+    }
+    if (t == _i8.BudgetCategory) {
+      return _i8.BudgetCategory.fromJson(data) as T;
+    }
+    if (t == _i9.FinancialTransaction) {
+      return _i9.FinancialTransaction.fromJson(data) as T;
+    }
+    if (t == _i10.Greeting) {
+      return _i10.Greeting.fromJson(data) as T;
+    }
+    if (t == _i11.IncomeSource) {
+      return _i11.IncomeSource.fromJson(data) as T;
+    }
+    if (t == _i12.IncomeType) {
+      return _i12.IncomeType.fromJson(data) as T;
+    }
+    if (t == _i13.NubankAccount) {
+      return _i13.NubankAccount.fromJson(data) as T;
+    }
+    if (t == _i14.SyncLog) {
+      return _i14.SyncLog.fromJson(data) as T;
+    }
+    if (t == _i15.SyncStatus) {
+      return _i15.SyncStatus.fromJson(data) as T;
+    }
+    if (t == _i1.getType<_i5.AccountType?>()) {
+      return (data != null ? _i5.AccountType.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i6.Bill?>()) {
+      return (data != null ? _i6.Bill.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i7.BillStatus?>()) {
+      return (data != null ? _i7.BillStatus.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i8.BudgetCategory?>()) {
+      return (data != null ? _i8.BudgetCategory.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i9.FinancialTransaction?>()) {
+      return (data != null ? _i9.FinancialTransaction.fromJson(data) : null)
+          as T;
+    }
+    if (t == _i1.getType<_i10.Greeting?>()) {
+      return (data != null ? _i10.Greeting.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i11.IncomeSource?>()) {
+      return (data != null ? _i11.IncomeSource.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i12.IncomeType?>()) {
+      return (data != null ? _i12.IncomeType.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i13.NubankAccount?>()) {
+      return (data != null ? _i13.NubankAccount.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i14.SyncLog?>()) {
+      return (data != null ? _i14.SyncLog.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i15.SyncStatus?>()) {
+      return (data != null ? _i15.SyncStatus.fromJson(data) : null) as T;
+    }
+    if (t == List<_i16.Bill>) {
+      return (data as List).map((e) => deserialize<_i16.Bill>(e)).toList() as T;
+    }
+    if (t == List<_i17.BudgetCategory>) {
+      return (data as List)
+              .map((e) => deserialize<_i17.BudgetCategory>(e))
+              .toList()
+          as T;
+    }
+    if (t == Map<String, double>) {
+      return (data as Map).map(
+            (k, v) => MapEntry(deserialize<String>(k), deserialize<double>(v)),
+          )
+          as T;
+    }
+    if (t == List<_i18.FinancialTransaction>) {
+      return (data as List)
+              .map((e) => deserialize<_i18.FinancialTransaction>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i19.IncomeSource>) {
+      return (data as List)
+              .map((e) => deserialize<_i19.IncomeSource>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i20.NubankAccount>) {
+      return (data as List)
+              .map((e) => deserialize<_i20.NubankAccount>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i21.SyncLog>) {
+      return (data as List).map((e) => deserialize<_i21.SyncLog>(e)).toList()
+          as T;
     }
     try {
       return _i3.Protocol().deserialize<T>(data, t);
@@ -79,7 +594,17 @@ class Protocol extends _i1.SerializationManagerServer {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
-      _i5.Greeting => 'Greeting',
+      _i5.AccountType => 'AccountType',
+      _i6.Bill => 'Bill',
+      _i7.BillStatus => 'BillStatus',
+      _i8.BudgetCategory => 'BudgetCategory',
+      _i9.FinancialTransaction => 'FinancialTransaction',
+      _i10.Greeting => 'Greeting',
+      _i11.IncomeSource => 'IncomeSource',
+      _i12.IncomeType => 'IncomeType',
+      _i13.NubankAccount => 'NubankAccount',
+      _i14.SyncLog => 'SyncLog',
+      _i15.SyncStatus => 'SyncStatus',
       _ => null,
     };
   }
@@ -97,8 +622,28 @@ class Protocol extends _i1.SerializationManagerServer {
     }
 
     switch (data) {
-      case _i5.Greeting():
+      case _i5.AccountType():
+        return 'AccountType';
+      case _i6.Bill():
+        return 'Bill';
+      case _i7.BillStatus():
+        return 'BillStatus';
+      case _i8.BudgetCategory():
+        return 'BudgetCategory';
+      case _i9.FinancialTransaction():
+        return 'FinancialTransaction';
+      case _i10.Greeting():
         return 'Greeting';
+      case _i11.IncomeSource():
+        return 'IncomeSource';
+      case _i12.IncomeType():
+        return 'IncomeType';
+      case _i13.NubankAccount():
+        return 'NubankAccount';
+      case _i14.SyncLog():
+        return 'SyncLog';
+      case _i15.SyncStatus():
+        return 'SyncStatus';
     }
     className = _i2.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -121,8 +666,38 @@ class Protocol extends _i1.SerializationManagerServer {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'AccountType') {
+      return deserialize<_i5.AccountType>(data['data']);
+    }
+    if (dataClassName == 'Bill') {
+      return deserialize<_i6.Bill>(data['data']);
+    }
+    if (dataClassName == 'BillStatus') {
+      return deserialize<_i7.BillStatus>(data['data']);
+    }
+    if (dataClassName == 'BudgetCategory') {
+      return deserialize<_i8.BudgetCategory>(data['data']);
+    }
+    if (dataClassName == 'FinancialTransaction') {
+      return deserialize<_i9.FinancialTransaction>(data['data']);
+    }
     if (dataClassName == 'Greeting') {
-      return deserialize<_i5.Greeting>(data['data']);
+      return deserialize<_i10.Greeting>(data['data']);
+    }
+    if (dataClassName == 'IncomeSource') {
+      return deserialize<_i11.IncomeSource>(data['data']);
+    }
+    if (dataClassName == 'IncomeType') {
+      return deserialize<_i12.IncomeType>(data['data']);
+    }
+    if (dataClassName == 'NubankAccount') {
+      return deserialize<_i13.NubankAccount>(data['data']);
+    }
+    if (dataClassName == 'SyncLog') {
+      return deserialize<_i14.SyncLog>(data['data']);
+    }
+    if (dataClassName == 'SyncStatus') {
+      return deserialize<_i15.SyncStatus>(data['data']);
     }
     if (dataClassName.startsWith('serverpod.')) {
       data['className'] = dataClassName.substring(10);
@@ -158,6 +733,20 @@ class Protocol extends _i1.SerializationManagerServer {
       if (table != null) {
         return table;
       }
+    }
+    switch (t) {
+      case _i6.Bill:
+        return _i6.Bill.t;
+      case _i8.BudgetCategory:
+        return _i8.BudgetCategory.t;
+      case _i9.FinancialTransaction:
+        return _i9.FinancialTransaction.t;
+      case _i11.IncomeSource:
+        return _i11.IncomeSource.t;
+      case _i13.NubankAccount:
+        return _i13.NubankAccount.t;
+      case _i14.SyncLog:
+        return _i14.SyncLog.t;
     }
     return null;
   }

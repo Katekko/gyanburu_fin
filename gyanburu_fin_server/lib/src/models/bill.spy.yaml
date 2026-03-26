@@ -1,0 +1,9 @@
+class: Bill
+table: bill
+fields:
+  userId: UuidValue
+  merchantName: String
+  amount: double
+  dueAt: DateTime
+  status: BillStatus
+  recurrent: bool

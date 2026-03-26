@@ -16,9 +16,16 @@ import 'package:serverpod_client/serverpod_client.dart' as _i2;
 import 'dart:async' as _i3;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
+import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i5;
+import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i6;
+import 'package:gyanburu_fin_client/src/protocol/financial_transaction.dart'
+    as _i7;
+import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i8;
+import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i9;
+import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i10;
 import 'package:gyanburu_fin_client/src/protocol/greetings/greeting.dart'
-    as _i5;
-import 'protocol.dart' as _i6;
+    as _i11;
+import 'protocol.dart' as _i12;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -241,6 +248,227 @@ class EndpointJwtRefresh extends _i4.EndpointRefreshJwtTokens {
   );
 }
 
+/// {@category Endpoint}
+class EndpointBill extends _i2.EndpointRef {
+  EndpointBill(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'bill';
+
+  _i3.Future<List<_i5.Bill>> list() =>
+      caller.callServerEndpoint<List<_i5.Bill>>(
+        'bill',
+        'list',
+        {},
+      );
+
+  _i3.Future<List<_i5.Bill>> listUpcoming() =>
+      caller.callServerEndpoint<List<_i5.Bill>>(
+        'bill',
+        'listUpcoming',
+        {},
+      );
+
+  _i3.Future<_i5.Bill> create(_i5.Bill bill) =>
+      caller.callServerEndpoint<_i5.Bill>(
+        'bill',
+        'create',
+        {'bill': bill},
+      );
+
+  _i3.Future<_i5.Bill> update(_i5.Bill bill) =>
+      caller.callServerEndpoint<_i5.Bill>(
+        'bill',
+        'update',
+        {'bill': bill},
+      );
+
+  _i3.Future<_i5.Bill> markAsPaid(int id) =>
+      caller.callServerEndpoint<_i5.Bill>(
+        'bill',
+        'markAsPaid',
+        {'id': id},
+      );
+
+  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+    'bill',
+    'delete',
+    {'id': id},
+  );
+}
+
+/// {@category Endpoint}
+class EndpointBudget extends _i2.EndpointRef {
+  EndpointBudget(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'budget';
+
+  _i3.Future<List<_i6.BudgetCategory>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i6.BudgetCategory>>(
+        'budget',
+        'listByMonth',
+        {'month': month},
+      );
+
+  _i3.Future<_i6.BudgetCategory> create(_i6.BudgetCategory category) =>
+      caller.callServerEndpoint<_i6.BudgetCategory>(
+        'budget',
+        'create',
+        {'category': category},
+      );
+
+  _i3.Future<_i6.BudgetCategory> update(_i6.BudgetCategory category) =>
+      caller.callServerEndpoint<_i6.BudgetCategory>(
+        'budget',
+        'update',
+        {'category': category},
+      );
+
+  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+    'budget',
+    'delete',
+    {'id': id},
+  );
+}
+
+/// {@category Endpoint}
+class EndpointDashboard extends _i2.EndpointRef {
+  EndpointDashboard(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'dashboard';
+
+  _i3.Future<Map<String, double>> spendingByCategory(DateTime month) =>
+      caller.callServerEndpoint<Map<String, double>>(
+        'dashboard',
+        'spendingByCategory',
+        {'month': month},
+      );
+
+  _i3.Future<List<_i7.FinancialTransaction>> recentTransactions() =>
+      caller.callServerEndpoint<List<_i7.FinancialTransaction>>(
+        'dashboard',
+        'recentTransactions',
+        {},
+      );
+
+  _i3.Future<double> netBalance(DateTime month) =>
+      caller.callServerEndpoint<double>(
+        'dashboard',
+        'netBalance',
+        {'month': month},
+      );
+}
+
+/// {@category Endpoint}
+class EndpointIncome extends _i2.EndpointRef {
+  EndpointIncome(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'income';
+
+  _i3.Future<List<_i8.IncomeSource>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i8.IncomeSource>>(
+        'income',
+        'listByMonth',
+        {'month': month},
+      );
+
+  _i3.Future<_i8.IncomeSource> create(_i8.IncomeSource source) =>
+      caller.callServerEndpoint<_i8.IncomeSource>(
+        'income',
+        'create',
+        {'source': source},
+      );
+
+  _i3.Future<_i8.IncomeSource> update(_i8.IncomeSource source) =>
+      caller.callServerEndpoint<_i8.IncomeSource>(
+        'income',
+        'update',
+        {'source': source},
+      );
+
+  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+    'income',
+    'delete',
+    {'id': id},
+  );
+}
+
+/// {@category Endpoint}
+class EndpointNubankAccount extends _i2.EndpointRef {
+  EndpointNubankAccount(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'nubankAccount';
+
+  _i3.Future<List<_i9.NubankAccount>> list() =>
+      caller.callServerEndpoint<List<_i9.NubankAccount>>(
+        'nubankAccount',
+        'list',
+        {},
+      );
+
+  _i3.Future<_i9.NubankAccount?> findById(int id) =>
+      caller.callServerEndpoint<_i9.NubankAccount?>(
+        'nubankAccount',
+        'findById',
+        {'id': id},
+      );
+
+  _i3.Future<List<_i10.SyncLog>> syncLogs(int accountId) =>
+      caller.callServerEndpoint<List<_i10.SyncLog>>(
+        'nubankAccount',
+        'syncLogs',
+        {'accountId': accountId},
+      );
+}
+
+/// {@category Endpoint}
+class EndpointTransaction extends _i2.EndpointRef {
+  EndpointTransaction(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'transaction';
+
+  _i3.Future<List<_i7.FinancialTransaction>> list() =>
+      caller.callServerEndpoint<List<_i7.FinancialTransaction>>(
+        'transaction',
+        'list',
+        {},
+      );
+
+  _i3.Future<List<_i7.FinancialTransaction>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i7.FinancialTransaction>>(
+        'transaction',
+        'listByMonth',
+        {'month': month},
+      );
+
+  _i3.Future<_i7.FinancialTransaction> create(
+    _i7.FinancialTransaction transaction,
+  ) => caller.callServerEndpoint<_i7.FinancialTransaction>(
+    'transaction',
+    'create',
+    {'transaction': transaction},
+  );
+
+  _i3.Future<_i7.FinancialTransaction> update(
+    _i7.FinancialTransaction transaction,
+  ) => caller.callServerEndpoint<_i7.FinancialTransaction>(
+    'transaction',
+    'update',
+    {'transaction': transaction},
+  );
+
+  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+    'transaction',
+    'delete',
+    {'id': id},
+  );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -251,8 +479,8 @@ class EndpointGreeting extends _i2.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i5.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i5.Greeting>(
+  _i3.Future<_i11.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i11.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -290,7 +518,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i6.Protocol(),
+         _i12.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -301,6 +529,12 @@ class Client extends _i2.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    bill = EndpointBill(this);
+    budget = EndpointBudget(this);
+    dashboard = EndpointDashboard(this);
+    income = EndpointIncome(this);
+    nubankAccount = EndpointNubankAccount(this);
+    transaction = EndpointTransaction(this);
     greeting = EndpointGreeting(this);
     modules = Modules(this);
   }
@@ -308,6 +542,18 @@ class Client extends _i2.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointBill bill;
+
+  late final EndpointBudget budget;
+
+  late final EndpointDashboard dashboard;
+
+  late final EndpointIncome income;
+
+  late final EndpointNubankAccount nubankAccount;
+
+  late final EndpointTransaction transaction;
 
   late final EndpointGreeting greeting;
 
@@ -317,6 +563,12 @@ class Client extends _i2.ServerpodClientShared {
   Map<String, _i2.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'bill': bill,
+    'budget': budget,
+    'dashboard': dashboard,
+    'income': income,
+    'nubankAccount': nubankAccount,
+    'transaction': transaction,
     'greeting': greeting,
   };
 

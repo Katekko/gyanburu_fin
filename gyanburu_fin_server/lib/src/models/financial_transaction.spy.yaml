@@ -1,0 +1,11 @@
+class: FinancialTransaction
+table: financial_transaction
+fields:
+  userId: UuidValue
+  nubankAccountId: UuidValue?
+  merchantName: String
+  category: String
+  amount: double
+  currency: String
+  occurredAt: DateTime
+  description: String?

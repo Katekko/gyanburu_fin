@@ -9,5 +9,36 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+bill:
+  - list:
+  - listUpcoming:
+  - create:
+  - update:
+  - markAsPaid:
+  - delete:
+budget:
+  - listByMonth:
+  - create:
+  - update:
+  - delete:
+dashboard:
+  - spendingByCategory:
+  - recentTransactions:
+  - netBalance:
+income:
+  - listByMonth:
+  - create:
+  - update:
+  - delete:
+nubankAccount:
+  - list:
+  - findById:
+  - syncLogs:
+transaction:
+  - list:
+  - listByMonth:
+  - create:
+  - update:
+  - delete:
 greeting:
   - hello:

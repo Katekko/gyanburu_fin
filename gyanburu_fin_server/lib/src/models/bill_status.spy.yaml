@@ -1,0 +1,5 @@
+enum: BillStatus
+values:
+  - pending
+  - paid
+  - overdue

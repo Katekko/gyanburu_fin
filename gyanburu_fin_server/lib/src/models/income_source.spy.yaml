@@ -1,0 +1,8 @@
+class: IncomeSource
+table: income_source
+fields:
+  userId: UuidValue
+  name: String
+  type: IncomeType
+  amount: double
+  month: DateTime

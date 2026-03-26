@@ -11,12 +11,39 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod_client/serverpod_client.dart' as _i1;
-import 'greetings/greeting.dart' as _i2;
+import 'account_type.dart' as _i2;
+import 'bill.dart' as _i3;
+import 'bill_status.dart' as _i4;
+import 'budget_category.dart' as _i5;
+import 'financial_transaction.dart' as _i6;
+import 'greetings/greeting.dart' as _i7;
+import 'income_source.dart' as _i8;
+import 'income_type.dart' as _i9;
+import 'nubank_account.dart' as _i10;
+import 'sync_log.dart' as _i11;
+import 'sync_status.dart' as _i12;
+import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i13;
+import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i14;
+import 'package:gyanburu_fin_client/src/protocol/financial_transaction.dart'
+    as _i15;
+import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i16;
+import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i17;
+import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i18;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
-    as _i3;
+    as _i19;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
-    as _i4;
+    as _i20;
+export 'account_type.dart';
+export 'bill.dart';
+export 'bill_status.dart';
+export 'budget_category.dart';
+export 'financial_transaction.dart';
 export 'greetings/greeting.dart';
+export 'income_source.dart';
+export 'income_type.dart';
+export 'nubank_account.dart';
+export 'sync_log.dart';
+export 'sync_status.dart';
 export 'client.dart';
 
 class Protocol extends _i1.SerializationManager {
@@ -53,24 +80,132 @@ class Protocol extends _i1.SerializationManager {
       }
     }
 
-    if (t == _i2.Greeting) {
-      return _i2.Greeting.fromJson(data) as T;
+    if (t == _i2.AccountType) {
+      return _i2.AccountType.fromJson(data) as T;
     }
-    if (t == _i1.getType<_i2.Greeting?>()) {
-      return (data != null ? _i2.Greeting.fromJson(data) : null) as T;
+    if (t == _i3.Bill) {
+      return _i3.Bill.fromJson(data) as T;
+    }
+    if (t == _i4.BillStatus) {
+      return _i4.BillStatus.fromJson(data) as T;
+    }
+    if (t == _i5.BudgetCategory) {
+      return _i5.BudgetCategory.fromJson(data) as T;
+    }
+    if (t == _i6.FinancialTransaction) {
+      return _i6.FinancialTransaction.fromJson(data) as T;
+    }
+    if (t == _i7.Greeting) {
+      return _i7.Greeting.fromJson(data) as T;
+    }
+    if (t == _i8.IncomeSource) {
+      return _i8.IncomeSource.fromJson(data) as T;
+    }
+    if (t == _i9.IncomeType) {
+      return _i9.IncomeType.fromJson(data) as T;
+    }
+    if (t == _i10.NubankAccount) {
+      return _i10.NubankAccount.fromJson(data) as T;
+    }
+    if (t == _i11.SyncLog) {
+      return _i11.SyncLog.fromJson(data) as T;
+    }
+    if (t == _i12.SyncStatus) {
+      return _i12.SyncStatus.fromJson(data) as T;
+    }
+    if (t == _i1.getType<_i2.AccountType?>()) {
+      return (data != null ? _i2.AccountType.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i3.Bill?>()) {
+      return (data != null ? _i3.Bill.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i4.BillStatus?>()) {
+      return (data != null ? _i4.BillStatus.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i5.BudgetCategory?>()) {
+      return (data != null ? _i5.BudgetCategory.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i6.FinancialTransaction?>()) {
+      return (data != null ? _i6.FinancialTransaction.fromJson(data) : null)
+          as T;
+    }
+    if (t == _i1.getType<_i7.Greeting?>()) {
+      return (data != null ? _i7.Greeting.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i8.IncomeSource?>()) {
+      return (data != null ? _i8.IncomeSource.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i9.IncomeType?>()) {
+      return (data != null ? _i9.IncomeType.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i10.NubankAccount?>()) {
+      return (data != null ? _i10.NubankAccount.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i11.SyncLog?>()) {
+      return (data != null ? _i11.SyncLog.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i12.SyncStatus?>()) {
+      return (data != null ? _i12.SyncStatus.fromJson(data) : null) as T;
+    }
+    if (t == List<_i13.Bill>) {
+      return (data as List).map((e) => deserialize<_i13.Bill>(e)).toList() as T;
+    }
+    if (t == List<_i14.BudgetCategory>) {
+      return (data as List)
+              .map((e) => deserialize<_i14.BudgetCategory>(e))
+              .toList()
+          as T;
+    }
+    if (t == Map<String, double>) {
+      return (data as Map).map(
+            (k, v) => MapEntry(deserialize<String>(k), deserialize<double>(v)),
+          )
+          as T;
+    }
+    if (t == List<_i15.FinancialTransaction>) {
+      return (data as List)
+              .map((e) => deserialize<_i15.FinancialTransaction>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i16.IncomeSource>) {
+      return (data as List)
+              .map((e) => deserialize<_i16.IncomeSource>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i17.NubankAccount>) {
+      return (data as List)
+              .map((e) => deserialize<_i17.NubankAccount>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i18.SyncLog>) {
+      return (data as List).map((e) => deserialize<_i18.SyncLog>(e)).toList()
+          as T;
     }
     try {
-      return _i3.Protocol().deserialize<T>(data, t);
+      return _i19.Protocol().deserialize<T>(data, t);
     } on _i1.DeserializationTypeNotFoundException catch (_) {}
     try {
-      return _i4.Protocol().deserialize<T>(data, t);
+      return _i20.Protocol().deserialize<T>(data, t);
     } on _i1.DeserializationTypeNotFoundException catch (_) {}
     return super.deserialize<T>(data, t);
   }
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
-      _i2.Greeting => 'Greeting',
+      _i2.AccountType => 'AccountType',
+      _i3.Bill => 'Bill',
+      _i4.BillStatus => 'BillStatus',
+      _i5.BudgetCategory => 'BudgetCategory',
+      _i6.FinancialTransaction => 'FinancialTransaction',
+      _i7.Greeting => 'Greeting',
+      _i8.IncomeSource => 'IncomeSource',
+      _i9.IncomeType => 'IncomeType',
+      _i10.NubankAccount => 'NubankAccount',
+      _i11.SyncLog => 'SyncLog',
+      _i12.SyncStatus => 'SyncStatus',
       _ => null,
     };
   }
@@ -88,14 +223,34 @@ class Protocol extends _i1.SerializationManager {
     }
 
     switch (data) {
-      case _i2.Greeting():
+      case _i2.AccountType():
+        return 'AccountType';
+      case _i3.Bill():
+        return 'Bill';
+      case _i4.BillStatus():
+        return 'BillStatus';
+      case _i5.BudgetCategory():
+        return 'BudgetCategory';
+      case _i6.FinancialTransaction():
+        return 'FinancialTransaction';
+      case _i7.Greeting():
         return 'Greeting';
+      case _i8.IncomeSource():
+        return 'IncomeSource';
+      case _i9.IncomeType():
+        return 'IncomeType';
+      case _i10.NubankAccount():
+        return 'NubankAccount';
+      case _i11.SyncLog():
+        return 'SyncLog';
+      case _i12.SyncStatus():
+        return 'SyncStatus';
     }
-    className = _i3.Protocol().getClassNameForObject(data);
+    className = _i19.Protocol().getClassNameForObject(data);
     if (className != null) {
       return 'serverpod_auth_idp.$className';
     }
-    className = _i4.Protocol().getClassNameForObject(data);
+    className = _i20.Protocol().getClassNameForObject(data);
     if (className != null) {
       return 'serverpod_auth_core.$className';
     }
@@ -108,16 +263,46 @@ class Protocol extends _i1.SerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'AccountType') {
+      return deserialize<_i2.AccountType>(data['data']);
+    }
+    if (dataClassName == 'Bill') {
+      return deserialize<_i3.Bill>(data['data']);
+    }
+    if (dataClassName == 'BillStatus') {
+      return deserialize<_i4.BillStatus>(data['data']);
+    }
+    if (dataClassName == 'BudgetCategory') {
+      return deserialize<_i5.BudgetCategory>(data['data']);
+    }
+    if (dataClassName == 'FinancialTransaction') {
+      return deserialize<_i6.FinancialTransaction>(data['data']);
+    }
     if (dataClassName == 'Greeting') {
-      return deserialize<_i2.Greeting>(data['data']);
+      return deserialize<_i7.Greeting>(data['data']);
+    }
+    if (dataClassName == 'IncomeSource') {
+      return deserialize<_i8.IncomeSource>(data['data']);
+    }
+    if (dataClassName == 'IncomeType') {
+      return deserialize<_i9.IncomeType>(data['data']);
+    }
+    if (dataClassName == 'NubankAccount') {
+      return deserialize<_i10.NubankAccount>(data['data']);
+    }
+    if (dataClassName == 'SyncLog') {
+      return deserialize<_i11.SyncLog>(data['data']);
+    }
+    if (dataClassName == 'SyncStatus') {
+      return deserialize<_i12.SyncStatus>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);
-      return _i3.Protocol().deserializeByClassName(data);
+      return _i19.Protocol().deserializeByClassName(data);
     }
     if (dataClassName.startsWith('serverpod_auth_core.')) {
       data['className'] = dataClassName.substring(20);
-      return _i4.Protocol().deserializeByClassName(data);
+      return _i20.Protocol().deserializeByClassName(data);
     }
     return super.deserializeByClassName(data);
   }
@@ -132,10 +317,10 @@ class Protocol extends _i1.SerializationManager {
       return null;
     }
     try {
-      return _i3.Protocol().mapRecordToJson(record);
+      return _i19.Protocol().mapRecordToJson(record);
     } catch (_) {}
     try {
-      return _i4.Protocol().mapRecordToJson(record);
+      return _i20.Protocol().mapRecordToJson(record);
     } catch (_) {}
     throw Exception('Unsupported record type ${record.runtimeType}');
   }

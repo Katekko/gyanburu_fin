@@ -1,0 +1,7 @@
+class: SyncLog
+table: sync_log
+fields:
+  nubankAccountId: UuidValue
+  syncedAt: DateTime
+  status: SyncStatus
+  errorMessage: String?

@@ -1,0 +1,8 @@
+class: BudgetCategory
+table: budget_category
+fields:
+  userId: UuidValue
+  name: String
+  icon: String
+  limitAmount: double
+  month: DateTime

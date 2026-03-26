@@ -1,0 +1,8 @@
+class: NubankAccount
+table: nubank_account
+fields:
+  userId: UuidValue
+  accountType: AccountType
+  lastSyncAt: DateTime?
+  syncStatus: SyncStatus
+  consentExpiresAt: DateTime?
