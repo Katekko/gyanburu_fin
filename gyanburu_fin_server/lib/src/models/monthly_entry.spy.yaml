@@ -1,0 +1,12 @@
+class: MonthlyEntry
+table: monthly_entry
+fields:
+  userId: UuidValue
+  categoryId: int
+  name: String
+  type: EntryType
+  amount: double
+  month: String
+  recurrent: bool
+  variable: bool
+  confirmed: bool

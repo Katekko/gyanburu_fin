@@ -1,0 +1,7 @@
+class: Category
+table: category
+fields:
+  userId: UuidValue
+  name: String
+  icon: String
+  color: String

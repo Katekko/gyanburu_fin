@@ -154,7 +154,7 @@
     },
     {
       "name": "serverpod_flutter",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "connectivity_plus",
         "flutter",
@@ -163,7 +163,7 @@
     },
     {
       "name": "serverpod_auth_idp_flutter",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "animations",
         "crypto",
@@ -240,7 +240,7 @@
     },
     {
       "name": "serverpod_test",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "meta",
         "serverpod",
@@ -256,7 +256,7 @@
     },
     {
       "name": "serverpod_auth_idp_server",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "clock",
         "dart_jsonwebtoken",
@@ -275,7 +275,7 @@
     },
     {
       "name": "serverpod",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "args",
         "collection",
@@ -300,7 +300,7 @@
     },
     {
       "name": "serverpod_client",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "collection",
         "http",
@@ -312,7 +312,7 @@
     },
     {
       "name": "serverpod_auth_idp_client",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "serverpod_auth_core_client",
         "serverpod_client"
@@ -482,7 +482,7 @@
     },
     {
       "name": "serverpod_auth_core_flutter",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "clock",
         "flutter",
@@ -803,7 +803,7 @@
     },
     {
       "name": "serverpod_lints",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "flutter_lints",
         "lints"
@@ -820,7 +820,7 @@
     },
     {
       "name": "serverpod_shared",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "crypto",
         "meta",
@@ -831,7 +831,7 @@
     },
     {
       "name": "serverpod_auth_core_server",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "clock",
         "crypto",
@@ -922,7 +922,7 @@
     },
     {
       "name": "serverpod_serialization",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "meta",
         "uuid",
@@ -974,7 +974,7 @@
     },
     {
       "name": "serverpod_auth_core_client",
-      "version": "3.4.4",
+      "version": "3.4.5",
       "dependencies": [
         "clock",
         "serverpod_client"

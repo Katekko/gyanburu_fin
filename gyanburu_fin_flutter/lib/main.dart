@@ -4,7 +4,7 @@ import 'package:serverpod_flutter/serverpod_flutter.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import 'screens/dashboard_screen.dart';
-import 'screens/budget_screen.dart';
+import 'screens/monthly_overview_screen.dart';
 import 'screens/transaction_history_screen.dart';
 import 'screens/nubank_sync_screen.dart';
 import 'screens/bill_detail_screen.dart';
@@ -101,9 +101,9 @@ class _AppShellState extends State<AppShell> {
                 label: Text('Dashboard'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.pie_chart_outline),
-                selectedIcon: Icon(Icons.pie_chart),
-                label: Text('Budget'),
+                icon: Icon(Icons.calendar_month_outlined),
+                selectedIcon: Icon(Icons.calendar_month),
+                label: Text('Monthly'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.receipt_long_outlined),
@@ -134,7 +134,7 @@ class _AppShellState extends State<AppShell> {
   Widget _buildScreen() {
     return switch (_selectedIndex) {
       0 => DashboardScreen(onBillTap: _navigateToBillDetail),
-      1 => const BudgetScreen(),
+      1 => const MonthlyOverviewScreen(),
       2 => const TransactionHistoryScreen(),
       3 => const NubankSyncScreen(),
       4 => BillDetailScreen(initialBillIndex: _billDetailIndex),
