@@ -89,7 +89,7 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
     if (result != null) {
       setState(() {
         _entries.add(result.copyWith(
-          id: (_entries.map((e) => e.id ?? 0).reduce((a, b) => a > b ? a : b)) + 1,
+          id: _entries.isEmpty ? 1 : (_entries.map((e) => e.id ?? 0).reduce((a, b) => a > b ? a : b)) + 1,
         ));
       });
     }
@@ -888,7 +888,7 @@ class _CategoryManagerDialogState extends State<_CategoryManagerDialog> {
     final result = await showDialog<Category>(
       context: context,
       builder: (_) => _CategoryEditDialog(
-        nextId: (_categories.map((c) => c.id ?? 0).reduce((a, b) => a > b ? a : b)) + 1,
+        nextId: _categories.isEmpty ? 1 : (_categories.map((c) => c.id ?? 0).reduce((a, b) => a > b ? a : b)) + 1,
       ),
     );
     if (result != null) {

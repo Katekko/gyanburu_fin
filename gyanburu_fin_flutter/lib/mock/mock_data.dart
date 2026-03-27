@@ -309,12 +309,7 @@ class MockData {
   };
 
   static const _uid = '00000000-0000-0000-0000-000000000001';
-  static String _month([int offset = 0]) {
-    final d = DateTime(now.year, now.month + offset);
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}';
-  }
-
-  static final categories = [
+static final categories = [
     Category(
       id: 1,
       userId: UuidValue.fromString(_uid),
@@ -387,130 +382,7 @@ class MockData {
     ),
   ];
 
-  static final monthlyEntries = [
-    // --- Income ---
-    MonthlyEntry(
-      id: 1,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 1,
-      name: 'Software Developer Salary',
-      type: EntryType.income,
-      amount: 8500.0,
-      month: _month(),
-      recurrent: true,
-      variable: false,
-      confirmed: true,
-    ),
-    MonthlyEntry(
-      id: 2,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 2,
-      name: 'Freelance Project',
-      type: EntryType.income,
-      amount: 2000.0,
-      month: _month(),
-      recurrent: true,
-      variable: true,
-      confirmed: false,
-    ),
-    MonthlyEntry(
-      id: 3,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 3,
-      name: 'Investment Dividends',
-      type: EntryType.income,
-      amount: 350.0,
-      month: _month(),
-      recurrent: true,
-      variable: true,
-      confirmed: true,
-    ),
-    // --- Expenses ---
-    MonthlyEntry(
-      id: 4,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 4,
-      name: 'Aluguel',
-      type: EntryType.expense,
-      amount: 2500.0,
-      month: _month(),
-      recurrent: true,
-      variable: false,
-      confirmed: true,
-    ),
-    MonthlyEntry(
-      id: 5,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 5,
-      name: 'CPFL Energia',
-      type: EntryType.expense,
-      amount: 210.0,
-      month: _month(),
-      recurrent: true,
-      variable: true,
-      confirmed: false,
-    ),
-    MonthlyEntry(
-      id: 6,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 5,
-      name: 'Vivo Internet',
-      type: EntryType.expense,
-      amount: 149.90,
-      month: _month(),
-      recurrent: true,
-      variable: false,
-      confirmed: true,
-    ),
-    MonthlyEntry(
-      id: 7,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 8,
-      name: 'Gym Membership',
-      type: EntryType.expense,
-      amount: 89.90,
-      month: _month(),
-      recurrent: true,
-      variable: false,
-      confirmed: true,
-    ),
-    MonthlyEntry(
-      id: 8,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 6,
-      name: 'Nubank Credit Card',
-      type: EntryType.expense,
-      amount: 1890.45,
-      month: _month(),
-      recurrent: true,
-      variable: true,
-      confirmed: true,
-    ),
-    MonthlyEntry(
-      id: 9,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 10,
-      name: 'Groceries Budget',
-      type: EntryType.expense,
-      amount: 1200.0,
-      month: _month(),
-      recurrent: true,
-      variable: true,
-      confirmed: false,
-    ),
-    MonthlyEntry(
-      id: 10,
-      userId: UuidValue.fromString(_uid),
-      categoryId: 9,
-      name: 'Semester Apartment Fee',
-      type: EntryType.expense,
-      amount: 3500.0,
-      month: _month(),
-      recurrent: false,
-      variable: false,
-      confirmed: true,
-    ),
-  ];
+  static final monthlyEntries = <MonthlyEntry>[];
 
   static final categoryIconMap = <String, IconData>{
     'work': Icons.work,
