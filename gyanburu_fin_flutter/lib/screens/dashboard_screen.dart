@@ -1,22 +1,127 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:gyanburu_fin_client/gyanburu_fin_client.dart' show BillStatus;
+import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
+import '../main.dart';
 import '../mock/mock_data.dart';
 import '../theme/app_theme.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key, this.onBillTap});
 
   final void Function(int index)? onBillTap;
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  List<MonthlyEntry> _entries = [];
+  List<Category> _categories = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  String get _monthKey {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    try {
+      final results = await Future.wait([
+        client.monthlyEntry.listByMonth(_monthKey),
+        client.category.list(),
+      ]);
+      setState(() {
+        _entries = results[0] as List<MonthlyEntry>;
+        _categories = results[1] as List<Category>;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
+
+  List<MonthlyEntry> get _incomeEntries =>
+      _entries.where((e) => e.type == EntryType.income).toList();
+
+  List<MonthlyEntry> get _expenseEntries =>
+      _entries.where((e) => e.type == EntryType.expense).toList();
+
+  double get _totalIncome => _incomeEntries.fold(0.0, (s, e) => s + e.amount);
+
+  double get _totalExpenses =>
+      _expenseEntries.fold(0.0, (s, e) => s + e.amount);
+
+  double get _balance => _totalIncome - _totalExpenses;
+
+  Category? _categoryFor(int id) {
+    try {
+      return _categories.firstWhere((c) => c.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Color _colorFor(Category? cat) {
+    if (cat == null) return AppColors.deepPurple;
+    try {
+      return Color(int.parse('FF${cat.color}', radix: 16));
+    } catch (_) {
+      return AppColors.deepPurple;
+    }
+  }
+
+  IconData _iconFor(Category? cat) {
+    if (cat == null) return Icons.category;
+    return MockData.categoryIconMap[cat.icon] ?? Icons.category;
+  }
+
+  /// Group expenses by category name → total amount
+  Map<String, double> get _spendingByCategory {
+    final Map<String, double> result = {};
+    for (final e in _expenseEntries) {
+      final cat = _categoryFor(e.categoryId);
+      final name = cat?.name ?? 'Other';
+      result[name] = (result[name] ?? 0) + e.amount;
+    }
+    return result;
+  }
+
+  /// Map category name → color for the chart
+  Map<String, Color> get _categoryColorMap {
+    final Map<String, Color> result = {};
+    for (final cat in _categories) {
+      result[cat.name] = _colorFor(cat);
+    }
+    return result;
+  }
+
+  /// Unpaid entries with due dates, sorted by due date
+  List<MonthlyEntry> get _upcomingBills {
+    final unpaid = _entries.where((e) => !e.paid && e.dueDate != null).toList()
+      ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
+    return unpaid;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -24,14 +129,33 @@ class DashboardScreen extends StatelessWidget {
         children: [
           Text('Dashboard', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 20),
-          _BalanceSummaryRow(),
+          _BalanceSummaryRow(
+            balance: _balance,
+            totalIncome: _totalIncome,
+            totalExpenses: _totalExpenses,
+          ),
           const SizedBox(height: 24),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 3, child: _SpendingChart()),
+              Expanded(
+                flex: 3,
+                child: _SpendingChart(
+                  spending: _spendingByCategory,
+                  colorMap: _categoryColorMap,
+                ),
+              ),
               const SizedBox(width: 20),
-              Expanded(flex: 2, child: _UpcomingBills(onBillTap: onBillTap)),
+              Expanded(
+                flex: 2,
+                child: _UpcomingBills(
+                  bills: _upcomingBills,
+                  categoryFor: _categoryFor,
+                  colorFor: _colorFor,
+                  iconFor: _iconFor,
+                  onBillTap: widget.onBillTap,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -43,6 +167,16 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _BalanceSummaryRow extends StatelessWidget {
+  const _BalanceSummaryRow({
+    required this.balance,
+    required this.totalIncome,
+    required this.totalExpenses,
+  });
+
+  final double balance;
+  final double totalIncome;
+  final double totalExpenses;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -50,10 +184,8 @@ class _BalanceSummaryRow extends StatelessWidget {
         Expanded(
           child: _SummaryCard(
             label: 'Net Balance',
-            value: _currencyFormat.format(MockData.netBalance),
-            color: MockData.netBalance >= 0
-                ? AppColors.positive
-                : AppColors.negative,
+            value: _currencyFormat.format(balance),
+            color: balance >= 0 ? AppColors.positive : AppColors.negative,
             icon: Icons.account_balance_wallet,
           ),
         ),
@@ -61,7 +193,7 @@ class _BalanceSummaryRow extends StatelessWidget {
         Expanded(
           child: _SummaryCard(
             label: 'Income',
-            value: _currencyFormat.format(MockData.totalIncome),
+            value: _currencyFormat.format(totalIncome),
             color: AppColors.positive,
             icon: Icons.trending_up,
           ),
@@ -70,7 +202,7 @@ class _BalanceSummaryRow extends StatelessWidget {
         Expanded(
           child: _SummaryCard(
             label: 'Expenses',
-            value: _currencyFormat.format(MockData.totalExpenses.abs()),
+            value: _currencyFormat.format(totalExpenses),
             color: AppColors.negative,
             icon: Icons.trending_down,
           ),
@@ -121,10 +253,17 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _SpendingChart extends StatelessWidget {
+  const _SpendingChart({
+    required this.spending,
+    required this.colorMap,
+  });
+
+  final Map<String, double> spending;
+  final Map<String, Color> colorMap;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final spending = MockData.spendingByCategory;
     final total = spending.values.fold(0.0, (s, v) => s + v);
 
     return Card(
@@ -135,48 +274,61 @@ class _SpendingChart extends StatelessWidget {
           children: [
             Text('Spending by Category', style: theme.textTheme.titleMedium),
             const SizedBox(height: 20),
-            SizedBox(
-              height: 180,
-              child: Center(child: _DonutChart(spending: spending)),
-            ),
-            const SizedBox(height: 20),
-            ...spending.entries.map((e) {
-              final pct = total > 0 ? (e.value / total * 100) : 0;
-              final color = MockData.categoryColors[e.key] ??
-                  AppColors.deepPurple;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(e.key, style: theme.textTheme.bodyMedium),
-                    ),
-                    Text(
-                      _currencyFormat.format(e.value),
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 42,
-                      child: Text(
-                        '${pct.toStringAsFixed(0)}%',
-                        style: theme.textTheme.labelSmall,
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
-                  ],
+            if (spending.isEmpty)
+              SizedBox(
+                height: 180,
+                child: Center(
+                  child: Text(
+                    'No expenses this month',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ),
-              );
-            }),
+              )
+            else ...[
+              SizedBox(
+                height: 180,
+                child: Center(
+                  child: _DonutChart(spending: spending, colorMap: colorMap),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ...spending.entries.map((e) {
+                final pct = total > 0 ? (e.value / total * 100) : 0;
+                final color = colorMap[e.key] ?? AppColors.deepPurple;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(e.key, style: theme.textTheme.bodyMedium),
+                      ),
+                      Text(
+                        _currencyFormat.format(e.value),
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 42,
+                        child: Text(
+                          '${pct.toStringAsFixed(0)}%',
+                          style: theme.textTheme.labelSmall,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
           ],
         ),
       ),
@@ -185,21 +337,23 @@ class _SpendingChart extends StatelessWidget {
 }
 
 class _DonutChart extends StatelessWidget {
-  const _DonutChart({required this.spending});
+  const _DonutChart({required this.spending, required this.colorMap});
   final Map<String, double> spending;
+  final Map<String, Color> colorMap;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: const Size(160, 160),
-      painter: _DonutPainter(spending),
+      painter: _DonutPainter(spending, colorMap),
     );
   }
 }
 
 class _DonutPainter extends CustomPainter {
-  _DonutPainter(this.spending);
+  _DonutPainter(this.spending, this.colorMap);
   final Map<String, double> spending;
+  final Map<String, Color> colorMap;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -217,8 +371,7 @@ class _DonutPainter extends CustomPainter {
     var startAngle = -pi / 2;
     for (final entry in spending.entries) {
       final sweep = (entry.value / total) * 2 * pi;
-      final color =
-          MockData.categoryColors[entry.key] ?? AppColors.deepPurple;
+      final color = colorMap[entry.key] ?? AppColors.deepPurple;
       final paint = Paint()
         ..color = color
         ..style = PaintingStyle.stroke
@@ -234,15 +387,24 @@ class _DonutPainter extends CustomPainter {
 }
 
 class _UpcomingBills extends StatelessWidget {
-  const _UpcomingBills({this.onBillTap});
+  const _UpcomingBills({
+    required this.bills,
+    required this.categoryFor,
+    required this.colorFor,
+    required this.iconFor,
+    this.onBillTap,
+  });
+
+  final List<MonthlyEntry> bills;
+  final Category? Function(int id) categoryFor;
+  final Color Function(Category? cat) colorFor;
+  final IconData Function(Category? cat) iconFor;
   final void Function(int index)? onBillTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final upcoming = MockData.bills
-        .where((b) => b.status == BillStatus.pending)
-        .toList();
+    final now = DateTime.now();
 
     return Card(
       child: Padding(
@@ -252,7 +414,7 @@ class _UpcomingBills extends StatelessWidget {
           children: [
             Text('Upcoming Bills', style: theme.textTheme.titleMedium),
             const SizedBox(height: 16),
-            if (upcoming.isEmpty)
+            if (bills.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
@@ -263,22 +425,27 @@ class _UpcomingBills extends StatelessWidget {
                 ),
               )
             else
-              ...upcoming.map((bill) {
-                final daysUntil =
-                    bill.dueAt.difference(DateTime.now()).inDays;
+              ...bills.map((entry) {
+                final cat = categoryFor(entry.categoryId);
+                final color = colorFor(cat);
+                final daysUntil = entry.dueDate!.difference(now).inDays;
+                final isOverdue = daysUntil < 0;
+                final dueLabel = isOverdue
+                    ? 'Overdue by ${daysUntil.abs()} days'
+                    : daysUntil == 0
+                    ? 'Due today'
+                    : 'Due in $daysUntil days';
+
                 return InkWell(
-                  onTap: () {
-                    final idx = MockData.bills.indexOf(bill);
-                    onBillTap?.call(idx);
-                  },
+                  onTap: () => onBillTap?.call(0),
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
                         Icon(
-                          Icons.receipt_long,
-                          color: AppColors.vibrantOrange,
+                          iconFor(cat),
+                          color: isOverdue ? AppColors.negative : color,
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -287,20 +454,24 @@ class _UpcomingBills extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                bill.merchantName,
+                                entry.name,
                                 style: theme.textTheme.bodyMedium,
                               ),
                               Text(
-                                'Due in $daysUntil days',
-                                style: theme.textTheme.labelSmall,
+                                dueLabel,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: isOverdue ? AppColors.negative : null,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         Text(
-                          _currencyFormat.format(bill.amount),
+                          _currencyFormat.format(entry.amount),
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.vibrantOrange,
+                            color: isOverdue
+                                ? AppColors.negative
+                                : AppColors.vibrantOrange,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -320,8 +491,6 @@ class _RecentTransactions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final recent = MockData.transactions.take(5).toList();
-    final dateFormat = DateFormat('dd MMM');
 
     return Card(
       child: Padding(
@@ -331,54 +500,25 @@ class _RecentTransactions extends StatelessWidget {
           children: [
             Text('Recent Transactions', style: theme.textTheme.titleMedium),
             const SizedBox(height: 16),
-            ...recent.map((tx) {
-              final icon = MockData.categoryIcons[tx.category] ??
-                  Icons.attach_money;
-              final color = MockData.categoryColors[tx.category] ??
-                  AppColors.deepPurple;
-              final isIncome = tx.amount > 0;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Column(
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(icon, color: color, size: 18),
+                    Icon(
+                      Icons.sync_disabled,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                      size: 32,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tx.merchantName,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          Text(
-                            '${tx.category} · ${dateFormat.format(tx.occurredAt)}',
-                            style: theme.textTheme.labelSmall,
-                          ),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 8),
                     Text(
-                      '${isIncome ? '+' : ''}${_currencyFormat.format(tx.amount)}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isIncome
-                            ? AppColors.positive
-                            : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      'Transactions will appear once sync is set up',
+                      style: theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
-              );
-            }),
+              ),
+            ),
           ],
         ),
       ),
