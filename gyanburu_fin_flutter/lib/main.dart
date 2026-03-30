@@ -8,6 +8,7 @@ import 'screens/monthly_overview_screen.dart';
 import 'screens/transaction_history_screen.dart';
 import 'screens/nubank_sync_screen.dart';
 import 'screens/bill_detail_screen.dart';
+import 'screens/sign_in_screen.dart';
 import 'theme/app_theme.dart';
 
 late final Client client;
@@ -35,7 +36,7 @@ class GyanburuFinApp extends StatelessWidget {
       title: 'Gyanburu Fin',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: const AppShell(),
+      home: SignInScreen(child: const AppShell()),
     );
   }
 }

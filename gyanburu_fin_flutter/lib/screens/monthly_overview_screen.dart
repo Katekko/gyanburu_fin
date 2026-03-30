@@ -732,7 +732,7 @@ class _EntryDialogState extends State<_EntryDialog> {
 
     final entry = MonthlyEntry(
       id: widget.existing?.id,
-      userId: UuidValue.fromString('00000000-0000-0000-0000-000000000001'),
+      userId: UuidValue.fromString('00000000-0000-4000-8000-000000000000'),
       categoryId: _categoryId,
       name: _nameController.text.trim(),
       type: widget.type,
@@ -916,12 +916,11 @@ class _CategoryManagerDialogState extends State<_CategoryManagerDialog> {
   void _addCategory() async {
     final result = await showDialog<Category>(
       context: context,
-      builder: (_) => _CategoryEditDialog(
-        nextId: _categories.isEmpty ? 1 : (_categories.map((c) => c.id ?? 0).reduce((a, b) => a > b ? a : b)) + 1,
-      ),
+      builder: (_) => const _CategoryEditDialog(),
     );
     if (result != null) {
-      setState(() => _categories.add(result));
+      final saved = await client.category.create(result);
+      setState(() => _categories.add(saved));
     }
   }
 
@@ -931,11 +930,16 @@ class _CategoryManagerDialogState extends State<_CategoryManagerDialog> {
       builder: (_) => _CategoryEditDialog(existing: _categories[index]),
     );
     if (result != null) {
-      setState(() => _categories[index] = result);
+      final saved = await client.category.update(result);
+      setState(() => _categories[index] = saved);
     }
   }
 
-  void _deleteCategory(int index) {
+  void _deleteCategory(int index) async {
+    final cat = _categories[index];
+    if (cat.id != null) {
+      await client.category.delete(cat.id!);
+    }
     setState(() => _categories.removeAt(index));
   }
 
@@ -1029,9 +1033,8 @@ class _CategoryManagerDialogState extends State<_CategoryManagerDialog> {
 // ---------------------------------------------------------------------------
 
 class _CategoryEditDialog extends StatefulWidget {
-  const _CategoryEditDialog({this.existing, this.nextId});
+  const _CategoryEditDialog({this.existing});
   final Category? existing;
-  final int? nextId;
 
   @override
   State<_CategoryEditDialog> createState() => _CategoryEditDialogState();
@@ -1073,8 +1076,8 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
     if (name.isEmpty) return;
 
     final cat = Category(
-      id: widget.existing?.id ?? widget.nextId,
-      userId: UuidValue.fromString('00000000-0000-0000-0000-000000000001'),
+      id: widget.existing?.id,
+      userId: UuidValue.fromString('00000000-0000-4000-8000-000000000000'),
       name: name,
       icon: _selectedIcon,
       color: _selectedColor,

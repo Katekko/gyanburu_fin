@@ -37,21 +37,23 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return _isSignedIn
         ? widget.child
-        : Center(
-            child: SignInWidget(
-              client: client,
-              onAuthenticated: () {
-                context.showSnackBar(
-                  message: 'User authenticated.',
-                  backgroundColor: Colors.green,
-                );
-              },
-              onError: (error) {
-                context.showSnackBar(
-                  message: 'Authentication failed: $error',
-                  backgroundColor: Colors.red,
-                );
-              },
+        : Scaffold(
+            body: Center(
+              child: SignInWidget(
+                client: client,
+                onAuthenticated: () {
+                  context.showSnackBar(
+                    message: 'User authenticated.',
+                    backgroundColor: Colors.green,
+                  );
+                },
+                onError: (error) {
+                  context.showSnackBar(
+                    message: 'Authentication failed: $error',
+                    backgroundColor: Colors.red,
+                  );
+                },
+              ),
             ),
           );
   }
