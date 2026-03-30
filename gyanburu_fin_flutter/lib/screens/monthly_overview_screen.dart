@@ -732,7 +732,7 @@ class _EntryDialogState extends State<_EntryDialog> {
 
     final entry = MonthlyEntry(
       id: widget.existing?.id,
-      userId: UuidValue.fromString('00000000-0000-4000-8000-000000000000'),
+      userId: Uuid().v4obj(),
       categoryId: _categoryId,
       name: _nameController.text.trim(),
       type: widget.type,
@@ -1077,7 +1077,7 @@ class _CategoryEditDialogState extends State<_CategoryEditDialog> {
 
     final cat = Category(
       id: widget.existing?.id,
-      userId: UuidValue.fromString('00000000-0000-4000-8000-000000000000'),
+      userId: Uuid().v4obj(),
       name: name,
       icon: _selectedIcon,
       color: _selectedColor,
