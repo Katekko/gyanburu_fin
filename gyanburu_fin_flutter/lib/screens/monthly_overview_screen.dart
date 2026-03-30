@@ -126,6 +126,10 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
         categories: _categories,
         existing: entry,
         onManageCategories: _openCategoryManager,
+        onDelete: () async {
+          Navigator.pop(context); 
+          _deleteEntry(entry);
+        },
       ),
     );
     if (result != null) {
@@ -266,7 +270,6 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
                   iconFor: _iconFor,
                   onAdd: () => _addEntry(EntryType.income),
                   onEdit: _editEntry,
-                  onDelete: _deleteEntry,
                   onToggleConfirmed: _toggleConfirmed,
                 ),
               ),
@@ -284,7 +287,6 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
                   iconFor: _iconFor,
                   onAdd: () => _addEntry(EntryType.expense),
                   onEdit: _editEntry,
-                  onDelete: _deleteEntry,
                   onToggleConfirmed: _toggleConfirmed,
                 ),
               ),
@@ -458,7 +460,6 @@ class _EntryColumn extends StatelessWidget {
     required this.iconFor,
     required this.onAdd,
     required this.onEdit,
-    required this.onDelete,
     required this.onToggleConfirmed,
   });
   final String title;
@@ -471,7 +472,6 @@ class _EntryColumn extends StatelessWidget {
   final IconData Function(Category?) iconFor;
   final VoidCallback onAdd;
   final void Function(MonthlyEntry) onEdit;
-  final void Function(MonthlyEntry) onDelete;
   final void Function(MonthlyEntry) onToggleConfirmed;
 
   @override
@@ -517,7 +517,6 @@ class _EntryColumn extends StatelessWidget {
                   color: colorFor(cat),
                   icon: iconFor(cat),
                   onEdit: () => onEdit(entry),
-                  onDelete: () => onDelete(entry),
                   onToggleConfirmed: () => onToggleConfirmed(entry),
                 );
               }),
@@ -548,7 +547,6 @@ class _EntryRow extends StatelessWidget {
     required this.color,
     required this.icon,
     required this.onEdit,
-    required this.onDelete,
     required this.onToggleConfirmed,
   });
   final MonthlyEntry entry;
@@ -556,7 +554,6 @@ class _EntryRow extends StatelessWidget {
   final Color color;
   final IconData icon;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
   final VoidCallback onToggleConfirmed;
 
   @override
@@ -658,14 +655,6 @@ class _EntryRow extends StatelessWidget {
                     color: needsConfirmation ? AppColors.vibrantOrange : null,
                   ),
                 ),
-                // Delete
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: Icon(Icons.close,
-                      size: 16, color: AppColors.textMuted),
-                  tooltip: 'Delete',
-                  onPressed: onDelete,
-                ),
               ],
             ),
           ),
@@ -686,12 +675,14 @@ class _EntryDialog extends StatefulWidget {
     required this.categories,
     this.existing,
     required this.onManageCategories,
+    this.onDelete,
   });
   final EntryType type;
   final String month;
   final List<Category> categories;
   final MonthlyEntry? existing;
   final VoidCallback onManageCategories;
+  final VoidCallback? onDelete;
 
   @override
   State<_EntryDialog> createState() => _EntryDialogState();
@@ -870,8 +861,15 @@ class _EntryDialogState extends State<_EntryDialog> {
                 const SizedBox(height: 24),
                 // Actions
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    if (_isEditing && widget.onDelete != null)
+                      IconButton(
+                        icon: Icon(Icons.delete_outline,
+                            color: AppColors.negative),
+                        tooltip: 'Delete',
+                        onPressed: widget.onDelete,
+                      ),
+                    const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Cancel'),
