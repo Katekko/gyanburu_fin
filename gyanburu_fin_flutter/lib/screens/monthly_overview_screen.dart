@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
+import '../main.dart';
 import '../mock/mock_data.dart';
 import '../theme/app_theme.dart';
 
@@ -16,16 +17,33 @@ class MonthlyOverviewScreen extends StatefulWidget {
 
 class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
   late DateTime _selectedMonth;
-  late List<MonthlyEntry> _entries;
-  late List<Category> _categories;
+  List<MonthlyEntry> _entries = [];
+  List<Category> _categories = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
     _selectedMonth = DateTime(now.year, now.month);
-    _entries = List.from(MockData.monthlyEntries);
-    _categories = List.from(MockData.categories);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    try {
+      final results = await Future.wait([
+        client.monthlyEntry.listByMonth(_monthKey),
+        client.category.list(),
+      ]);
+      setState(() {
+        _entries = results[0] as List<MonthlyEntry>;
+        _categories = results[1] as List<Category>;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
   }
 
   String get _monthKey =>
@@ -74,9 +92,16 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
       _selectedMonth =
           DateTime(_selectedMonth.year, _selectedMonth.month + delta);
     });
+    _loadData();
   }
 
   void _addEntry(EntryType type) async {
+    if (_categories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please create a category first.')),
+      );
+      return;
+    }
     final result = await showDialog<MonthlyEntry>(
       context: context,
       builder: (_) => _EntryDialog(
@@ -87,11 +112,8 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
       ),
     );
     if (result != null) {
-      setState(() {
-        _entries.add(result.copyWith(
-          id: _entries.isEmpty ? 1 : (_entries.map((e) => e.id ?? 0).reduce((a, b) => a > b ? a : b)) + 1,
-        ));
-      });
+      final saved = await client.monthlyEntry.create(result);
+      setState(() => _entries.add(saved));
     }
   }
 
@@ -107,9 +129,10 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
       ),
     );
     if (result != null) {
+      final saved = await client.monthlyEntry.update(result);
       setState(() {
         final idx = _entries.indexWhere((e) => e.id == entry.id);
-        if (idx != -1) _entries[idx] = result;
+        if (idx != -1) _entries[idx] = saved;
       });
     }
   }
@@ -134,16 +157,18 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
       ),
     );
     if (confirmed == true) {
+      await client.monthlyEntry.delete(entry.id!);
       setState(() => _entries.removeWhere((e) => e.id == entry.id));
     }
   }
 
-  void _toggleConfirmed(MonthlyEntry entry) {
+  void _toggleConfirmed(MonthlyEntry entry) async {
+    final updated =
+        entry.copyWith(confirmed: !entry.confirmed);
+    final saved = await client.monthlyEntry.update(updated);
     setState(() {
       final idx = _entries.indexWhere((e) => e.id == entry.id);
-      if (idx != -1) {
-        _entries[idx] = _entries[idx].copyWith(confirmed: !entry.confirmed);
-      }
+      if (idx != -1) _entries[idx] = saved;
     });
   }
 
@@ -160,6 +185,10 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -685,8 +714,8 @@ class _EntryDialogState extends State<_EntryDialog> {
         TextEditingController(text: widget.existing?.name ?? '');
     _amountController = TextEditingController(
         text: widget.existing?.amount.toStringAsFixed(2) ?? '');
-    _categoryId =
-        widget.existing?.categoryId ?? widget.categories.first.id!;
+    _categoryId = widget.existing?.categoryId ??
+        (widget.categories.isNotEmpty ? widget.categories.first.id! : 0);
     _recurrent = widget.existing?.recurrent ?? true;
     _variable = widget.existing?.variable ?? false;
   }

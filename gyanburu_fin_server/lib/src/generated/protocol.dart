@@ -32,11 +32,13 @@ import 'sync_log.dart' as _i17;
 import 'sync_status.dart' as _i18;
 import 'package:gyanburu_fin_server/src/generated/bill.dart' as _i19;
 import 'package:gyanburu_fin_server/src/generated/budget_category.dart' as _i20;
+import 'package:gyanburu_fin_server/src/generated/category.dart' as _i21;
 import 'package:gyanburu_fin_server/src/generated/financial_transaction.dart'
-    as _i21;
-import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i22;
-import 'package:gyanburu_fin_server/src/generated/nubank_account.dart' as _i23;
-import 'package:gyanburu_fin_server/src/generated/sync_log.dart' as _i24;
+    as _i22;
+import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i23;
+import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i24;
+import 'package:gyanburu_fin_server/src/generated/nubank_account.dart' as _i25;
+import 'package:gyanburu_fin_server/src/generated/sync_log.dart' as _i26;
 export 'account_type.dart';
 export 'bill.dart';
 export 'bill_status.dart';
@@ -718,32 +720,42 @@ class Protocol extends _i1.SerializationManagerServer {
               .toList()
           as T;
     }
+    if (t == List<_i21.Category>) {
+      return (data as List).map((e) => deserialize<_i21.Category>(e)).toList()
+          as T;
+    }
     if (t == Map<String, double>) {
       return (data as Map).map(
             (k, v) => MapEntry(deserialize<String>(k), deserialize<double>(v)),
           )
           as T;
     }
-    if (t == List<_i21.FinancialTransaction>) {
+    if (t == List<_i22.FinancialTransaction>) {
       return (data as List)
-              .map((e) => deserialize<_i21.FinancialTransaction>(e))
+              .map((e) => deserialize<_i22.FinancialTransaction>(e))
               .toList()
           as T;
     }
-    if (t == List<_i22.IncomeSource>) {
+    if (t == List<_i23.IncomeSource>) {
       return (data as List)
-              .map((e) => deserialize<_i22.IncomeSource>(e))
+              .map((e) => deserialize<_i23.IncomeSource>(e))
               .toList()
           as T;
     }
-    if (t == List<_i23.NubankAccount>) {
+    if (t == List<_i24.MonthlyEntry>) {
       return (data as List)
-              .map((e) => deserialize<_i23.NubankAccount>(e))
+              .map((e) => deserialize<_i24.MonthlyEntry>(e))
               .toList()
           as T;
     }
-    if (t == List<_i24.SyncLog>) {
-      return (data as List).map((e) => deserialize<_i24.SyncLog>(e)).toList()
+    if (t == List<_i25.NubankAccount>) {
+      return (data as List)
+              .map((e) => deserialize<_i25.NubankAccount>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_i26.SyncLog>) {
+      return (data as List).map((e) => deserialize<_i26.SyncLog>(e)).toList()
           as T;
     }
     try {

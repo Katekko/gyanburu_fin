@@ -21,11 +21,21 @@ budget:
   - create:
   - update:
   - delete:
+category:
+  - list:
+  - create:
+  - update:
+  - delete:
 dashboard:
   - spendingByCategory:
   - recentTransactions:
   - netBalance:
 income:
+  - listByMonth:
+  - create:
+  - update:
+  - delete:
+monthlyEntry:
   - listByMonth:
   - create:
   - update:
