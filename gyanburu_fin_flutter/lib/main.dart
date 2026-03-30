@@ -50,12 +50,10 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
-  int? _billDetailIndex;
 
-  void _navigateToBillDetail(int billIndex) {
+  void _navigateToBills() {
     setState(() {
       _selectedIndex = 4;
-      _billDetailIndex = billIndex;
     });
   }
 
@@ -69,7 +67,6 @@ class _AppShellState extends State<AppShell> {
             onDestinationSelected: (index) {
               setState(() {
                 _selectedIndex = index;
-                _billDetailIndex = null;
               });
             },
             extended: true,
@@ -134,11 +131,11 @@ class _AppShellState extends State<AppShell> {
 
   Widget _buildScreen() {
     return switch (_selectedIndex) {
-      0 => DashboardScreen(onBillTap: _navigateToBillDetail),
+      0 => DashboardScreen(onBillTap: (_) => _navigateToBills()),
       1 => const MonthlyOverviewScreen(),
       2 => const TransactionHistoryScreen(),
       3 => const NubankSyncScreen(),
-      4 => BillDetailScreen(initialBillIndex: _billDetailIndex),
+      4 => const BillDetailScreen(),
       _ => const SizedBox.shrink(),
     };
   }

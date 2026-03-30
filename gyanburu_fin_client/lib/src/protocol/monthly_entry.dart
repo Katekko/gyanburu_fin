@@ -25,6 +25,12 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
     required this.recurrent,
     required this.variable,
     required this.confirmed,
+    this.dueDate,
+    required this.paid,
+    this.paidAt,
+    this.paidAmount,
+    this.paymentMethod,
+    this.paymentNote,
   });
 
   factory MonthlyEntry({
@@ -38,6 +44,12 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
     required bool recurrent,
     required bool variable,
     required bool confirmed,
+    DateTime? dueDate,
+    required bool paid,
+    DateTime? paidAt,
+    double? paidAmount,
+    String? paymentMethod,
+    String? paymentNote,
   }) = _MonthlyEntryImpl;
 
   factory MonthlyEntry.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -52,6 +64,16 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
       recurrent: _i1.BoolJsonExtension.fromJson(jsonSerialization['recurrent']),
       variable: _i1.BoolJsonExtension.fromJson(jsonSerialization['variable']),
       confirmed: _i1.BoolJsonExtension.fromJson(jsonSerialization['confirmed']),
+      dueDate: jsonSerialization['dueDate'] == null
+          ? null
+          : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['dueDate']),
+      paid: _i1.BoolJsonExtension.fromJson(jsonSerialization['paid']),
+      paidAt: jsonSerialization['paidAt'] == null
+          ? null
+          : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['paidAt']),
+      paidAmount: (jsonSerialization['paidAmount'] as num?)?.toDouble(),
+      paymentMethod: jsonSerialization['paymentMethod'] as String?,
+      paymentNote: jsonSerialization['paymentNote'] as String?,
     );
   }
 
@@ -78,6 +100,18 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
 
   bool confirmed;
 
+  DateTime? dueDate;
+
+  bool paid;
+
+  DateTime? paidAt;
+
+  double? paidAmount;
+
+  String? paymentMethod;
+
+  String? paymentNote;
+
   /// Returns a shallow copy of this [MonthlyEntry]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -92,6 +126,12 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
     bool? recurrent,
     bool? variable,
     bool? confirmed,
+    DateTime? dueDate,
+    bool? paid,
+    DateTime? paidAt,
+    double? paidAmount,
+    String? paymentMethod,
+    String? paymentNote,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -107,6 +147,12 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
       'recurrent': recurrent,
       'variable': variable,
       'confirmed': confirmed,
+      if (dueDate != null) 'dueDate': dueDate?.toJson(),
+      'paid': paid,
+      if (paidAt != null) 'paidAt': paidAt?.toJson(),
+      if (paidAmount != null) 'paidAmount': paidAmount,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      if (paymentNote != null) 'paymentNote': paymentNote,
     };
   }
 
@@ -130,6 +176,12 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     required bool recurrent,
     required bool variable,
     required bool confirmed,
+    DateTime? dueDate,
+    required bool paid,
+    DateTime? paidAt,
+    double? paidAmount,
+    String? paymentMethod,
+    String? paymentNote,
   }) : super._(
          id: id,
          userId: userId,
@@ -141,6 +193,12 @@ class _MonthlyEntryImpl extends MonthlyEntry {
          recurrent: recurrent,
          variable: variable,
          confirmed: confirmed,
+         dueDate: dueDate,
+         paid: paid,
+         paidAt: paidAt,
+         paidAmount: paidAmount,
+         paymentMethod: paymentMethod,
+         paymentNote: paymentNote,
        );
 
   /// Returns a shallow copy of this [MonthlyEntry]
@@ -158,6 +216,12 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     bool? recurrent,
     bool? variable,
     bool? confirmed,
+    Object? dueDate = _Undefined,
+    bool? paid,
+    Object? paidAt = _Undefined,
+    Object? paidAmount = _Undefined,
+    Object? paymentMethod = _Undefined,
+    Object? paymentNote = _Undefined,
   }) {
     return MonthlyEntry(
       id: id is int? ? id : this.id,
@@ -170,6 +234,14 @@ class _MonthlyEntryImpl extends MonthlyEntry {
       recurrent: recurrent ?? this.recurrent,
       variable: variable ?? this.variable,
       confirmed: confirmed ?? this.confirmed,
+      dueDate: dueDate is DateTime? ? dueDate : this.dueDate,
+      paid: paid ?? this.paid,
+      paidAt: paidAt is DateTime? ? paidAt : this.paidAt,
+      paidAmount: paidAmount is double? ? paidAmount : this.paidAmount,
+      paymentMethod: paymentMethod is String?
+          ? paymentMethod
+          : this.paymentMethod,
+      paymentNote: paymentNote is String? ? paymentNote : this.paymentNote,
     );
   }
 }

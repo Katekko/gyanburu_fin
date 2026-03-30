@@ -26,6 +26,12 @@ abstract class MonthlyEntry
     required this.recurrent,
     required this.variable,
     required this.confirmed,
+    this.dueDate,
+    required this.paid,
+    this.paidAt,
+    this.paidAmount,
+    this.paymentMethod,
+    this.paymentNote,
   });
 
   factory MonthlyEntry({
@@ -39,6 +45,12 @@ abstract class MonthlyEntry
     required bool recurrent,
     required bool variable,
     required bool confirmed,
+    DateTime? dueDate,
+    required bool paid,
+    DateTime? paidAt,
+    double? paidAmount,
+    String? paymentMethod,
+    String? paymentNote,
   }) = _MonthlyEntryImpl;
 
   factory MonthlyEntry.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -53,6 +65,16 @@ abstract class MonthlyEntry
       recurrent: _i1.BoolJsonExtension.fromJson(jsonSerialization['recurrent']),
       variable: _i1.BoolJsonExtension.fromJson(jsonSerialization['variable']),
       confirmed: _i1.BoolJsonExtension.fromJson(jsonSerialization['confirmed']),
+      dueDate: jsonSerialization['dueDate'] == null
+          ? null
+          : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['dueDate']),
+      paid: _i1.BoolJsonExtension.fromJson(jsonSerialization['paid']),
+      paidAt: jsonSerialization['paidAt'] == null
+          ? null
+          : _i1.DateTimeJsonExtension.fromJson(jsonSerialization['paidAt']),
+      paidAmount: (jsonSerialization['paidAmount'] as num?)?.toDouble(),
+      paymentMethod: jsonSerialization['paymentMethod'] as String?,
+      paymentNote: jsonSerialization['paymentNote'] as String?,
     );
   }
 
@@ -81,6 +103,18 @@ abstract class MonthlyEntry
 
   bool confirmed;
 
+  DateTime? dueDate;
+
+  bool paid;
+
+  DateTime? paidAt;
+
+  double? paidAmount;
+
+  String? paymentMethod;
+
+  String? paymentNote;
+
   @override
   _i1.Table<int?> get table => t;
 
@@ -98,6 +132,12 @@ abstract class MonthlyEntry
     bool? recurrent,
     bool? variable,
     bool? confirmed,
+    DateTime? dueDate,
+    bool? paid,
+    DateTime? paidAt,
+    double? paidAmount,
+    String? paymentMethod,
+    String? paymentNote,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -113,6 +153,12 @@ abstract class MonthlyEntry
       'recurrent': recurrent,
       'variable': variable,
       'confirmed': confirmed,
+      if (dueDate != null) 'dueDate': dueDate?.toJson(),
+      'paid': paid,
+      if (paidAt != null) 'paidAt': paidAt?.toJson(),
+      if (paidAmount != null) 'paidAmount': paidAmount,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      if (paymentNote != null) 'paymentNote': paymentNote,
     };
   }
 
@@ -130,6 +176,12 @@ abstract class MonthlyEntry
       'recurrent': recurrent,
       'variable': variable,
       'confirmed': confirmed,
+      if (dueDate != null) 'dueDate': dueDate?.toJson(),
+      'paid': paid,
+      if (paidAt != null) 'paidAt': paidAt?.toJson(),
+      if (paidAmount != null) 'paidAmount': paidAmount,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      if (paymentNote != null) 'paymentNote': paymentNote,
     };
   }
 
@@ -177,6 +229,12 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     required bool recurrent,
     required bool variable,
     required bool confirmed,
+    DateTime? dueDate,
+    required bool paid,
+    DateTime? paidAt,
+    double? paidAmount,
+    String? paymentMethod,
+    String? paymentNote,
   }) : super._(
          id: id,
          userId: userId,
@@ -188,6 +246,12 @@ class _MonthlyEntryImpl extends MonthlyEntry {
          recurrent: recurrent,
          variable: variable,
          confirmed: confirmed,
+         dueDate: dueDate,
+         paid: paid,
+         paidAt: paidAt,
+         paidAmount: paidAmount,
+         paymentMethod: paymentMethod,
+         paymentNote: paymentNote,
        );
 
   /// Returns a shallow copy of this [MonthlyEntry]
@@ -205,6 +269,12 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     bool? recurrent,
     bool? variable,
     bool? confirmed,
+    Object? dueDate = _Undefined,
+    bool? paid,
+    Object? paidAt = _Undefined,
+    Object? paidAmount = _Undefined,
+    Object? paymentMethod = _Undefined,
+    Object? paymentNote = _Undefined,
   }) {
     return MonthlyEntry(
       id: id is int? ? id : this.id,
@@ -217,6 +287,14 @@ class _MonthlyEntryImpl extends MonthlyEntry {
       recurrent: recurrent ?? this.recurrent,
       variable: variable ?? this.variable,
       confirmed: confirmed ?? this.confirmed,
+      dueDate: dueDate is DateTime? ? dueDate : this.dueDate,
+      paid: paid ?? this.paid,
+      paidAt: paidAt is DateTime? ? paidAt : this.paidAt,
+      paidAmount: paidAmount is double? ? paidAmount : this.paidAmount,
+      paymentMethod: paymentMethod is String?
+          ? paymentMethod
+          : this.paymentMethod,
+      paymentNote: paymentNote is String? ? paymentNote : this.paymentNote,
     );
   }
 }
@@ -270,6 +348,39 @@ class MonthlyEntryUpdateTable extends _i1.UpdateTable<MonthlyEntryTable> {
     table.confirmed,
     value,
   );
+
+  _i1.ColumnValue<DateTime, DateTime> dueDate(DateTime? value) =>
+      _i1.ColumnValue(
+        table.dueDate,
+        value,
+      );
+
+  _i1.ColumnValue<bool, bool> paid(bool value) => _i1.ColumnValue(
+    table.paid,
+    value,
+  );
+
+  _i1.ColumnValue<DateTime, DateTime> paidAt(DateTime? value) =>
+      _i1.ColumnValue(
+        table.paidAt,
+        value,
+      );
+
+  _i1.ColumnValue<double, double> paidAmount(double? value) => _i1.ColumnValue(
+    table.paidAmount,
+    value,
+  );
+
+  _i1.ColumnValue<String, String> paymentMethod(String? value) =>
+      _i1.ColumnValue(
+        table.paymentMethod,
+        value,
+      );
+
+  _i1.ColumnValue<String, String> paymentNote(String? value) => _i1.ColumnValue(
+    table.paymentNote,
+    value,
+  );
 }
 
 class MonthlyEntryTable extends _i1.Table<int?> {
@@ -312,6 +423,30 @@ class MonthlyEntryTable extends _i1.Table<int?> {
       'confirmed',
       this,
     );
+    dueDate = _i1.ColumnDateTime(
+      'dueDate',
+      this,
+    );
+    paid = _i1.ColumnBool(
+      'paid',
+      this,
+    );
+    paidAt = _i1.ColumnDateTime(
+      'paidAt',
+      this,
+    );
+    paidAmount = _i1.ColumnDouble(
+      'paidAmount',
+      this,
+    );
+    paymentMethod = _i1.ColumnString(
+      'paymentMethod',
+      this,
+    );
+    paymentNote = _i1.ColumnString(
+      'paymentNote',
+      this,
+    );
   }
 
   late final MonthlyEntryUpdateTable updateTable;
@@ -334,6 +469,18 @@ class MonthlyEntryTable extends _i1.Table<int?> {
 
   late final _i1.ColumnBool confirmed;
 
+  late final _i1.ColumnDateTime dueDate;
+
+  late final _i1.ColumnBool paid;
+
+  late final _i1.ColumnDateTime paidAt;
+
+  late final _i1.ColumnDouble paidAmount;
+
+  late final _i1.ColumnString paymentMethod;
+
+  late final _i1.ColumnString paymentNote;
+
   @override
   List<_i1.Column> get columns => [
     id,
@@ -346,6 +493,12 @@ class MonthlyEntryTable extends _i1.Table<int?> {
     recurrent,
     variable,
     confirmed,
+    dueDate,
+    paid,
+    paidAt,
+    paidAmount,
+    paymentMethod,
+    paymentNote,
   ];
 }
 

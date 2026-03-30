@@ -10,3 +10,9 @@ fields:
   recurrent: bool
   variable: bool
   confirmed: bool
+  dueDate: DateTime?
+  paid: bool
+  paidAt: DateTime?
+  paidAmount: double?
+  paymentMethod: String?
+  paymentNote: String?

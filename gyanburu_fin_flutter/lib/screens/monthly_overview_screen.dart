@@ -695,6 +695,7 @@ class _EntryDialogState extends State<_EntryDialog> {
   late int _categoryId;
   late bool _recurrent;
   late bool _variable;
+  DateTime? _dueDate;
 
   bool get _isEditing => widget.existing != null;
 
@@ -709,6 +710,7 @@ class _EntryDialogState extends State<_EntryDialog> {
         (widget.categories.isNotEmpty ? widget.categories.first.id! : 0);
     _recurrent = widget.existing?.recurrent ?? true;
     _variable = widget.existing?.variable ?? false;
+    _dueDate = widget.existing?.dueDate;
   }
 
   @override
@@ -732,6 +734,12 @@ class _EntryDialogState extends State<_EntryDialog> {
       recurrent: _recurrent,
       variable: _variable,
       confirmed: !_variable,
+      dueDate: _dueDate,
+      paid: widget.existing?.paid ?? false,
+      paidAt: widget.existing?.paidAt,
+      paidAmount: widget.existing?.paidAmount,
+      paymentMethod: widget.existing?.paymentMethod,
+      paymentNote: widget.existing?.paymentNote,
     );
     Navigator.pop(context, entry);
   }
@@ -827,6 +835,39 @@ class _EntryDialogState extends State<_EntryDialog> {
                       },
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                // Due date
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _dueDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) setState(() => _dueDate = picked);
+                  },
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Due Date',
+                      suffixIcon: _dueDate != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () =>
+                                  setState(() => _dueDate = null),
+                            )
+                          : const Icon(Icons.calendar_today, size: 18),
+                    ),
+                    child: Text(
+                      _dueDate != null
+                          ? DateFormat('dd/MM/yyyy').format(_dueDate!)
+                          : 'No due date',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: _dueDate != null ? null : AppColors.textMuted,
+                          ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 // Checkboxes
