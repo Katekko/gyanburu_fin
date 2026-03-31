@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../main.dart';
 import '../mock/mock_data.dart';
+import '../shared/category_manager_dialog.dart';
 import '../theme/app_theme.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -81,80 +82,47 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return list;
   }
 
-  Future<void> _showCategoryPicker(FinancialTransaction transaction) async {
-    final selected = await showDialog<Category>(
+  Future<void> _showTransactionEditor(FinancialTransaction transaction) async {
+    final existingRule = _rules
+        .where((r) => r.merchantPattern == transaction.merchantName)
+        .firstOrNull;
+
+    final result = await showDialog<_TransactionEditResult>(
       context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Select Category'),
-        children: [
-          // "No category" option
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: Row(
-              children: [
-                Icon(Icons.clear, color: AppColors.textMuted, size: 20),
-                const SizedBox(width: 12),
-                Text('No category',
-                    style: TextStyle(color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-          ..._categories.map((cat) {
-            final icon =
-                MockData.categoryIconMap[cat.icon] ?? Icons.category;
-            final color = Color(int.parse('FF${cat.color}', radix: 16));
-            return SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, cat),
-              child: Row(
-                children: [
-                  Icon(icon, color: color, size: 20),
-                  const SizedBox(width: 12),
-                  Text(cat.name),
-                ],
-              ),
-            );
-          }),
-        ],
+      builder: (ctx) => _TransactionEditDialog(
+        transaction: transaction,
+        categories: _categories,
+        existingDisplayName: existingRule?.displayName ?? transaction.displayName,
       ),
     );
 
-    // User dismissed dialog
-    if (!mounted) return;
+    if (result == null || !mounted) return;
 
-    // If they picked "No category" (null returned via pop), clear it
-    // If they dismissed (null from showDialog), do nothing
-    // We can't distinguish these easily, so we use a sentinel approach:
-    // The dialog always returns via pop, so null = dismissed or cleared.
-    // Let's just handle the Category case.
-    if (selected == null) return;
-
-    await _assignCategory(transaction, selected);
-  }
-
-  Future<void> _assignCategory(
-    FinancialTransaction transaction,
-    Category category,
-  ) async {
     try {
       // Update the transaction
-      transaction.category = category.name;
+      transaction.category = result.category?.name ?? '';
+      transaction.displayName = result.displayName;
       await client.transaction.update(transaction);
 
-      // Create or update CategoryRule for auto-categorization
-      final existingRule = _rules
-          .where((r) => r.merchantPattern == transaction.merchantName)
-          .firstOrNull;
-
-      if (existingRule != null) {
-        existingRule.categoryId = category.id!;
+      // Create or update CategoryRule
+      if (result.category != null) {
+        if (existingRule != null) {
+          existingRule.categoryId = result.category!.id!;
+          existingRule.displayName = result.displayName;
+          await client.categoryRule.update(existingRule);
+        } else {
+          final newRule = CategoryRule(
+            userId: transaction.userId,
+            merchantPattern: transaction.merchantName,
+            categoryId: result.category!.id!,
+            displayName: result.displayName,
+          );
+          await client.categoryRule.create(newRule);
+        }
+      } else if (existingRule != null && result.displayName != null) {
+        // No category but has display name — update rule's display name
+        existingRule.displayName = result.displayName;
         await client.categoryRule.update(existingRule);
-      } else {
-        final newRule = CategoryRule(
-          userId: transaction.userId,
-          merchantPattern: transaction.merchantName,
-          categoryId: category.id!,
-        );
-        await client.categoryRule.create(newRule);
       }
 
       _loadData();
@@ -162,11 +130,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update category: $e'),
+            content: Text('Failed to update: $e'),
             backgroundColor: AppColors.negative,
           ),
         );
       }
+    }
+  }
+
+  void _openCategoryManager() async {
+    final result = await showCategoryManagerDialog(context, _categories);
+    if (result != null) {
+      setState(() => _categories = result);
     }
   }
 
@@ -197,7 +172,19 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Transactions', style: theme.textTheme.headlineMedium),
+          Row(
+            children: [
+              Expanded(
+                child: Text('Transactions',
+                    style: theme.textTheme.headlineMedium),
+              ),
+              IconButton(
+                icon: const Icon(Icons.category, size: 20),
+                tooltip: 'Manage Categories',
+                onPressed: _openCategoryManager,
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           // Month selector
           Row(
@@ -295,8 +282,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                             ...group.value.map((tx) => _TransactionRow(
                                   tx: tx,
                                   categories: _categories,
-                                  onCategoryTap: () =>
-                                      _showCategoryPicker(tx),
+                                  onTap: () =>
+                                      _showTransactionEditor(tx),
                                 )),
                           ];
                         }).toList(),
@@ -412,19 +399,20 @@ class _TransactionRow extends StatelessWidget {
   const _TransactionRow({
     required this.tx,
     required this.categories,
-    required this.onCategoryTap,
+    required this.onTap,
   });
   final FinancialTransaction tx;
   final List<Category> categories;
-  final VoidCallback onCategoryTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     final hasCategory = tx.category.isNotEmpty;
-    final catObj =
-        hasCategory ? categories.where((c) => c.name == tx.category).firstOrNull : null;
+    final catObj = hasCategory
+        ? categories.where((c) => c.name == tx.category).firstOrNull
+        : null;
     final icon = catObj != null
         ? (MockData.categoryIconMap[catObj.icon] ?? Icons.category)
         : Icons.help_outline;
@@ -434,16 +422,27 @@ class _TransactionRow extends StatelessWidget {
 
     final hasInstallment =
         tx.installmentCurrent != null && tx.installmentTotal != null;
+    final hasDisplayName =
+        tx.displayName != null && tx.displayName!.isNotEmpty;
+
+    // Build the main display name with installment appended
+    String mainName;
+    if (hasDisplayName) {
+      mainName = hasInstallment
+          ? '${tx.displayName} - Parcela ${tx.installmentCurrent}/${tx.installmentTotal}'
+          : tx.displayName!;
+    } else {
+      mainName = tx.merchantName;
+    }
 
     return Card(
       child: InkWell(
-        onTap: onCategoryTap,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              // Category icon (tappable indicator)
               Container(
                 width: 40,
                 height: 40,
@@ -460,35 +459,43 @@ class _TransactionRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              // Merchant name + category label
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tx.merchantName,
+                      mainName,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    // Original merchant name (shown when display name is set)
+                    if (hasDisplayName)
+                      Text(
+                        tx.merchantName,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
                     Row(
                       children: [
                         if (hasCategory)
                           Text(tx.category, style: theme.textTheme.labelSmall)
                         else
                           Text(
-                            'Tap to categorize',
+                            'Tap to edit',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: AppColors.vibrantOrange,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
-                        if (hasInstallment) ...[
+                        if (!hasDisplayName && hasInstallment) ...[
                           Text(' · ', style: theme.textTheme.labelSmall),
                           Text(
                             'Parcela ${tx.installmentCurrent}/${tx.installmentTotal}',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.textPrimary,
+                              color: AppColors.deepPurple,
                             ),
                           ),
                         ],
@@ -497,13 +504,218 @@ class _TransactionRow extends StatelessWidget {
                   ],
                 ),
               ),
-              // Amount
               Text(
                 _currencyFormat.format(tx.amount),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Transaction Edit Dialog
+// ---------------------------------------------------------------------------
+
+class _TransactionEditResult {
+  final Category? category;
+  final String? displayName;
+
+  _TransactionEditResult({this.category, this.displayName});
+}
+
+class _TransactionEditDialog extends StatefulWidget {
+  const _TransactionEditDialog({
+    required this.transaction,
+    required this.categories,
+    this.existingDisplayName,
+  });
+  final FinancialTransaction transaction;
+  final List<Category> categories;
+  final String? existingDisplayName;
+
+  @override
+  State<_TransactionEditDialog> createState() => _TransactionEditDialogState();
+}
+
+class _TransactionEditDialogState extends State<_TransactionEditDialog> {
+  late final TextEditingController _displayNameController;
+  Category? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayNameController = TextEditingController(
+      text: widget.existingDisplayName ?? '',
+    );
+    // Pre-select current category
+    if (widget.transaction.category.isNotEmpty) {
+      _selectedCategory = widget.categories
+          .where((c) => c.name == widget.transaction.category)
+          .firstOrNull;
+    }
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final displayName = _displayNameController.text.trim();
+    Navigator.pop(
+      context,
+      _TransactionEditResult(
+        category: _selectedCategory,
+        displayName: displayName.isEmpty ? null : displayName,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tx = widget.transaction;
+    final hasInstallment =
+        tx.installmentCurrent != null && tx.installmentTotal != null;
+
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Edit Transaction', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 6),
+              // Show original merchant name
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.store, size: 16, color: AppColors.textMuted),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tx.merchantName,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _currencyFormat.format(tx.amount),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (hasInstallment) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        'Parcela ${tx.installmentCurrent}/${tx.installmentTotal}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.deepPurple,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Display name field
+              Text('Display Name', style: theme.textTheme.labelMedium),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _displayNameController,
+                decoration: InputDecoration(
+                  hintText: tx.merchantName,
+                  helperText: 'A friendly name for this merchant',
+                  helperMaxLines: 2,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Category picker
+              Text('Category', style: theme.textTheme.labelMedium),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.categories.map((cat) {
+                  final icon =
+                      MockData.categoryIconMap[cat.icon] ?? Icons.category;
+                  final color =
+                      Color(int.parse('FF${cat.color}', radix: 16));
+                  final isSelected = _selectedCategory?.id == cat.id;
+
+                  return InkWell(
+                    onTap: () => setState(() {
+                      _selectedCategory =
+                          isSelected ? null : cat;
+                    }),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? color.withValues(alpha: 0.2)
+                            : AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(10),
+                        border: isSelected
+                            ? Border.all(color: color, width: 1.5)
+                            : null,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, color: color, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            cat.name,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: isSelected
+                                  ? color
+                                  : AppColors.textSecondary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _save,
+                    child: const Text('Save'),
+                  ),
+                ],
               ),
             ],
           ),

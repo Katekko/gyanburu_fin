@@ -12,3 +12,4 @@ fields:
   externalId: String?
   installmentCurrent: int?
   installmentTotal: int?
+  displayName: String?

@@ -57,14 +57,16 @@ class OfxImportEndpoint extends Endpoint {
       // Parse merchant name and installments
       final merchantInfo = _parseMerchantName(txn.memo);
 
-      // Auto-categorize
+      // Auto-categorize and apply display name from rules
       var category = '';
+      String? displayName;
       final rule = ruleMap[merchantInfo.cleanName];
       if (rule != null) {
         final cat = await Category.db.findById(session, rule.categoryId);
         if (cat != null) {
           category = cat.name;
         }
+        displayName = rule.displayName;
       }
 
       final transaction = FinancialTransaction(
@@ -77,6 +79,7 @@ class OfxImportEndpoint extends Endpoint {
         externalId: txn.fitId,
         installmentCurrent: merchantInfo.installmentCurrent,
         installmentTotal: merchantInfo.installmentTotal,
+        displayName: displayName,
       );
 
       await FinancialTransaction.db.insertRow(session, transaction);

@@ -4,3 +4,4 @@ fields:
   userId: UuidValue
   merchantPattern: String
   categoryId: int
+  displayName: String?

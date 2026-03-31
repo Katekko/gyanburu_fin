@@ -18,6 +18,7 @@ abstract class CategoryRule implements _i1.SerializableModel {
     required this.userId,
     required this.merchantPattern,
     required this.categoryId,
+    this.displayName,
   });
 
   factory CategoryRule({
@@ -25,6 +26,7 @@ abstract class CategoryRule implements _i1.SerializableModel {
     required _i1.UuidValue userId,
     required String merchantPattern,
     required int categoryId,
+    String? displayName,
   }) = _CategoryRuleImpl;
 
   factory CategoryRule.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -33,6 +35,7 @@ abstract class CategoryRule implements _i1.SerializableModel {
       userId: _i1.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
       merchantPattern: jsonSerialization['merchantPattern'] as String,
       categoryId: jsonSerialization['categoryId'] as int,
+      displayName: jsonSerialization['displayName'] as String?,
     );
   }
 
@@ -47,6 +50,8 @@ abstract class CategoryRule implements _i1.SerializableModel {
 
   int categoryId;
 
+  String? displayName;
+
   /// Returns a shallow copy of this [CategoryRule]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -55,6 +60,7 @@ abstract class CategoryRule implements _i1.SerializableModel {
     _i1.UuidValue? userId,
     String? merchantPattern,
     int? categoryId,
+    String? displayName,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -64,6 +70,7 @@ abstract class CategoryRule implements _i1.SerializableModel {
       'userId': userId.toJson(),
       'merchantPattern': merchantPattern,
       'categoryId': categoryId,
+      if (displayName != null) 'displayName': displayName,
     };
   }
 
@@ -81,11 +88,13 @@ class _CategoryRuleImpl extends CategoryRule {
     required _i1.UuidValue userId,
     required String merchantPattern,
     required int categoryId,
+    String? displayName,
   }) : super._(
          id: id,
          userId: userId,
          merchantPattern: merchantPattern,
          categoryId: categoryId,
+         displayName: displayName,
        );
 
   /// Returns a shallow copy of this [CategoryRule]
@@ -97,12 +106,14 @@ class _CategoryRuleImpl extends CategoryRule {
     _i1.UuidValue? userId,
     String? merchantPattern,
     int? categoryId,
+    Object? displayName = _Undefined,
   }) {
     return CategoryRule(
       id: id is int? ? id : this.id,
       userId: userId ?? this.userId,
       merchantPattern: merchantPattern ?? this.merchantPattern,
       categoryId: categoryId ?? this.categoryId,
+      displayName: displayName is String? ? displayName : this.displayName,
     );
   }
 }
