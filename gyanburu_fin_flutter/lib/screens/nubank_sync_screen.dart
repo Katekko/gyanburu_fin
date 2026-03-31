@@ -1,12 +1,137 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
-import '../mock/mock_data.dart';
+import '../main.dart';
 import '../theme/app_theme.dart';
 
-class NubankSyncScreen extends StatelessWidget {
+class NubankSyncScreen extends StatefulWidget {
   const NubankSyncScreen({super.key});
+
+  @override
+  State<NubankSyncScreen> createState() => _NubankSyncScreenState();
+}
+
+class _NubankSyncScreenState extends State<NubankSyncScreen> {
+  List<ImportHistory> _history = [];
+  bool _loading = true;
+  bool _importing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _loading = true);
+    try {
+      _history = await client.importHistory.list();
+    } catch (_) {}
+    setState(() => _loading = false);
+  }
+
+  Future<void> _pickAndImport() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['ofx'],
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    if (file.bytes == null) return;
+
+    final content = utf8.decode(file.bytes!, allowMalformed: true);
+    final fileName = file.name;
+
+    setState(() => _importing = true);
+
+    try {
+      final importResult = await client.ofxImport.importOfx(content, fileName);
+
+      if (mounted) {
+        _showImportResult(importResult);
+        _loadHistory();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
+            backgroundColor: AppColors.negative,
+          ),
+        );
+      }
+    }
+
+    setState(() => _importing = false);
+  }
+
+  void _showImportResult(ImportHistory result) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final dateFormat = DateFormat('dd/MM/yyyy');
+
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceVariant,
+          title: Row(
+            children: [
+              Icon(Icons.check_circle, color: AppColors.positive, size: 24),
+              const SizedBox(width: 10),
+              Text('Import Complete', style: theme.textTheme.titleLarge),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ResultRow(
+                label: 'File',
+                value: result.fileName,
+              ),
+              _ResultRow(
+                label: 'Statement period',
+                value:
+                    '${dateFormat.format(result.statementStart)} - ${dateFormat.format(result.statementEnd)}',
+              ),
+              const Divider(height: 24),
+              _ResultRow(
+                label: 'Total in file',
+                value: '${result.totalTransactions}',
+              ),
+              _ResultRow(
+                label: 'New imported',
+                value: '${result.newTransactions}',
+                valueColor: AppColors.positive,
+              ),
+              _ResultRow(
+                label: 'Skipped (duplicates)',
+                value: '${result.skippedDuplicates}',
+                valueColor: AppColors.textMuted,
+              ),
+              _ResultRow(
+                label: 'Skipped (credits)',
+                value: '${result.skippedCredits}',
+                valueColor: AppColors.textMuted,
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,42 +142,40 @@ class NubankSyncScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Nubank Sync Status', style: theme.textTheme.headlineMedium),
+          Text('Nubank Import', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
-            'Manage your connected Nubank accounts and monitor sync health.',
+            'Import your Nubank credit card statement from an OFX file.',
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 24),
-          ...MockData.nubankAccounts.map(
-            (account) => _AccountCard(account: account),
+          _ImportCard(
+            importing: _importing,
+            onImport: _pickAndImport,
           ),
           const SizedBox(height: 24),
-          _SyncLogSection(),
+          if (_loading)
+            const Center(child: CircularProgressIndicator())
+          else if (_history.isNotEmpty)
+            _ImportHistorySection(history: _history),
         ],
       ),
     );
   }
 }
 
-class _AccountCard extends StatelessWidget {
-  const _AccountCard({required this.account});
-  final NubankAccount account;
+class _ImportCard extends StatelessWidget {
+  const _ImportCard({required this.importing, required this.onImport});
+  final bool importing;
+  final VoidCallback onImport;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isHealthy = account.syncStatus == SyncStatus.success;
-    final dateFormat = DateFormat('dd MMM yyyy, HH:mm');
-
-    final daysUntilExpiry = account.consentExpiresAt != null
-        ? account.consentExpiresAt!.difference(DateTime.now()).inDays
-        : 0;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -66,7 +189,7 @@ class _AccountCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.account_balance,
+                    Icons.upload_file,
                     color: Color(0xFF8A05BE),
                     size: 22,
                   ),
@@ -77,158 +200,111 @@ class _AccountCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Nubank ${_accountTypeName(account.accountType)}',
+                        'Import OFX File',
                         style: theme.textTheme.titleMedium,
                       ),
                       Text(
-                        account.accountType.name.toUpperCase(),
+                        'Export from Nubank app and select the .ofx file',
                         style: theme.textTheme.labelSmall,
                       ),
                     ],
                   ),
                 ),
-                _StatusBadge(status: account.syncStatus),
               ],
             ),
             const SizedBox(height: 20),
-            _InfoRow(
-              icon: Icons.sync,
-              label: 'Last sync',
-              value: account.lastSyncAt != null
-                  ? dateFormat.format(account.lastSyncAt!)
-                  : 'Never',
-            ),
-            const SizedBox(height: 10),
-            _InfoRow(
-              icon: Icons.verified_user,
-              label: 'Consent expires',
-              value: account.consentExpiresAt != null
-                  ? '$daysUntilExpiry days remaining'
-                  : 'N/A',
-              valueColor: daysUntilExpiry < 30
-                  ? AppColors.vibrantOrange
-                  : AppColors.textPrimary,
-            ),
-            const SizedBox(height: 10),
-            _InfoRow(
-              icon: isHealthy ? Icons.check_circle : Icons.error,
-              label: 'Connection health',
-              value: isHealthy ? 'Healthy' : 'Issue detected',
-              valueColor: isHealthy ? AppColors.positive : AppColors.negative,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('How to export from Nubank:',
+                      style: theme.textTheme.labelMedium),
+                  const SizedBox(height: 8),
+                  _StepText(number: '1', text: 'Open Nubank app'),
+                  _StepText(
+                      number: '2', text: 'Go to Credit Card > Your Bills'),
+                  _StepText(
+                      number: '3',
+                      text: 'Select the month and tap "Share"'),
+                  _StepText(number: '4', text: 'Choose "OFX" format'),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.sync, size: 18),
-                  label: const Text('Sync Now'),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text('Re-authorize'),
-                ),
-              ],
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: importing ? null : onImport,
+                icon: importing
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.file_open, size: 18),
+                label: Text(importing ? 'Importing...' : 'Select OFX File'),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-  String _accountTypeName(AccountType type) {
-    switch (type) {
-      case AccountType.checking:
-        return 'Checking Account';
-      case AccountType.savings:
-        return 'Savings Account';
-      case AccountType.creditCard:
-        return 'Credit Card';
-    }
-  }
 }
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-  final SyncStatus status;
+class _StepText extends StatelessWidget {
+  const _StepText({required this.number, required this.text});
+  final String number;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final (color, label) = switch (status) {
-      SyncStatus.success => (AppColors.positive, 'Connected'),
-      SyncStatus.syncing => (AppColors.vibrantOrange, 'Syncing...'),
-      SyncStatus.error => (AppColors.negative, 'Error'),
-      SyncStatus.idle => (AppColors.textMuted, 'Idle'),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.deepPurple.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              number,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: AppColors.deepPurple,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          Text(text, style: theme.textTheme.bodySmall),
         ],
       ),
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
+class _ImportHistorySection extends StatelessWidget {
+  const _ImportHistorySection({required this.history});
+  final List<ImportHistory> history;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: AppColors.textMuted),
-        const SizedBox(width: 8),
-        Text(label, style: theme.textTheme.labelSmall),
-        const Spacer(),
-        Text(
-          value,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: valueColor ?? AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SyncLogSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dateFormat = DateFormat('dd MMM HH:mm');
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm');
+    final periodFormat = DateFormat('MMM yyyy');
 
     return Card(
       child: Padding(
@@ -236,18 +312,17 @@ class _SyncLogSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Sync History', style: theme.textTheme.titleMedium),
+            Text('Import History', style: theme.textTheme.titleMedium),
             const SizedBox(height: 16),
-            ...MockData.syncLogs.map((log) {
-              final isError = log.status == SyncStatus.error;
+            ...history.map((h) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   children: [
                     Icon(
-                      isError ? Icons.error_outline : Icons.check_circle_outline,
+                      Icons.check_circle_outline,
                       size: 18,
-                      color: isError ? AppColors.negative : AppColors.positive,
+                      color: AppColors.positive,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -255,26 +330,35 @@ class _SyncLogSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            dateFormat.format(log.syncedAt),
+                            h.fileName,
                             style: theme.textTheme.bodyMedium,
                           ),
-                          if (log.errorMessage != null)
-                            Text(
-                              log.errorMessage!,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppColors.negative,
-                              ),
-                            ),
+                          Text(
+                            '${dateFormat.format(h.importedAt)} · '
+                            '${periodFormat.format(h.statementStart)} - ${periodFormat.format(h.statementEnd)}',
+                            style: theme.textTheme.labelSmall,
+                          ),
                         ],
                       ),
                     ),
-                    Text(
-                      log.status.name,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: isError
-                            ? AppColors.negative
-                            : AppColors.positive,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '+${h.newTransactions} new',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.positive,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (h.skippedDuplicates > 0)
+                          Text(
+                            '${h.skippedDuplicates} skipped',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -282,6 +366,37 @@ class _SyncLogSection extends StatelessWidget {
             }),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ResultRow extends StatelessWidget {
+  const _ResultRow({required this.label, required this.value, this.valueColor});
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: theme.textTheme.bodySmall),
+          Flexible(
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: valueColor ?? AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
       ),
     );
   }

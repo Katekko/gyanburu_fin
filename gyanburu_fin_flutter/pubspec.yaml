@@ -30,6 +30,7 @@ dependencies:
   google_fonts: ^6.2.1
   gyanburu_fin_client:
     path: ../gyanburu_fin_client
+  file_picker: ^8.0.0
   intl: ^0.20.0
   serverpod_auth_idp_flutter: 3.4.5
   serverpod_flutter: 3.4.5

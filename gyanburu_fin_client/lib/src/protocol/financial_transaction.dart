@@ -23,6 +23,9 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     required this.currency,
     required this.occurredAt,
     this.description,
+    this.externalId,
+    this.installmentCurrent,
+    this.installmentTotal,
   });
 
   factory FinancialTransaction({
@@ -35,6 +38,9 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     required String currency,
     required DateTime occurredAt,
     String? description,
+    String? externalId,
+    int? installmentCurrent,
+    int? installmentTotal,
   }) = _FinancialTransactionImpl;
 
   factory FinancialTransaction.fromJson(
@@ -56,6 +62,9 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
         jsonSerialization['occurredAt'],
       ),
       description: jsonSerialization['description'] as String?,
+      externalId: jsonSerialization['externalId'] as String?,
+      installmentCurrent: jsonSerialization['installmentCurrent'] as int?,
+      installmentTotal: jsonSerialization['installmentTotal'] as int?,
     );
   }
 
@@ -80,6 +89,12 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
 
   String? description;
 
+  String? externalId;
+
+  int? installmentCurrent;
+
+  int? installmentTotal;
+
   /// Returns a shallow copy of this [FinancialTransaction]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -93,6 +108,9 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     String? currency,
     DateTime? occurredAt,
     String? description,
+    String? externalId,
+    int? installmentCurrent,
+    int? installmentTotal,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -107,6 +125,9 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       'currency': currency,
       'occurredAt': occurredAt.toJson(),
       if (description != null) 'description': description,
+      if (externalId != null) 'externalId': externalId,
+      if (installmentCurrent != null) 'installmentCurrent': installmentCurrent,
+      if (installmentTotal != null) 'installmentTotal': installmentTotal,
     };
   }
 
@@ -129,6 +150,9 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     required String currency,
     required DateTime occurredAt,
     String? description,
+    String? externalId,
+    int? installmentCurrent,
+    int? installmentTotal,
   }) : super._(
          id: id,
          userId: userId,
@@ -139,6 +163,9 @@ class _FinancialTransactionImpl extends FinancialTransaction {
          currency: currency,
          occurredAt: occurredAt,
          description: description,
+         externalId: externalId,
+         installmentCurrent: installmentCurrent,
+         installmentTotal: installmentTotal,
        );
 
   /// Returns a shallow copy of this [FinancialTransaction]
@@ -155,6 +182,9 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     String? currency,
     DateTime? occurredAt,
     Object? description = _Undefined,
+    Object? externalId = _Undefined,
+    Object? installmentCurrent = _Undefined,
+    Object? installmentTotal = _Undefined,
   }) {
     return FinancialTransaction(
       id: id is int? ? id : this.id,
@@ -168,6 +198,13 @@ class _FinancialTransactionImpl extends FinancialTransaction {
       currency: currency ?? this.currency,
       occurredAt: occurredAt ?? this.occurredAt,
       description: description is String? ? description : this.description,
+      externalId: externalId is String? ? externalId : this.externalId,
+      installmentCurrent: installmentCurrent is int?
+          ? installmentCurrent
+          : this.installmentCurrent,
+      installmentTotal: installmentTotal is int?
+          ? installmentTotal
+          : this.installmentTotal,
     );
   }
 }

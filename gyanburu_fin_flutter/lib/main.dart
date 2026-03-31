@@ -109,9 +109,9 @@ class _AppShellState extends State<AppShell> {
                 label: Text('Transactions'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.sync_outlined),
-                selectedIcon: Icon(Icons.sync),
-                label: Text('Nubank Sync'),
+                icon: Icon(Icons.upload_file_outlined),
+                selectedIcon: Icon(Icons.upload_file),
+                label: Text('Import'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.payment_outlined),

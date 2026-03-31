@@ -9,3 +9,6 @@ fields:
   currency: String
   occurredAt: DateTime
   description: String?
+  externalId: String?
+  installmentCurrent: int?
+  installmentTotal: int?

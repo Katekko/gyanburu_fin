@@ -24,6 +24,9 @@ abstract class FinancialTransaction
     required this.currency,
     required this.occurredAt,
     this.description,
+    this.externalId,
+    this.installmentCurrent,
+    this.installmentTotal,
   });
 
   factory FinancialTransaction({
@@ -36,6 +39,9 @@ abstract class FinancialTransaction
     required String currency,
     required DateTime occurredAt,
     String? description,
+    String? externalId,
+    int? installmentCurrent,
+    int? installmentTotal,
   }) = _FinancialTransactionImpl;
 
   factory FinancialTransaction.fromJson(
@@ -57,6 +63,9 @@ abstract class FinancialTransaction
         jsonSerialization['occurredAt'],
       ),
       description: jsonSerialization['description'] as String?,
+      externalId: jsonSerialization['externalId'] as String?,
+      installmentCurrent: jsonSerialization['installmentCurrent'] as int?,
+      installmentTotal: jsonSerialization['installmentTotal'] as int?,
     );
   }
 
@@ -83,6 +92,12 @@ abstract class FinancialTransaction
 
   String? description;
 
+  String? externalId;
+
+  int? installmentCurrent;
+
+  int? installmentTotal;
+
   @override
   _i1.Table<int?> get table => t;
 
@@ -99,6 +114,9 @@ abstract class FinancialTransaction
     String? currency,
     DateTime? occurredAt,
     String? description,
+    String? externalId,
+    int? installmentCurrent,
+    int? installmentTotal,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -113,6 +131,9 @@ abstract class FinancialTransaction
       'currency': currency,
       'occurredAt': occurredAt.toJson(),
       if (description != null) 'description': description,
+      if (externalId != null) 'externalId': externalId,
+      if (installmentCurrent != null) 'installmentCurrent': installmentCurrent,
+      if (installmentTotal != null) 'installmentTotal': installmentTotal,
     };
   }
 
@@ -129,6 +150,9 @@ abstract class FinancialTransaction
       'currency': currency,
       'occurredAt': occurredAt.toJson(),
       if (description != null) 'description': description,
+      if (externalId != null) 'externalId': externalId,
+      if (installmentCurrent != null) 'installmentCurrent': installmentCurrent,
+      if (installmentTotal != null) 'installmentTotal': installmentTotal,
     };
   }
 
@@ -175,6 +199,9 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     required String currency,
     required DateTime occurredAt,
     String? description,
+    String? externalId,
+    int? installmentCurrent,
+    int? installmentTotal,
   }) : super._(
          id: id,
          userId: userId,
@@ -185,6 +212,9 @@ class _FinancialTransactionImpl extends FinancialTransaction {
          currency: currency,
          occurredAt: occurredAt,
          description: description,
+         externalId: externalId,
+         installmentCurrent: installmentCurrent,
+         installmentTotal: installmentTotal,
        );
 
   /// Returns a shallow copy of this [FinancialTransaction]
@@ -201,6 +231,9 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     String? currency,
     DateTime? occurredAt,
     Object? description = _Undefined,
+    Object? externalId = _Undefined,
+    Object? installmentCurrent = _Undefined,
+    Object? installmentTotal = _Undefined,
   }) {
     return FinancialTransaction(
       id: id is int? ? id : this.id,
@@ -214,6 +247,13 @@ class _FinancialTransactionImpl extends FinancialTransaction {
       currency: currency ?? this.currency,
       occurredAt: occurredAt ?? this.occurredAt,
       description: description is String? ? description : this.description,
+      externalId: externalId is String? ? externalId : this.externalId,
+      installmentCurrent: installmentCurrent is int?
+          ? installmentCurrent
+          : this.installmentCurrent,
+      installmentTotal: installmentTotal is int?
+          ? installmentTotal
+          : this.installmentTotal,
     );
   }
 }
@@ -265,6 +305,21 @@ class FinancialTransactionUpdateTable
     table.description,
     value,
   );
+
+  _i1.ColumnValue<String, String> externalId(String? value) => _i1.ColumnValue(
+    table.externalId,
+    value,
+  );
+
+  _i1.ColumnValue<int, int> installmentCurrent(int? value) => _i1.ColumnValue(
+    table.installmentCurrent,
+    value,
+  );
+
+  _i1.ColumnValue<int, int> installmentTotal(int? value) => _i1.ColumnValue(
+    table.installmentTotal,
+    value,
+  );
 }
 
 class FinancialTransactionTable extends _i1.Table<int?> {
@@ -303,6 +358,18 @@ class FinancialTransactionTable extends _i1.Table<int?> {
       'description',
       this,
     );
+    externalId = _i1.ColumnString(
+      'externalId',
+      this,
+    );
+    installmentCurrent = _i1.ColumnInt(
+      'installmentCurrent',
+      this,
+    );
+    installmentTotal = _i1.ColumnInt(
+      'installmentTotal',
+      this,
+    );
   }
 
   late final FinancialTransactionUpdateTable updateTable;
@@ -323,6 +390,12 @@ class FinancialTransactionTable extends _i1.Table<int?> {
 
   late final _i1.ColumnString description;
 
+  late final _i1.ColumnString externalId;
+
+  late final _i1.ColumnInt installmentCurrent;
+
+  late final _i1.ColumnInt installmentTotal;
+
   @override
   List<_i1.Column> get columns => [
     id,
@@ -334,6 +407,9 @@ class FinancialTransactionTable extends _i1.Table<int?> {
     currency,
     occurredAt,
     description,
+    externalId,
+    installmentCurrent,
+    installmentTotal,
   ];
 }
 

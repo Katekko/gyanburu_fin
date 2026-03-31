@@ -1,0 +1,6 @@
+class: CategoryRule
+table: category_rule
+fields:
+  userId: UuidValue
+  merchantPattern: String
+  categoryId: int

@@ -26,10 +26,17 @@ category:
   - create:
   - update:
   - delete:
+categoryRule:
+  - list:
+  - create:
+  - update:
+  - delete:
 dashboard:
   - spendingByCategory:
   - recentTransactions:
   - netBalance:
+importHistory:
+  - list:
 income:
   - listByMonth:
   - create:
@@ -44,6 +51,8 @@ nubankAccount:
   - list:
   - findById:
   - syncLogs:
+ofxImport:
+  - importOfx:
 transaction:
   - list:
   - listByMonth:

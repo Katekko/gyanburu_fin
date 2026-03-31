@@ -1,0 +1,12 @@
+class: ImportHistory
+table: import_history
+fields:
+  userId: UuidValue
+  importedAt: DateTime
+  fileName: String
+  statementStart: DateTime
+  statementEnd: DateTime
+  totalTransactions: int
+  newTransactions: int
+  skippedDuplicates: int
+  skippedCredits: int
