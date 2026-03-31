@@ -75,6 +75,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       list = list
           .where((t) =>
               t.merchantName.toLowerCase().contains(query) ||
+              (t.displayName?.toLowerCase().contains(query) ?? false) ||
               (t.description?.toLowerCase().contains(query) ?? false))
           .toList();
     }
