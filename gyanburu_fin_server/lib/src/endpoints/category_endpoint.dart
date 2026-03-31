@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import '../util/validation.dart';
 
 class CategoryEndpoint extends Endpoint {
   @override
@@ -16,10 +17,17 @@ class CategoryEndpoint extends Endpoint {
     );
   }
 
+  void _validate(Category c) {
+    Validate.requireString(c.name, 'name');
+    Validate.requireString(c.icon, 'icon');
+    Validate.requireHexColor(c.color, 'color');
+  }
+
   Future<Category> create(
     Session session,
     Category category,
   ) async {
+    _validate(category);
     category.userId = _userId(session);
     return Category.db.insertRow(session, category);
   }
@@ -28,13 +36,16 @@ class CategoryEndpoint extends Endpoint {
     Session session,
     Category category,
   ) async {
+    _validate(category);
+    category.userId = _userId(session);
     return Category.db.updateRow(session, category);
   }
 
   Future<void> delete(Session session, int id) async {
     await Category.db.deleteWhere(
       session,
-      where: (t) => t.id.equals(id),
+      where: (t) =>
+          t.id.equals(id) & t.userId.equals(_userId(session)),
     );
   }
 }

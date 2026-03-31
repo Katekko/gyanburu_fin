@@ -49,7 +49,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       _transactions = results[0] as List<FinancialTransaction>;
       _categories = results[1] as List<Category>;
       _rules = results[2] as List<CategoryRule>;
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load transactions: $e')),
+        );
+      }
+    }
     setState(() => _loading = false);
   }
 

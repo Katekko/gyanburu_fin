@@ -9,6 +9,8 @@ class OfxImportEndpoint extends Endpoint {
   UuidValue _userId(Session session) =>
       UuidValue.fromString(session.authenticated!.userIdentifier);
 
+  static const _maxTransactionsPerImport = 5000;
+
   Future<ImportHistory> importOfx(
     Session session,
     String ofxContent,
@@ -16,8 +18,20 @@ class OfxImportEndpoint extends Endpoint {
   ) async {
     final userId = _userId(session);
 
+    // Validate OFX structure
+    if (!ofxContent.contains('<OFX>') && !ofxContent.contains('<ofx>')) {
+      throw ArgumentError('Invalid OFX file: missing <OFX> root tag');
+    }
+
     // Parse OFX
     final parsed = _parseOfx(ofxContent);
+
+    if (parsed.transactions.length > _maxTransactionsPerImport) {
+      throw ArgumentError(
+        'Too many transactions (${parsed.transactions.length}). '
+        'Maximum is $_maxTransactionsPerImport per import.',
+      );
+    }
 
     // Load category rules for auto-categorization
     final rules = await CategoryRule.db.find(
@@ -40,50 +54,53 @@ class OfxImportEndpoint extends Endpoint {
     var newCount = 0;
     var skippedDuplicates = 0;
     var skippedCredits = 0;
-
     for (final txn in parsed.transactions) {
-      // Skip credits (bill payments)
-      if (txn.type == 'CREDIT') {
-        skippedCredits++;
-        continue;
-      }
-
-      // Skip duplicates
-      if (existingFitIds.contains(txn.fitId)) {
-        skippedDuplicates++;
-        continue;
-      }
-
-      // Parse merchant name and installments
-      final merchantInfo = _parseMerchantName(txn.memo);
-
-      // Auto-categorize and apply display name from rules
-      var category = '';
-      String? displayName;
-      final rule = ruleMap[merchantInfo.cleanName];
-      if (rule != null) {
-        final cat = await Category.db.findById(session, rule.categoryId);
-        if (cat != null) {
-          category = cat.name;
+      try {
+        // Skip credits (bill payments)
+        if (txn.type == 'CREDIT') {
+          skippedCredits++;
+          continue;
         }
-        displayName = rule.displayName;
+
+        // Skip duplicates
+        if (existingFitIds.contains(txn.fitId)) {
+          skippedDuplicates++;
+          continue;
+        }
+
+        // Parse merchant name and installments
+        final merchantInfo = _parseMerchantName(txn.memo);
+
+        // Auto-categorize and apply display name from rules
+        var category = '';
+        String? displayName;
+        final rule = ruleMap[merchantInfo.cleanName];
+        if (rule != null) {
+          final cat = await Category.db.findById(session, rule.categoryId);
+          if (cat != null) {
+            category = cat.name;
+          }
+          displayName = rule.displayName;
+        }
+
+        final transaction = FinancialTransaction(
+          userId: userId,
+          merchantName: merchantInfo.cleanName,
+          category: category,
+          amount: txn.amount.abs(),
+          currency: parsed.currency,
+          occurredAt: txn.datePosted,
+          externalId: txn.fitId,
+          installmentCurrent: merchantInfo.installmentCurrent,
+          installmentTotal: merchantInfo.installmentTotal,
+          displayName: displayName,
+        );
+
+        await FinancialTransaction.db.insertRow(session, transaction);
+        newCount++;
+      } catch (_) {
+        // Skip malformed individual transactions
       }
-
-      final transaction = FinancialTransaction(
-        userId: userId,
-        merchantName: merchantInfo.cleanName,
-        category: category,
-        amount: txn.amount.abs(),
-        currency: parsed.currency,
-        occurredAt: txn.datePosted,
-        externalId: txn.fitId,
-        installmentCurrent: merchantInfo.installmentCurrent,
-        installmentTotal: merchantInfo.installmentTotal,
-        displayName: displayName,
-      );
-
-      await FinancialTransaction.db.insertRow(session, transaction);
-      newCount++;
     }
 
     // Log the import

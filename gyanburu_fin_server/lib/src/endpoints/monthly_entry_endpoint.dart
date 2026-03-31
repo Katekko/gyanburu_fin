@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import '../util/validation.dart';
 
 class MonthlyEntryEndpoint extends Endpoint {
   @override
@@ -20,10 +21,17 @@ class MonthlyEntryEndpoint extends Endpoint {
     );
   }
 
+  void _validate(MonthlyEntry e) {
+    Validate.requireString(e.name, 'name');
+    Validate.requirePositiveAmount(e.amount, 'amount');
+    Validate.requireMonthFormat(e.month, 'month');
+  }
+
   Future<MonthlyEntry> create(
     Session session,
     MonthlyEntry entry,
   ) async {
+    _validate(entry);
     entry.userId = _userId(session);
     return MonthlyEntry.db.insertRow(session, entry);
   }
@@ -32,13 +40,16 @@ class MonthlyEntryEndpoint extends Endpoint {
     Session session,
     MonthlyEntry entry,
   ) async {
+    _validate(entry);
+    entry.userId = _userId(session);
     return MonthlyEntry.db.updateRow(session, entry);
   }
 
   Future<void> delete(Session session, int id) async {
     await MonthlyEntry.db.deleteWhere(
       session,
-      where: (t) => t.id.equals(id),
+      where: (t) =>
+          t.id.equals(id) & t.userId.equals(_userId(session)),
     );
   }
 }

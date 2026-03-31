@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import '../util/validation.dart';
 
 class BudgetEndpoint extends Endpoint {
   @override
@@ -23,10 +24,17 @@ class BudgetEndpoint extends Endpoint {
     );
   }
 
+  void _validate(BudgetCategory c) {
+    Validate.requireString(c.name, 'name');
+    Validate.requireString(c.icon, 'icon');
+    Validate.requirePositiveAmount(c.limitAmount, 'limitAmount');
+  }
+
   Future<BudgetCategory> create(
     Session session,
     BudgetCategory category,
   ) async {
+    _validate(category);
     category.userId = _userId(session);
     return BudgetCategory.db.insertRow(session, category);
   }
@@ -35,13 +43,16 @@ class BudgetEndpoint extends Endpoint {
     Session session,
     BudgetCategory category,
   ) async {
+    _validate(category);
+    category.userId = _userId(session);
     return BudgetCategory.db.updateRow(session, category);
   }
 
   Future<void> delete(Session session, int id) async {
     await BudgetCategory.db.deleteWhere(
       session,
-      where: (b) => b.id.equals(id),
+      where: (b) =>
+          b.id.equals(id) & b.userId.equals(_userId(session)),
     );
   }
 }

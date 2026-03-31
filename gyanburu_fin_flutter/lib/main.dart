@@ -8,6 +8,7 @@ import 'screens/monthly_overview_screen.dart';
 import 'screens/transaction_history_screen.dart';
 import 'screens/nubank_sync_screen.dart';
 import 'screens/bill_detail_screen.dart';
+import 'screens/budget_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -118,6 +119,11 @@ class _AppShellState extends State<AppShell> {
                 selectedIcon: Icon(Icons.upload_file),
                 label: Text('Import'),
               ),
+              NavigationRailDestination(
+                icon: Icon(Icons.pie_chart_outline),
+                selectedIcon: Icon(Icons.pie_chart),
+                label: Text('Budget'),
+              ),
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),
@@ -136,6 +142,7 @@ class _AppShellState extends State<AppShell> {
       2 => const BillDetailScreen(),
       3 => const TransactionHistoryScreen(),
       4 => const NubankSyncScreen(),
+      5 => const BudgetScreen(),
       _ => const SizedBox.shrink(),
     };
   }

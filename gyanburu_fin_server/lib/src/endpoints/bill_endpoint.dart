@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import '../util/validation.dart';
 
 class BillEndpoint extends Endpoint {
   @override
@@ -29,18 +30,28 @@ class BillEndpoint extends Endpoint {
     );
   }
 
+  void _validate(Bill b) {
+    Validate.requireString(b.merchantName, 'merchantName');
+    Validate.requirePositiveAmount(b.amount, 'amount');
+  }
+
   Future<Bill> create(Session session, Bill bill) async {
+    _validate(bill);
     bill.userId = _userId(session);
     return Bill.db.insertRow(session, bill);
   }
 
   Future<Bill> update(Session session, Bill bill) async {
+    _validate(bill);
+    bill.userId = _userId(session);
     return Bill.db.updateRow(session, bill);
   }
 
   Future<Bill> markAsPaid(Session session, int id) async {
     final bill = await Bill.db.findById(session, id);
-    if (bill == null) throw Exception('Bill not found');
+    if (bill == null || bill.userId != _userId(session)) {
+      throw Exception('Bill not found');
+    }
     bill.status = BillStatus.paid;
     return Bill.db.updateRow(session, bill);
   }
@@ -48,7 +59,8 @@ class BillEndpoint extends Endpoint {
   Future<void> delete(Session session, int id) async {
     await Bill.db.deleteWhere(
       session,
-      where: (b) => b.id.equals(id),
+      where: (b) =>
+          b.id.equals(id) & b.userId.equals(_userId(session)),
     );
   }
 }

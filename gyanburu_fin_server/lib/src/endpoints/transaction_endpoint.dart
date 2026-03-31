@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import '../util/validation.dart';
 
 class TransactionEndpoint extends Endpoint {
   @override
@@ -34,10 +35,17 @@ class TransactionEndpoint extends Endpoint {
     );
   }
 
+  void _validate(FinancialTransaction t) {
+    Validate.requireString(t.merchantName, 'merchantName');
+    Validate.requireFiniteAmount(t.amount, 'amount');
+    Validate.requireString(t.currency, 'currency', maxLength: 10);
+  }
+
   Future<FinancialTransaction> create(
     Session session,
     FinancialTransaction transaction,
   ) async {
+    _validate(transaction);
     transaction.userId = _userId(session);
     return FinancialTransaction.db.insertRow(session, transaction);
   }
@@ -46,13 +54,16 @@ class TransactionEndpoint extends Endpoint {
     Session session,
     FinancialTransaction transaction,
   ) async {
+    _validate(transaction);
+    transaction.userId = _userId(session);
     return FinancialTransaction.db.updateRow(session, transaction);
   }
 
   Future<void> delete(Session session, int id) async {
     await FinancialTransaction.db.deleteWhere(
       session,
-      where: (t) => t.id.equals(id),
+      where: (t) =>
+          t.id.equals(id) & t.userId.equals(_userId(session)),
     );
   }
 }

@@ -55,8 +55,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _transactions = results[2] as List<FinancialTransaction>;
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
       setState(() => _loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load dashboard data: $e')),
+        );
+      }
     }
   }
 

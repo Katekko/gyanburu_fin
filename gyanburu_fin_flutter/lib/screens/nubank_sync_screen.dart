@@ -30,7 +30,13 @@ class _NubankSyncScreenState extends State<NubankSyncScreen> {
     setState(() => _loading = true);
     try {
       _history = await client.importHistory.list();
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load import history: $e')),
+        );
+      }
+    }
     setState(() => _loading = false);
   }
 

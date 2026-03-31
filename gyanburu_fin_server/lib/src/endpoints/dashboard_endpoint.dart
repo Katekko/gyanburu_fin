@@ -21,7 +21,7 @@ class DashboardEndpoint extends Endpoint {
       where: (t) =>
           t.userId.equals(_userId(session)) &
           t.occurredAt.between(start, end) &
-          t.amount.between(double.negativeInfinity, 0),
+          (t.amount < 0),
     );
 
     final Map<String, double> result = {};

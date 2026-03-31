@@ -17,12 +17,14 @@ class NubankAccountEndpoint extends Endpoint {
   }
 
   Future<NubankAccount?> findById(Session session, int id) async {
-    return NubankAccount.db.findById(session, id);
+    final account = await NubankAccount.db.findById(session, id);
+    if (account == null || account.userId != _userId(session)) return null;
+    return account;
   }
 
   Future<List<SyncLog>> syncLogs(Session session, int accountId) async {
     final account = await NubankAccount.db.findById(session, accountId);
-    if (account == null) return [];
+    if (account == null || account.userId != _userId(session)) return [];
     return SyncLog.db.find(
       session,
       orderBy: (l) => l.syncedAt,

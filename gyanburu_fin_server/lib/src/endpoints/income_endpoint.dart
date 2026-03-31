@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import '../util/validation.dart';
 
 class IncomeEndpoint extends Endpoint {
   @override
@@ -23,10 +24,16 @@ class IncomeEndpoint extends Endpoint {
     );
   }
 
+  void _validate(IncomeSource s) {
+    Validate.requireString(s.name, 'name');
+    Validate.requirePositiveAmount(s.amount, 'amount');
+  }
+
   Future<IncomeSource> create(
     Session session,
     IncomeSource source,
   ) async {
+    _validate(source);
     source.userId = _userId(session);
     return IncomeSource.db.insertRow(session, source);
   }
@@ -35,13 +42,16 @@ class IncomeEndpoint extends Endpoint {
     Session session,
     IncomeSource source,
   ) async {
+    _validate(source);
+    source.userId = _userId(session);
     return IncomeSource.db.updateRow(session, source);
   }
 
   Future<void> delete(Session session, int id) async {
     await IncomeSource.db.deleteWhere(
       session,
-      where: (i) => i.id.equals(id),
+      where: (i) =>
+          i.id.equals(id) & i.userId.equals(_userId(session)),
     );
   }
 }
