@@ -3,7 +3,7 @@ import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
-import '../mock/mock_data.dart';
+import '../shared/icon_map.dart';
 import '../shared/category_manager_dialog.dart';
 import '../theme/app_theme.dart';
 
@@ -331,7 +331,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ...categories.where((c) => c.isNotEmpty).map((cat) {
             final catObj = _categories.where((c) => c.name == cat).firstOrNull;
             final icon = catObj != null
-                ? (MockData.categoryIconMap[catObj.icon] ?? Icons.category)
+                ? (categoryIconMap[catObj.icon] ?? Icons.category)
                 : Icons.category;
             final color = catObj != null
                 ? Color(int.parse('FF${catObj.color}', radix: 16))
@@ -421,7 +421,7 @@ class _TransactionRow extends StatelessWidget {
         ? categories.where((c) => c.name == tx.category).firstOrNull
         : null;
     final icon = catObj != null
-        ? (MockData.categoryIconMap[catObj.icon] ?? Icons.category)
+        ? (categoryIconMap[catObj.icon] ?? Icons.category)
         : Icons.help_outline;
     final color = catObj != null
         ? Color(int.parse('FF${catObj.color}', radix: 16))
@@ -664,7 +664,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
                 runSpacing: 8,
                 children: widget.categories.map((cat) {
                   final icon =
-                      MockData.categoryIconMap[cat.icon] ?? Icons.category;
+                      categoryIconMap[cat.icon] ?? Icons.category;
                   final color =
                       Color(int.parse('FF${cat.color}', radix: 16));
                   final isSelected = _selectedCategory?.id == cat.id;

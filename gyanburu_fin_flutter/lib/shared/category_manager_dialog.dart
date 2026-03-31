@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 
 import '../main.dart';
-import '../mock/mock_data.dart';
+import 'icon_map.dart';
 import '../theme/app_theme.dart';
 
 /// Opens the Manage Categories dialog. Returns the updated list of categories
@@ -93,7 +93,7 @@ class _CategoryManagerDialogState extends State<CategoryManagerDialog> {
                   itemBuilder: (ctx, i) {
                     final cat = _categories[i];
                     final icon =
-                        MockData.categoryIconMap[cat.icon] ?? Icons.category;
+                        categoryIconMap[cat.icon] ?? Icons.category;
                     final color =
                         Color(int.parse('FF${cat.color}', radix: 16));
 
@@ -235,7 +235,7 @@ class _CategoryEditDialogState extends State<CategoryEditDialog> {
                 runSpacing: 6,
                 children: _availableIcons.map((iconKey) {
                   final iconData =
-                      MockData.categoryIconMap[iconKey] ?? Icons.category;
+                      categoryIconMap[iconKey] ?? Icons.category;
                   final isSelected = _selectedIcon == iconKey;
                   return InkWell(
                     onTap: () => setState(() => _selectedIcon = iconKey),

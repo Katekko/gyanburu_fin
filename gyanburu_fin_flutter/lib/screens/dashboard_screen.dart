@@ -5,7 +5,7 @@ import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
-import '../mock/mock_data.dart';
+import '../shared/icon_map.dart';
 import '../theme/app_theme.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -98,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   IconData _iconFor(Category? cat) {
     if (cat == null) return Icons.category;
-    return MockData.categoryIconMap[cat.icon] ?? Icons.category;
+    return categoryIconMap[cat.icon] ?? Icons.category;
   }
 
   /// Spending by category from imported transactions
@@ -621,7 +621,7 @@ class _RecentTransactions extends StatelessWidget {
                         .firstOrNull
                     : null;
                 final icon = catObj != null
-                    ? (MockData.categoryIconMap[catObj.icon] ?? Icons.category)
+                    ? (categoryIconMap[catObj.icon] ?? Icons.category)
                     : Icons.help_outline;
                 final color = catObj != null
                     ? Color(int.parse('FF${catObj.color}', radix: 16))

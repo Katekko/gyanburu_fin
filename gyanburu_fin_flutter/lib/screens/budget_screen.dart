@@ -3,7 +3,7 @@ import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
-import '../mock/mock_data.dart';
+import '../shared/icon_map.dart';
 import '../theme/app_theme.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -194,7 +194,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 : 0.0;
             final isOverBudget = spent > budget.limitAmount;
             final iconData =
-                MockData.categoryIconMap[budget.icon] ?? Icons.category;
+                categoryIconMap[budget.icon] ?? Icons.category;
 
             return Card(
               child: Padding(

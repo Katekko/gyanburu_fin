@@ -3,7 +3,7 @@ import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
-import '../mock/mock_data.dart';
+import '../shared/icon_map.dart';
 import '../shared/category_manager_dialog.dart';
 import '../theme/app_theme.dart';
 
@@ -90,7 +90,7 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
 
   IconData _iconFor(Category? cat) {
     if (cat == null) return Icons.category;
-    return MockData.categoryIconMap[cat.icon] ?? Icons.category;
+    return categoryIconMap[cat.icon] ?? Icons.category;
   }
 
   void _changeMonth(int delta) {
@@ -808,7 +808,7 @@ class _EntryDialogState extends State<_EntryDialog> {
                             const InputDecoration(labelText: 'Category'),
                         items: widget.categories.map((cat) {
                           final icon =
-                              MockData.categoryIconMap[cat.icon] ??
+                              categoryIconMap[cat.icon] ??
                                   Icons.category;
                           final color = Color(
                               int.parse('FF${cat.color}', radix: 16));
