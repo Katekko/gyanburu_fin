@@ -10,6 +10,11 @@ class OfxImportEndpoint extends Endpoint {
       UuidValue.fromString(session.authenticated!.userIdentifier);
 
   static const _maxTransactionsPerImport = 5000;
+  static const _importCooldown = Duration(minutes: 1);
+  static const _maxFileSize = 5 * 1024 * 1024; // 5 MB
+
+  /// In-memory per-user cooldown tracker.
+  static final _lastImportAt = <String, DateTime>{};
 
   Future<ImportHistory> importOfx(
     Session session,
@@ -17,6 +22,23 @@ class OfxImportEndpoint extends Endpoint {
     String fileName,
   ) async {
     final userId = _userId(session);
+    final userKey = userId.toString();
+
+    // Rate limit: one import per user per minute
+    final lastImport = _lastImportAt[userKey];
+    if (lastImport != null &&
+        DateTime.now().difference(lastImport) < _importCooldown) {
+      throw Exception(
+        'Please wait at least one minute between imports.',
+      );
+    }
+
+    // File size limit
+    if (ofxContent.length > _maxFileSize) {
+      throw ArgumentError(
+        'OFX file too large. Maximum size is 5 MB.',
+      );
+    }
 
     // Validate OFX structure
     if (!ofxContent.contains('<OFX>') && !ofxContent.contains('<ofx>')) {
@@ -116,6 +138,7 @@ class OfxImportEndpoint extends Endpoint {
       skippedCredits: skippedCredits,
     );
 
+    _lastImportAt[userKey] = DateTime.now();
     return ImportHistory.db.insertRow(session, history);
   }
 }
