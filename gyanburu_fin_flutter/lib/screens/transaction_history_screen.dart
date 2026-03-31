@@ -429,7 +429,7 @@ class _TransactionRow extends StatelessWidget {
     String mainName;
     if (hasDisplayName) {
       mainName = hasInstallment
-          ? '${tx.displayName} - Parcela ${tx.installmentCurrent}/${tx.installmentTotal}'
+          ? '${tx.displayName} - ${tx.installmentCurrent}/${tx.installmentTotal}'
           : tx.displayName!;
     } else {
       mainName = tx.merchantName;
@@ -495,7 +495,7 @@ class _TransactionRow extends StatelessWidget {
                           Text(
                             'Parcela ${tx.installmentCurrent}/${tx.installmentTotal}',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.deepPurple,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -629,7 +629,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
                       Text(
                         'Parcela ${tx.installmentCurrent}/${tx.installmentTotal}',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.deepPurple,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],

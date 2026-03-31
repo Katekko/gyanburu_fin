@@ -104,6 +104,11 @@ class _AppShellState extends State<AppShell> {
                 label: Text('Monthly'),
               ),
               NavigationRailDestination(
+                icon: Icon(Icons.payment_outlined),
+                selectedIcon: Icon(Icons.payment),
+                label: Text('Bills'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.receipt_long_outlined),
                 selectedIcon: Icon(Icons.receipt_long),
                 label: Text('Transactions'),
@@ -112,11 +117,6 @@ class _AppShellState extends State<AppShell> {
                 icon: Icon(Icons.upload_file_outlined),
                 selectedIcon: Icon(Icons.upload_file),
                 label: Text('Import'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.payment_outlined),
-                selectedIcon: Icon(Icons.payment),
-                label: Text('Bills'),
               ),
             ],
           ),
@@ -133,9 +133,9 @@ class _AppShellState extends State<AppShell> {
     return switch (_selectedIndex) {
       0 => DashboardScreen(onBillTap: (_) => _navigateToBills()),
       1 => const MonthlyOverviewScreen(),
-      2 => const TransactionHistoryScreen(),
-      3 => const NubankSyncScreen(),
-      4 => const BillDetailScreen(),
+      2 => const BillDetailScreen(),
+      3 => const TransactionHistoryScreen(),
+      4 => const NubankSyncScreen(),
       _ => const SizedBox.shrink(),
     };
   }

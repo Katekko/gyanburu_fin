@@ -22,6 +22,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<MonthlyEntry> _entries = [];
   List<Category> _categories = [];
+  List<FinancialTransaction> _transactions = [];
   bool _loading = true;
 
   @override
@@ -35,16 +36,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}';
   }
 
+  DateTime get _currentMonth {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month);
+  }
+
   Future<void> _loadData() async {
     setState(() => _loading = true);
     try {
       final results = await Future.wait([
         client.monthlyEntry.listByMonth(_monthKey),
         client.category.list(),
+        client.transaction.listByMonth(_currentMonth),
       ]);
       setState(() {
         _entries = results[0] as List<MonthlyEntry>;
         _categories = results[1] as List<Category>;
+        _transactions = results[2] as List<FinancialTransaction>;
         _loading = false;
       });
     } catch (_) {
@@ -60,10 +68,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   double get _totalIncome => _incomeEntries.fold(0.0, (s, e) => s + e.amount);
 
-  double get _totalExpenses =>
+  double get _totalBudgetedExpenses =>
       _expenseEntries.fold(0.0, (s, e) => s + e.amount);
 
-  double get _balance => _totalIncome - _totalExpenses;
+  double get _totalCardSpending =>
+      _transactions.fold(0.0, (s, t) => s + t.amount);
 
   Category? _categoryFor(int id) {
     try {
@@ -87,27 +96,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return MockData.categoryIconMap[cat.icon] ?? Icons.category;
   }
 
-  /// Group expenses by category name → total amount
-  Map<String, double> get _spendingByCategory {
+  /// Spending by category from imported transactions
+  Map<String, double> get _transactionSpendingByCategory {
     final Map<String, double> result = {};
-    for (final e in _expenseEntries) {
-      final cat = _categoryFor(e.categoryId);
-      final name = cat?.name ?? 'Other';
-      result[name] = (result[name] ?? 0) + e.amount;
+    for (final t in _transactions) {
+      final name = t.category.isNotEmpty ? t.category : 'Uncategorized';
+      result[name] = (result[name] ?? 0) + t.amount;
     }
     return result;
   }
 
-  /// Map category name → color for the chart
   Map<String, Color> get _categoryColorMap {
     final Map<String, Color> result = {};
     for (final cat in _categories) {
       result[cat.name] = _colorFor(cat);
     }
+    result['Uncategorized'] = AppColors.textMuted;
     return result;
   }
 
-  /// Unpaid entries with due dates, sorted by due date
   List<MonthlyEntry> get _upcomingBills {
     final unpaid = _entries.where((e) => !e.paid && e.dueDate != null).toList()
       ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
@@ -122,6 +129,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final uncategorizedCount =
+        _transactions.where((t) => t.category.isEmpty).length;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -129,10 +139,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Text('Dashboard', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 20),
-          _BalanceSummaryRow(
-            balance: _balance,
-            totalIncome: _totalIncome,
-            totalExpenses: _totalExpenses,
+          // Summary cards
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryCard(
+                  label: 'Income',
+                  value: _currencyFormat.format(_totalIncome),
+                  color: AppColors.positive,
+                  icon: Icons.trending_up,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _SummaryCard(
+                  label: 'Card Spending',
+                  value: _currencyFormat.format(_totalCardSpending),
+                  color: AppColors.negative,
+                  icon: Icons.credit_card,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _SummaryCard(
+                  label: 'Budgeted Expenses',
+                  value: _currencyFormat.format(_totalBudgetedExpenses),
+                  color: AppColors.vibrantOrange,
+                  icon: Icons.receipt_long,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           Row(
@@ -141,73 +177,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 flex: 3,
                 child: _SpendingChart(
-                  spending: _spendingByCategory,
+                  spending: _transactionSpendingByCategory,
                   colorMap: _categoryColorMap,
+                  total: _totalCardSpending,
                 ),
               ),
               const SizedBox(width: 20),
               Expanded(
                 flex: 2,
-                child: _UpcomingBills(
-                  bills: _upcomingBills,
-                  categoryFor: _categoryFor,
-                  colorFor: _colorFor,
-                  iconFor: _iconFor,
-                  onBillTap: widget.onBillTap,
+                child: Column(
+                  children: [
+                    _UpcomingBills(
+                      bills: _upcomingBills,
+                      categoryFor: _categoryFor,
+                      colorFor: _colorFor,
+                      iconFor: _iconFor,
+                      onBillTap: widget.onBillTap,
+                    ),
+                    if (uncategorizedCount > 0) ...[
+                      const SizedBox(height: 16),
+                      _UncategorizedBanner(count: uncategorizedCount),
+                    ],
+                  ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          _RecentTransactions(),
+          _RecentTransactions(
+            transactions: _transactions,
+            categories: _categories,
+          ),
         ],
       ),
-    );
-  }
-}
-
-class _BalanceSummaryRow extends StatelessWidget {
-  const _BalanceSummaryRow({
-    required this.balance,
-    required this.totalIncome,
-    required this.totalExpenses,
-  });
-
-  final double balance;
-  final double totalIncome;
-  final double totalExpenses;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _SummaryCard(
-            label: 'Net Balance',
-            value: _currencyFormat.format(balance),
-            color: balance >= 0 ? AppColors.positive : AppColors.negative,
-            icon: Icons.account_balance_wallet,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _SummaryCard(
-            label: 'Income',
-            value: _currencyFormat.format(totalIncome),
-            color: AppColors.positive,
-            icon: Icons.trending_up,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _SummaryCard(
-            label: 'Expenses',
-            value: _currencyFormat.format(totalExpenses),
-            color: AppColors.negative,
-            icon: Icons.trending_down,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -256,15 +258,20 @@ class _SpendingChart extends StatelessWidget {
   const _SpendingChart({
     required this.spending,
     required this.colorMap,
+    required this.total,
   });
 
   final Map<String, double> spending;
   final Map<String, Color> colorMap;
+  final double total;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final total = spending.values.fold(0.0, (s, v) => s + v);
+
+    // Sort by amount descending
+    final sorted = spending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
     return Card(
       child: Padding(
@@ -272,15 +279,37 @@ class _SpendingChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Spending by Category', style: theme.textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Spending by Category',
+                      style: theme.textTheme.titleMedium),
+                ),
+                Text(
+                  _currencyFormat.format(total),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.negative,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             if (spending.isEmpty)
               SizedBox(
                 height: 180,
                 child: Center(
-                  child: Text(
-                    'No expenses this month',
-                    style: theme.textTheme.bodySmall,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.upload_file,
+                          size: 32, color: AppColors.textMuted),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Import an OFX file to see spending',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ),
               )
@@ -292,7 +321,7 @@ class _SpendingChart extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              ...spending.entries.map((e) {
+              ...sorted.map((e) {
                 final pct = total > 0 ? (e.value / total * 100) : 0;
                 final color = colorMap[e.key] ?? AppColors.deepPurple;
                 return Padding(
@@ -433,8 +462,8 @@ class _UpcomingBills extends StatelessWidget {
                 final dueLabel = isOverdue
                     ? 'Overdue by ${daysUntil.abs()} days'
                     : daysUntil == 0
-                    ? 'Due today'
-                    : 'Due in $daysUntil days';
+                        ? 'Due today'
+                        : 'Due in $daysUntil days';
 
                 return InkWell(
                   onTap: () => onBillTap?.call(0),
@@ -460,7 +489,8 @@ class _UpcomingBills extends StatelessWidget {
                               Text(
                                 dueLabel,
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isOverdue ? AppColors.negative : null,
+                                  color:
+                                      isOverdue ? AppColors.negative : null,
                                 ),
                               ),
                             ],
@@ -487,10 +517,58 @@ class _UpcomingBills extends StatelessWidget {
   }
 }
 
-class _RecentTransactions extends StatelessWidget {
+class _UncategorizedBanner extends StatelessWidget {
+  const _UncategorizedBanner({required this.count});
+  final int count;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    return Card(
+      color: AppColors.vibrantOrange.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.label_off, color: AppColors.vibrantOrange, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$count uncategorized transactions',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.vibrantOrange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'Go to Transactions to categorize them',
+                    style: theme.textTheme.labelSmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentTransactions extends StatelessWidget {
+  const _RecentTransactions({
+    required this.transactions,
+    required this.categories,
+  });
+  final List<FinancialTransaction> transactions;
+  final List<Category> categories;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final recent = transactions.take(10).toList();
 
     return Card(
       child: Padding(
@@ -498,27 +576,113 @@ class _RecentTransactions extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Recent Transactions', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.sync_disabled,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Transactions will appear once sync is set up',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Recent Transactions',
+                      style: theme.textTheme.titleMedium),
                 ),
-              ),
+                if (transactions.isNotEmpty)
+                  Text(
+                    '${transactions.length} this month',
+                    style: theme.textTheme.labelSmall,
+                  ),
+              ],
             ),
+            const SizedBox(height: 16),
+            if (recent.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.upload_file,
+                          color: AppColors.textMuted, size: 32),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Import an OFX file to see transactions',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...recent.map((tx) {
+                final hasCategory = tx.category.isNotEmpty;
+                final catObj = hasCategory
+                    ? categories
+                        .where((c) => c.name == tx.category)
+                        .firstOrNull
+                    : null;
+                final icon = catObj != null
+                    ? (MockData.categoryIconMap[catObj.icon] ?? Icons.category)
+                    : Icons.help_outline;
+                final color = catObj != null
+                    ? Color(int.parse('FF${catObj.color}', radix: 16))
+                    : AppColors.textMuted;
+
+                final hasDisplayName =
+                    tx.displayName != null && tx.displayName!.isNotEmpty;
+                final hasInstallment = tx.installmentCurrent != null &&
+                    tx.installmentTotal != null;
+
+                String mainName;
+                if (hasDisplayName) {
+                  mainName = hasInstallment
+                      ? '${tx.displayName} - ${tx.installmentCurrent}/${tx.installmentTotal}'
+                      : tx.displayName!;
+                } else {
+                  mainName = tx.merchantName;
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, color: color, size: 16),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mainName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (hasDisplayName)
+                              Text(
+                                tx.merchantName,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: AppColors.textMuted,
+                                  fontSize: 11,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        _currencyFormat.format(tx.amount),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),
