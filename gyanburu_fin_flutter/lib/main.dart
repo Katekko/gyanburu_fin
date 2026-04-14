@@ -14,12 +14,15 @@ import 'theme/app_theme.dart';
 
 late final Client client;
 
+const _serverUrl = String.fromEnvironment(
+  'SERVER_URL',
+  defaultValue: 'http://192.168.0.229:8080/',
+);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final serverUrl = await getServerUrl();
-
-  client = Client(serverUrl)
+  client = Client(_serverUrl)
     ..connectivityMonitor = FlutterConnectivityMonitor()
     ..authSessionManager = FlutterAuthSessionManager();
 
