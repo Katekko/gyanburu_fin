@@ -74,7 +74,7 @@ jobs:
             mkdir -p web/app
             tar -xzf /tmp/webapp.tgz -C web/app
             rm /tmp/webapp.tgz
-            docker compose -f docker-compose.prod.yaml build server
+            docker compose -f docker-compose.prod.yaml build --no-cache server
             docker compose -f docker-compose.prod.yaml run --rm \
               --entrypoint sh server \
               -c './server --mode=production --apply-migrations --role=maintenance'
