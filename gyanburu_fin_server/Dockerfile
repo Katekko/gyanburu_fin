@@ -3,6 +3,9 @@ FROM dart:3.8.0 AS build
 WORKDIR /app
 COPY . .
 
+# Strip workspace resolution so pub get works standalone inside the image.
+RUN sed -i '/^resolution: workspace$/d' pubspec.yaml
+
 # Install dependencies and compile the server executable
 RUN dart pub get
 RUN dart compile exe bin/main.dart -o bin/server
