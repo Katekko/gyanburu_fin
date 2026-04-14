@@ -92,6 +92,7 @@ jobs:
             docker compose -f docker-compose.prod.yaml run --rm \
               --entrypoint sh server \
               -c './server --mode=production --apply-migrations --role=maintenance'
-            docker compose -f docker-compose.prod.yaml up -d --force-recreate server
+            docker compose -f docker-compose.prod.yaml rm -fsv server
+            docker compose -f docker-compose.prod.yaml up -d server
             docker image prune -f
           REMOTE
