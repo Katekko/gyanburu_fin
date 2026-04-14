@@ -14,5 +14,8 @@ doc/api/
 # Passwords file
 config/passwords.yaml
 
+# Environment file for docker-compose (DB/Redis passwords)
+.env
+
 # Firebase service account key for Firebase auth
 config/firebase_service_account_key.json

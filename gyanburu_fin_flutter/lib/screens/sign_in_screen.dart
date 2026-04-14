@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import '../main.dart';
+import 'auth/custom_sign_in_widget.dart';
 
 class SignInScreen extends StatefulWidget {
   final Widget child;
@@ -38,22 +39,20 @@ class _SignInScreenState extends State<SignInScreen> {
     return _isSignedIn
         ? widget.child
         : Scaffold(
-            body: Center(
-              child: SignInWidget(
-                client: client,
-                onAuthenticated: () {
-                  context.showSnackBar(
-                    message: 'User authenticated.',
-                    backgroundColor: Colors.green,
-                  );
-                },
-                onError: (error) {
-                  context.showSnackBar(
-                    message: 'Authentication failed: $error',
-                    backgroundColor: Colors.red,
-                  );
-                },
-              ),
+            body: CustomSignInWidget(
+              client: client,
+              onAuthenticated: () {
+                context.showSnackBar(
+                  message: 'Autenticado com sucesso.',
+                  backgroundColor: Colors.green,
+                );
+              },
+              onError: (message) {
+                context.showSnackBar(
+                  message: message,
+                  backgroundColor: Colors.red,
+                );
+              },
             ),
           );
   }
