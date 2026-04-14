@@ -4,6 +4,7 @@ import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_auth_idp_server/core.dart';
 import 'package:serverpod_auth_idp_server/providers/email.dart';
 
+import 'src/email/email_service.dart';
 import 'src/generated/endpoints.dart';
 import 'src/generated/protocol.dart';
 import 'src/web/routes/app_config_route.dart';
@@ -77,26 +78,32 @@ void run(List<String> args) async {
   await pod.start();
 }
 
-void _sendRegistrationCode(
+Future<void> _sendRegistrationCode(
   Session session, {
   required String email,
   required UuidValue accountRequestId,
   required String verificationCode,
   required Transaction? transaction,
-}) {
-  // NOTE: Here you call your mail service to send the verification code to
-  // the user. For testing, we will just log the verification code.
+}) async {
   session.log('[EmailIdp] Registration code ($email): $verificationCode');
+  await EmailService.sendRegistrationCode(
+    session,
+    toEmail: email,
+    code: verificationCode,
+  );
 }
 
-void _sendPasswordResetCode(
+Future<void> _sendPasswordResetCode(
   Session session, {
   required String email,
   required UuidValue passwordResetRequestId,
   required String verificationCode,
   required Transaction? transaction,
-}) {
-  // NOTE: Here you call your mail service to send the verification code to
-  // the user. For testing, we will just log the verification code.
+}) async {
   session.log('[EmailIdp] Password reset code ($email): $verificationCode');
+  await EmailService.sendPasswordResetCode(
+    session,
+    toEmail: email,
+    code: verificationCode,
+  );
 }
