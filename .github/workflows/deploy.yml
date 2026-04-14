@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'gyanburu_fin_server/**'
+      - 'gyanburu_fin_flutter/**'
+      - 'gyanburu_fin_client/**'
+      - 'pubspec.yaml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -16,6 +19,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: stable
+          cache: true
+
+      - name: Build Flutter web
+        working-directory: gyanburu_fin_flutter
+        run: |
+          flutter pub get
+          flutter build web \
+            --base-href /app/ \
+            --wasm \
+            --dart-define=SERVER_URL=http://192.168.0.229:8080/ \
+            --output ../gyanburu_fin_server/web/app
+
+      - name: Pack web bundle
+        run: tar -czf webapp.tgz -C gyanburu_fin_server/web/app .
+
       - name: Join Tailscale
         uses: tailscale/github-action@v2
         with:
@@ -29,6 +53,12 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
+      - name: Upload web bundle
+        env:
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+        run: scp -o BatchMode=yes webapp.tgz "$USER@$HOST:/tmp/webapp.tgz"
+
       - name: Deploy
         env:
           HOST: ${{ secrets.SERVER_HOST }}
@@ -40,6 +70,10 @@ jobs:
             git fetch --quiet origin main
             git reset --hard origin/main
             cd gyanburu_fin_server
+            rm -rf web/app
+            mkdir -p web/app
+            tar -xzf /tmp/webapp.tgz -C web/app
+            rm /tmp/webapp.tgz
             docker compose -f docker-compose.prod.yaml build server
             docker compose -f docker-compose.prod.yaml run --rm \
               --entrypoint sh server \
