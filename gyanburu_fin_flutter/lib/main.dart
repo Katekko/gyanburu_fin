@@ -1,8 +1,10 @@
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:serverpod_flutter/serverpod_flutter.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
+import 'auth/web_local_storage.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/monthly_overview_screen.dart';
 import 'screens/transaction_history_screen.dart';
@@ -24,7 +26,13 @@ void main() async {
 
   client = Client(_serverUrl)
     ..connectivityMonitor = FlutterConnectivityMonitor()
-    ..authSessionManager = FlutterAuthSessionManager();
+    ..authSessionManager = FlutterAuthSessionManager(
+      storage: kIsWeb
+          ? KeyValueClientAuthSuccessStorage(
+              keyValueStorage: WebLocalStorageKeyValueStorage(),
+            )
+          : SecureClientAuthSuccessStorage(),
+    );
 
   client.auth.initialize();
 

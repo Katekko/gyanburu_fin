@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
@@ -42,8 +44,12 @@ class _CustomSignInWidgetState extends State<CustomSignInWidget> {
   UuidValue? _requestId;
   String? _finishToken;
 
+  Timer? _codeHintTimer;
+  bool _showCodeHint = false;
+
   @override
   void dispose() {
+    _codeHintTimer?.cancel();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _codeCtrl.dispose();
@@ -65,6 +71,13 @@ class _CustomSignInWidgetState extends State<CustomSignInWidget> {
       if (step == _AuthStep.registerComplete ||
           step == _AuthStep.resetComplete) {
         _passwordCtrl.clear();
+      }
+      _codeHintTimer?.cancel();
+      _showCodeHint = false;
+      if (step == _AuthStep.registerVerify) {
+        _codeHintTimer = Timer(const Duration(seconds: 60), () {
+          if (mounted) setState(() => _showCodeHint = true);
+        });
       }
     });
   }
@@ -378,6 +391,45 @@ class _CustomSignInWidgetState extends State<CustomSignInWidget> {
                 : _AuthStep.resetStart,
           );
         }),
+        if (_showCodeHint && _step == _AuthStep.registerVerify) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ainda sem código?',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Pode ser que este email já esteja cadastrado.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: _loading ? null : () => _goTo(_AuthStep.login),
+                    child: const Text('Tentar fazer login'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
