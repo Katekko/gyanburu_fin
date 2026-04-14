@@ -1,0 +1,49 @@
+name: Deploy server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gyanburu_fin_server/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Join Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+          args: --accept-routes
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy
+        env:
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+        run: |
+          ssh -o BatchMode=yes "$USER@$HOST" bash <<'REMOTE'
+            set -euo pipefail
+            cd /opt/gyanburu_fin
+            git fetch --quiet origin main
+            git reset --hard origin/main
+            cd gyanburu_fin_server
+            docker compose -f docker-compose.prod.yaml build server
+            docker compose -f docker-compose.prod.yaml run --rm \
+              --entrypoint sh server \
+              -c './server --mode=production --apply-migrations --role=maintenance'
+            docker compose -f docker-compose.prod.yaml up -d --force-recreate server
+            docker image prune -f
+          REMOTE
