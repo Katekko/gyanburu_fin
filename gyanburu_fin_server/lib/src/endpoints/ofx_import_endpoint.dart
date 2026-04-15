@@ -73,6 +73,10 @@ class OfxImportEndpoint extends Endpoint {
         if (t.externalId != null) t.externalId,
     };
 
+    final billingMonth =
+        '${parsed.dateEnd.year.toString().padLeft(4, '0')}-'
+        '${parsed.dateEnd.month.toString().padLeft(2, '0')}';
+
     var newCount = 0;
     var skippedDuplicates = 0;
     var skippedCredits = 0;
@@ -116,6 +120,7 @@ class OfxImportEndpoint extends Endpoint {
           installmentCurrent: merchantInfo.installmentCurrent,
           installmentTotal: merchantInfo.installmentTotal,
           displayName: displayName,
+          billingMonth: billingMonth,
         );
 
         await FinancialTransaction.db.insertRow(session, transaction);

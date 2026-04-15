@@ -94,6 +94,57 @@ void main() {
       });
     });
 
+    group('Month filtering', () {
+      test('manual transactions (no billingMonth) fall back to occurredAt',
+          () async {
+        await endpoints.transaction.create(
+          authed,
+          FinancialTransaction(
+            userId: UuidValue.fromString(userId),
+            merchantName: 'Manual March',
+            category: 'Food',
+            amount: 10.0,
+            currency: 'BRL',
+            occurredAt: DateTime(2026, 3, 15),
+          ),
+        );
+
+        final march = await endpoints.transaction
+            .listByMonth(authed, DateTime(2026, 3));
+        expect(march, hasLength(1));
+
+        final april = await endpoints.transaction
+            .listByMonth(authed, DateTime(2026, 4));
+        expect(april, isEmpty);
+      });
+
+      test('billingMonth overrides occurredAt for month filtering', () async {
+        final tx = FinancialTransaction(
+          userId: UuidValue.fromString(userId),
+          merchantName: 'Fatura Tail',
+          category: 'Shopping',
+          amount: 99.0,
+          currency: 'BRL',
+          occurredAt: DateTime(2026, 3, 31),
+          billingMonth: '2026-04',
+        );
+        await FinancialTransaction.db.insertRow(
+          sessionBuilder.build(),
+          tx,
+        );
+
+        final march = await endpoints.transaction
+            .listByMonth(authed, DateTime(2026, 3));
+        expect(march, isEmpty,
+            reason: 'billingMonth 2026-04 should hide this from March');
+
+        final april = await endpoints.transaction
+            .listByMonth(authed, DateTime(2026, 4));
+        expect(april, hasLength(1));
+        expect(april.first.merchantName, 'Fatura Tail');
+      });
+    });
+
     group('User isolation', () {
       test('user cannot see another user transactions', () async {
         await endpoints.transaction.create(

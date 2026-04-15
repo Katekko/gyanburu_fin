@@ -27,6 +27,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     this.installmentCurrent,
     this.installmentTotal,
     this.displayName,
+    this.billingMonth,
   });
 
   factory FinancialTransaction({
@@ -43,6 +44,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     int? installmentCurrent,
     int? installmentTotal,
     String? displayName,
+    String? billingMonth,
   }) = _FinancialTransactionImpl;
 
   factory FinancialTransaction.fromJson(
@@ -68,6 +70,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       installmentCurrent: jsonSerialization['installmentCurrent'] as int?,
       installmentTotal: jsonSerialization['installmentTotal'] as int?,
       displayName: jsonSerialization['displayName'] as String?,
+      billingMonth: jsonSerialization['billingMonth'] as String?,
     );
   }
 
@@ -100,6 +103,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
 
   String? displayName;
 
+  String? billingMonth;
+
   /// Returns a shallow copy of this [FinancialTransaction]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -117,6 +122,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     int? installmentCurrent,
     int? installmentTotal,
     String? displayName,
+    String? billingMonth,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -135,6 +141,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       if (installmentCurrent != null) 'installmentCurrent': installmentCurrent,
       if (installmentTotal != null) 'installmentTotal': installmentTotal,
       if (displayName != null) 'displayName': displayName,
+      if (billingMonth != null) 'billingMonth': billingMonth,
     };
   }
 
@@ -161,6 +168,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     int? installmentCurrent,
     int? installmentTotal,
     String? displayName,
+    String? billingMonth,
   }) : super._(
          id: id,
          userId: userId,
@@ -175,6 +183,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
          installmentCurrent: installmentCurrent,
          installmentTotal: installmentTotal,
          displayName: displayName,
+         billingMonth: billingMonth,
        );
 
   /// Returns a shallow copy of this [FinancialTransaction]
@@ -195,6 +204,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     Object? installmentCurrent = _Undefined,
     Object? installmentTotal = _Undefined,
     Object? displayName = _Undefined,
+    Object? billingMonth = _Undefined,
   }) {
     return FinancialTransaction(
       id: id is int? ? id : this.id,
@@ -216,6 +226,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
           ? installmentTotal
           : this.installmentTotal,
       displayName: displayName is String? ? displayName : this.displayName,
+      billingMonth: billingMonth is String? ? billingMonth : this.billingMonth,
     );
   }
 }

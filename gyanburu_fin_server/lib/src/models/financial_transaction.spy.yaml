@@ -13,3 +13,4 @@ fields:
   installmentCurrent: int?
   installmentTotal: int?
   displayName: String?
+  billingMonth: String?

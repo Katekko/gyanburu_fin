@@ -110,6 +110,46 @@ void main() {
       );
     });
 
+    test(
+        'groups imported transactions by DTEND month (fatura), '
+        'not by individual DTPOSTED date', () async {
+      // Fresh userId so this test doesn't collide with the shared
+      // cooldown used by the other tests in this file.
+      final faturaUserId = const Uuid().v4();
+      final faturaAuthed = sessionBuilder.copyWith(
+        authentication: AuthenticationOverride.authenticationInfo(
+            faturaUserId, {}),
+      );
+
+      // Simulates a Nubank "fatura de maio" export: DTEND = Apr 30,
+      // with transactions spanning the end of March through April.
+      final ofx = _buildOfx(
+        dtStart: '20260331',
+        dtEnd: '20260430',
+        transactions: [
+          _txn(fitId: 'FAT-1', date: '20260331', memo: 'LATE MARCH BUY'),
+          _txn(fitId: 'FAT-2', date: '20260401', memo: 'EARLY APRIL BUY'),
+          _txn(fitId: 'FAT-3', date: '20260420', memo: 'MID APRIL BUY'),
+        ],
+      );
+
+      await endpoints.ofxImport.importOfx(faturaAuthed, ofx, 'maio.ofx');
+
+      final aprilList = await endpoints.transaction
+          .listByMonth(faturaAuthed, DateTime(2026, 4));
+      expect(aprilList, hasLength(3));
+      expect(
+        aprilList.map((t) => t.billingMonth).toSet(),
+        equals({'2026-04'}),
+      );
+
+      final marchList = await endpoints.transaction
+          .listByMonth(faturaAuthed, DateTime(2026, 3));
+      expect(marchList, isEmpty,
+          reason: 'Mar 31 transaction belongs to the April fatura, '
+              'not the March tab');
+    });
+
     test('records import in history', () async {
       final ofx = _buildOfx(transactions: [
         _txn(fitId: 'TX030', memo: 'AMAZON', amount: '-299.90'),

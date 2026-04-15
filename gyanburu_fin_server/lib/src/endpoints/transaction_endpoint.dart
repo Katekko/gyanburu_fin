@@ -23,13 +23,18 @@ class TransactionEndpoint extends Endpoint {
     Session session,
     DateTime month,
   ) async {
+    final userId = _userId(session);
     final start = DateTime(month.year, month.month);
     final end = DateTime(month.year, month.month + 1);
+    final key = '${month.year.toString().padLeft(4, '0')}-'
+        '${month.month.toString().padLeft(2, '0')}';
     return FinancialTransaction.db.find(
       session,
       where: (t) =>
-          t.userId.equals(_userId(session)) &
-          t.occurredAt.between(start, end),
+          t.userId.equals(userId) &
+          (t.billingMonth.equals(key) |
+              (t.billingMonth.equals(null) &
+                  t.occurredAt.between(start, end))),
       orderBy: (t) => t.occurredAt,
       orderDescending: true,
     );
