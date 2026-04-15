@@ -73,19 +73,21 @@ class TransactionEndpoint extends Endpoint {
   }
 
   /// Applies an edit to a transaction and optionally propagates the
-  /// category and display name to the CategoryRule plus all sibling
+  /// category and/or display name to the CategoryRule plus all sibling
   /// transactions sharing the same merchant name.
   ///
-  /// - Category always propagates to siblings and the rule.
-  /// - Display name propagates only when [propagateDisplayName] is true;
-  ///   otherwise the rule's displayName and siblings' displayName are
-  ///   cleared so the user can set per-transaction names.
+  /// - Category propagates to siblings and the rule only when
+  ///   [propagateCategory] is true.
+  /// - Display name propagates only when [propagateDisplayName] is true.
+  /// - When a flag is false the corresponding field on the rule (and
+  ///   siblings) is left unchanged from its current value.
   Future<FinancialTransaction> saveWithPropagation(
     Session session,
     int transactionId,
     String? categoryName,
     String? displayName,
     bool propagateDisplayName,
+    bool propagateCategory,
   ) async {
     final userId = _userId(session);
     final tx = await FinancialTransaction.db.findById(session, transactionId);
@@ -114,8 +116,6 @@ class TransactionEndpoint extends Endpoint {
       categoryId = cat?.id;
     }
 
-    final ruleDisplayName = propagateDisplayName ? effectiveDisplay : null;
-
     final existingRule = (await CategoryRule.db.find(
       session,
       where: (r) =>
@@ -124,12 +124,19 @@ class TransactionEndpoint extends Endpoint {
     ))
         .firstOrNull;
 
-    if (categoryId == null && ruleDisplayName == null) {
+    // Resolve what the rule fields should be, respecting propagation flags.
+    // If not propagating a field, preserve the existing rule value.
+    final ruleCategoryId =
+        propagateCategory ? categoryId : existingRule?.categoryId;
+    final ruleDisplayName =
+        propagateDisplayName ? effectiveDisplay : existingRule?.displayName;
+
+    if (ruleCategoryId == null && ruleDisplayName == null) {
       if (existingRule != null) {
         await CategoryRule.db.deleteRow(session, existingRule);
       }
     } else if (existingRule != null) {
-      existingRule.categoryId = categoryId;
+      existingRule.categoryId = ruleCategoryId;
       existingRule.displayName = ruleDisplayName;
       await CategoryRule.db.updateRow(session, existingRule);
     } else {
@@ -138,24 +145,25 @@ class TransactionEndpoint extends Endpoint {
         CategoryRule(
           userId: userId,
           merchantPattern: tx.merchantName,
-          categoryId: categoryId,
+          categoryId: ruleCategoryId,
           displayName: ruleDisplayName,
         ),
       );
     }
 
-    final siblings = await FinancialTransaction.db.find(
-      session,
-      where: (t) =>
-          t.userId.equals(userId) &
-          t.merchantName.equals(tx.merchantName) &
-          t.id.notEquals(transactionId),
-    );
-    for (final sibling in siblings) {
-      sibling.category = effectiveCategory;
-      sibling.displayName =
-          propagateDisplayName ? effectiveDisplay : null;
-      await FinancialTransaction.db.updateRow(session, sibling);
+    if (propagateCategory || propagateDisplayName) {
+      final siblings = await FinancialTransaction.db.find(
+        session,
+        where: (t) =>
+            t.userId.equals(userId) &
+            t.merchantName.equals(tx.merchantName) &
+            t.id.notEquals(transactionId),
+      );
+      for (final sibling in siblings) {
+        if (propagateCategory) sibling.category = effectiveCategory;
+        if (propagateDisplayName) sibling.displayName = effectiveDisplay;
+        await FinancialTransaction.db.updateRow(session, sibling);
+      }
     }
 
     return tx;

@@ -84,6 +84,19 @@ class EmailService {
     required String html,
     required String text,
   }) async {
+    if (Serverpod.instance.runMode == ServerpodRunMode.development) {
+      // ignore: avoid_print
+      print(
+        '\n'
+        '┌─────────────────────────────────────────┐\n'
+        '│  [Email – DEV] To:      $toEmail\n'
+        '│              Subject: $subject\n'
+        '│              Body:    $text\n'
+        '└─────────────────────────────────────────┘',
+      );
+      return;
+    }
+
     _ensureInitialized(session);
 
     final server = _smtpServer;

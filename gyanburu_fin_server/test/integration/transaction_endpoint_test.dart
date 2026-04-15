@@ -186,6 +186,7 @@ void main() {
           'Transport',
           'Moto Stuff',
           true,
+          true,
         );
 
         final reloadedA =
@@ -233,6 +234,7 @@ void main() {
           'Moto',
           'Capacete rosa',
           false,
+          true,
         );
 
         final reloadedA =
@@ -276,6 +278,7 @@ void main() {
           null,
           null,
           false,
+          true,
         );
 
         final rules = await endpoints.categoryRule.list(authed);
@@ -299,6 +302,7 @@ void main() {
             a.id!,
             'X',
             'Y',
+            true,
             true,
           ),
           throwsA(isA<ArgumentError>()),

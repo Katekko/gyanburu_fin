@@ -1087,6 +1087,11 @@ class Endpoints extends _i1.EndpointDispatch {
               type: _i1.getType<bool>(),
               nullable: false,
             ),
+            'propagateCategory': _i1.ParameterDescription(
+              name: 'propagateCategory',
+              type: _i1.getType<bool>(),
+              nullable: false,
+            ),
           },
           call:
               (
@@ -1099,6 +1104,7 @@ class Endpoints extends _i1.EndpointDispatch {
                     params['categoryName'],
                     params['displayName'],
                     params['propagateDisplayName'],
+                    params['propagateCategory'],
                   ),
         ),
       },

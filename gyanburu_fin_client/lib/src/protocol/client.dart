@@ -613,18 +613,20 @@ class EndpointTransaction extends _i2.EndpointRef {
   );
 
   /// Applies an edit to a transaction and optionally propagates the
-  /// category and display name to the CategoryRule plus all sibling
+  /// category and/or display name to the CategoryRule plus all sibling
   /// transactions sharing the same merchant name.
   ///
-  /// - Category always propagates to siblings and the rule.
-  /// - Display name propagates only when [propagateDisplayName] is true;
-  ///   otherwise the rule's displayName and siblings' displayName are
-  ///   cleared so the user can set per-transaction names.
+  /// - Category propagates to siblings and the rule only when
+  ///   [propagateCategory] is true.
+  /// - Display name propagates only when [propagateDisplayName] is true.
+  /// - When a flag is false the corresponding field on the rule (and
+  ///   siblings) is left unchanged from its current value.
   _i3.Future<_i9.FinancialTransaction> saveWithPropagation(
     int transactionId,
     String? categoryName,
     String? displayName,
     bool propagateDisplayName,
+    bool propagateCategory,
   ) => caller.callServerEndpoint<_i9.FinancialTransaction>(
     'transaction',
     'saveWithPropagation',
@@ -633,6 +635,7 @@ class EndpointTransaction extends _i2.EndpointRef {
       'categoryName': categoryName,
       'displayName': displayName,
       'propagateDisplayName': propagateDisplayName,
+      'propagateCategory': propagateCategory,
     },
   );
 }

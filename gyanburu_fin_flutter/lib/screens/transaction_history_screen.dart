@@ -94,13 +94,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         .where((r) => r.merchantPattern == transaction.merchantName)
         .firstOrNull;
 
-    // Checkbox defaults to the current propagation state: if the rule
-    // already carries a display name it's propagating, otherwise not.
-    // For brand new merchants (no rule yet) default to propagating.
-    final initialPropagate = existingRule == null
+    // Display name checkbox: propagate if rule already has a name, or new merchant.
+    final initialPropagateDisplayName = existingRule == null
         ? true
         : (existingRule.displayName != null &&
             existingRule.displayName!.isNotEmpty);
+
+    // Category checkbox: propagate if rule already has a category, or new merchant.
+    final initialPropagateCategory = existingRule == null
+        ? true
+        : existingRule.categoryId != null;
 
     final result = await showDialog<_TransactionEditResult>(
       context: context,
@@ -109,7 +112,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         categories: _categories,
         existingDisplayName:
             existingRule?.displayName ?? transaction.displayName,
-        initialPropagateDisplayName: initialPropagate,
+        initialPropagateDisplayName: initialPropagateDisplayName,
+        initialPropagateCategory: initialPropagateCategory,
       ),
     );
 
@@ -121,6 +125,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         result.category?.name,
         result.displayName,
         result.propagateDisplayName,
+        result.propagateCategory,
       );
       _loadData();
     } catch (e) {
@@ -524,11 +529,13 @@ class _TransactionEditResult {
   final Category? category;
   final String? displayName;
   final bool propagateDisplayName;
+  final bool propagateCategory;
 
   _TransactionEditResult({
     this.category,
     this.displayName,
     required this.propagateDisplayName,
+    required this.propagateCategory,
   });
 }
 
@@ -537,12 +544,14 @@ class _TransactionEditDialog extends StatefulWidget {
     required this.transaction,
     required this.categories,
     required this.initialPropagateDisplayName,
+    required this.initialPropagateCategory,
     this.existingDisplayName,
   });
   final FinancialTransaction transaction;
   final List<Category> categories;
   final String? existingDisplayName;
   final bool initialPropagateDisplayName;
+  final bool initialPropagateCategory;
 
   @override
   State<_TransactionEditDialog> createState() => _TransactionEditDialogState();
@@ -552,6 +561,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
   late final TextEditingController _displayNameController;
   Category? _selectedCategory;
   late bool _propagateDisplayName;
+  late bool _propagateCategory;
 
   @override
   void initState() {
@@ -560,6 +570,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
       text: widget.existingDisplayName ?? '',
     );
     _propagateDisplayName = widget.initialPropagateDisplayName;
+    _propagateCategory = widget.initialPropagateCategory;
     // Pre-select current category
     if (widget.transaction.category.isNotEmpty) {
       _selectedCategory = widget.categories
@@ -582,6 +593,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
         category: _selectedCategory,
         displayName: displayName.isEmpty ? null : displayName,
         propagateDisplayName: _propagateDisplayName,
+        propagateCategory: _propagateCategory,
       ),
     );
   }
@@ -736,6 +748,42 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
                     ),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 8),
+              // Category propagation toggle
+              InkWell(
+                onTap: _selectedCategory == null
+                    ? null
+                    : () => setState(() {
+                          _propagateCategory = !_propagateCategory;
+                        }),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _propagateCategory,
+                        onChanged: _selectedCategory == null
+                            ? null
+                            : (v) => setState(() {
+                                  _propagateCategory = v ?? false;
+                                }),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Apply this category to other ${tx.merchantName} transactions',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: _selectedCategory == null
+                                ? AppColors.textMuted
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               Row(

@@ -1884,6 +1884,7 @@ class _TransactionEndpoint {
     String? categoryName,
     String? displayName,
     bool propagateDisplayName,
+    bool propagateCategory,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1901,6 +1902,7 @@ class _TransactionEndpoint {
             'categoryName': categoryName,
             'displayName': displayName,
             'propagateDisplayName': propagateDisplayName,
+            'propagateCategory': propagateCategory,
           }),
           serializationManager: _serializationManager,
         );
