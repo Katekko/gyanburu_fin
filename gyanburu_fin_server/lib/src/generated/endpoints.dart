@@ -1064,6 +1064,43 @@ class Endpoints extends _i1.EndpointDispatch {
                     params['id'],
                   ),
         ),
+        'saveWithPropagation': _i1.MethodConnector(
+          name: 'saveWithPropagation',
+          params: {
+            'transactionId': _i1.ParameterDescription(
+              name: 'transactionId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+            'categoryName': _i1.ParameterDescription(
+              name: 'categoryName',
+              type: _i1.getType<String?>(),
+              nullable: true,
+            ),
+            'displayName': _i1.ParameterDescription(
+              name: 'displayName',
+              type: _i1.getType<String?>(),
+              nullable: true,
+            ),
+            'propagateDisplayName': _i1.ParameterDescription(
+              name: 'propagateDisplayName',
+              type: _i1.getType<bool>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['transaction'] as _i14.TransactionEndpoint)
+                  .saveWithPropagation(
+                    session,
+                    params['transactionId'],
+                    params['categoryName'],
+                    params['displayName'],
+                    params['propagateDisplayName'],
+                  ),
+        ),
       },
     );
     connectors['greeting'] = _i1.EndpointConnector(

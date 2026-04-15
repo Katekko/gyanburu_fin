@@ -18,7 +18,7 @@ abstract class CategoryRule
     this.id,
     required this.userId,
     required this.merchantPattern,
-    required this.categoryId,
+    this.categoryId,
     this.displayName,
   });
 
@@ -26,7 +26,7 @@ abstract class CategoryRule
     int? id,
     required _i1.UuidValue userId,
     required String merchantPattern,
-    required int categoryId,
+    int? categoryId,
     String? displayName,
   }) = _CategoryRuleImpl;
 
@@ -35,7 +35,7 @@ abstract class CategoryRule
       id: jsonSerialization['id'] as int?,
       userId: _i1.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
       merchantPattern: jsonSerialization['merchantPattern'] as String,
-      categoryId: jsonSerialization['categoryId'] as int,
+      categoryId: jsonSerialization['categoryId'] as int?,
       displayName: jsonSerialization['displayName'] as String?,
     );
   }
@@ -51,7 +51,7 @@ abstract class CategoryRule
 
   String merchantPattern;
 
-  int categoryId;
+  int? categoryId;
 
   String? displayName;
 
@@ -75,7 +75,7 @@ abstract class CategoryRule
       if (id != null) 'id': id,
       'userId': userId.toJson(),
       'merchantPattern': merchantPattern,
-      'categoryId': categoryId,
+      if (categoryId != null) 'categoryId': categoryId,
       if (displayName != null) 'displayName': displayName,
     };
   }
@@ -87,7 +87,7 @@ abstract class CategoryRule
       if (id != null) 'id': id,
       'userId': userId.toJson(),
       'merchantPattern': merchantPattern,
-      'categoryId': categoryId,
+      if (categoryId != null) 'categoryId': categoryId,
       if (displayName != null) 'displayName': displayName,
     };
   }
@@ -129,7 +129,7 @@ class _CategoryRuleImpl extends CategoryRule {
     int? id,
     required _i1.UuidValue userId,
     required String merchantPattern,
-    required int categoryId,
+    int? categoryId,
     String? displayName,
   }) : super._(
          id: id,
@@ -147,14 +147,14 @@ class _CategoryRuleImpl extends CategoryRule {
     Object? id = _Undefined,
     _i1.UuidValue? userId,
     String? merchantPattern,
-    int? categoryId,
+    Object? categoryId = _Undefined,
     Object? displayName = _Undefined,
   }) {
     return CategoryRule(
       id: id is int? ? id : this.id,
       userId: userId ?? this.userId,
       merchantPattern: merchantPattern ?? this.merchantPattern,
-      categoryId: categoryId ?? this.categoryId,
+      categoryId: categoryId is int? ? categoryId : this.categoryId,
       displayName: displayName is String? ? displayName : this.displayName,
     );
   }
@@ -175,7 +175,7 @@ class CategoryRuleUpdateTable extends _i1.UpdateTable<CategoryRuleTable> {
         value,
       );
 
-  _i1.ColumnValue<int, int> categoryId(int value) => _i1.ColumnValue(
+  _i1.ColumnValue<int, int> categoryId(int? value) => _i1.ColumnValue(
     table.categoryId,
     value,
   );

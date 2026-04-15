@@ -282,8 +282,8 @@ class Protocol extends _i1.SerializationManagerServer {
         _i2.ColumnDefinition(
           name: 'categoryId',
           columnType: _i2.ColumnType.bigint,
-          isNullable: false,
-          dartType: 'int',
+          isNullable: true,
+          dartType: 'int?',
         ),
         _i2.ColumnDefinition(
           name: 'displayName',

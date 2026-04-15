@@ -3,5 +3,5 @@ table: category_rule
 fields:
   userId: UuidValue
   merchantPattern: String
-  categoryId: int
+  categoryId: int?
   displayName: String?

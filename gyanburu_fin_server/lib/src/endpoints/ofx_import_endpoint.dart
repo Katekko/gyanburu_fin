@@ -102,9 +102,12 @@ class OfxImportEndpoint extends Endpoint {
         String? displayName;
         final rule = ruleMap[merchantInfo.cleanName];
         if (rule != null) {
-          final cat = await Category.db.findById(session, rule.categoryId);
-          if (cat != null) {
-            category = cat.name;
+          if (rule.categoryId != null) {
+            final cat =
+                await Category.db.findById(session, rule.categoryId!);
+            if (cat != null) {
+              category = cat.name;
+            }
           }
           displayName = rule.displayName;
         }

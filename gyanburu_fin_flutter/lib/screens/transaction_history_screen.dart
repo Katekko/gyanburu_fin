@@ -94,44 +94,34 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         .where((r) => r.merchantPattern == transaction.merchantName)
         .firstOrNull;
 
+    // Checkbox defaults to the current propagation state: if the rule
+    // already carries a display name it's propagating, otherwise not.
+    // For brand new merchants (no rule yet) default to propagating.
+    final initialPropagate = existingRule == null
+        ? true
+        : (existingRule.displayName != null &&
+            existingRule.displayName!.isNotEmpty);
+
     final result = await showDialog<_TransactionEditResult>(
       context: context,
       builder: (ctx) => _TransactionEditDialog(
         transaction: transaction,
         categories: _categories,
-        existingDisplayName: existingRule?.displayName ?? transaction.displayName,
+        existingDisplayName:
+            existingRule?.displayName ?? transaction.displayName,
+        initialPropagateDisplayName: initialPropagate,
       ),
     );
 
     if (result == null || !mounted) return;
 
     try {
-      // Update the transaction
-      transaction.category = result.category?.name ?? '';
-      transaction.displayName = result.displayName;
-      await client.transaction.update(transaction);
-
-      // Create or update CategoryRule
-      if (result.category != null) {
-        if (existingRule != null) {
-          existingRule.categoryId = result.category!.id!;
-          existingRule.displayName = result.displayName;
-          await client.categoryRule.update(existingRule);
-        } else {
-          final newRule = CategoryRule(
-            userId: transaction.userId,
-            merchantPattern: transaction.merchantName,
-            categoryId: result.category!.id!,
-            displayName: result.displayName,
-          );
-          await client.categoryRule.create(newRule);
-        }
-      } else if (existingRule != null && result.displayName != null) {
-        // No category but has display name — update rule's display name
-        existingRule.displayName = result.displayName;
-        await client.categoryRule.update(existingRule);
-      }
-
+      await client.transaction.saveWithPropagation(
+        transaction.id!,
+        result.category?.name,
+        result.displayName,
+        result.propagateDisplayName,
+      );
       _loadData();
     } catch (e) {
       if (mounted) {
@@ -533,19 +523,26 @@ class _TransactionRow extends StatelessWidget {
 class _TransactionEditResult {
   final Category? category;
   final String? displayName;
+  final bool propagateDisplayName;
 
-  _TransactionEditResult({this.category, this.displayName});
+  _TransactionEditResult({
+    this.category,
+    this.displayName,
+    required this.propagateDisplayName,
+  });
 }
 
 class _TransactionEditDialog extends StatefulWidget {
   const _TransactionEditDialog({
     required this.transaction,
     required this.categories,
+    required this.initialPropagateDisplayName,
     this.existingDisplayName,
   });
   final FinancialTransaction transaction;
   final List<Category> categories;
   final String? existingDisplayName;
+  final bool initialPropagateDisplayName;
 
   @override
   State<_TransactionEditDialog> createState() => _TransactionEditDialogState();
@@ -554,6 +551,7 @@ class _TransactionEditDialog extends StatefulWidget {
 class _TransactionEditDialogState extends State<_TransactionEditDialog> {
   late final TextEditingController _displayNameController;
   Category? _selectedCategory;
+  late bool _propagateDisplayName;
 
   @override
   void initState() {
@@ -561,6 +559,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
     _displayNameController = TextEditingController(
       text: widget.existingDisplayName ?? '',
     );
+    _propagateDisplayName = widget.initialPropagateDisplayName;
     // Pre-select current category
     if (widget.transaction.category.isNotEmpty) {
       _selectedCategory = widget.categories
@@ -582,6 +581,7 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
       _TransactionEditResult(
         category: _selectedCategory,
         displayName: displayName.isEmpty ? null : displayName,
+        propagateDisplayName: _propagateDisplayName,
       ),
     );
   }
@@ -653,6 +653,34 @@ class _TransactionEditDialogState extends State<_TransactionEditDialog> {
                   hintText: tx.merchantName,
                   helperText: 'A friendly name for this merchant',
                   helperMaxLines: 2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Propagation toggle
+              InkWell(
+                onTap: () => setState(() {
+                  _propagateDisplayName = !_propagateDisplayName;
+                }),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _propagateDisplayName,
+                        onChanged: (v) => setState(() {
+                          _propagateDisplayName = v ?? false;
+                        }),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Apply this name to other ${tx.merchantName} transactions',
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
