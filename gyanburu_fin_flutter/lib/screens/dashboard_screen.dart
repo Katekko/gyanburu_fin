@@ -101,10 +101,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return categoryIconMap[cat.icon] ?? Icons.category;
   }
 
-  /// Spending by category from imported transactions
+  /// Spending by category from imported transactions (expenses only)
+  List<FinancialTransaction> get _expenseTransactions => _transactions
+      .where((t) => t.kind != 'income' && t.kind != 'fatura_payment')
+      .toList();
+
+  double get _totalExpenseSpending =>
+      _expenseTransactions.fold(0.0, (s, t) => s + t.amount);
+
   Map<String, double> get _transactionSpendingByCategory {
     final Map<String, double> result = {};
-    for (final t in _transactions) {
+    for (final t in _expenseTransactions) {
       final name = t.category.isNotEmpty ? t.category : 'Uncategorized';
       result[name] = (result[name] ?? 0) + t.amount;
     }
@@ -184,7 +191,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _SpendingChart(
                   spending: _transactionSpendingByCategory,
                   colorMap: _categoryColorMap,
-                  total: _totalCardSpending,
+                  total: _totalExpenseSpending,
                 ),
               ),
               const SizedBox(width: 20),
@@ -259,7 +266,7 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _SpendingChart extends StatelessWidget {
+class _SpendingChart extends StatefulWidget {
   const _SpendingChart({
     required this.spending,
     required this.colorMap,
@@ -271,12 +278,58 @@ class _SpendingChart extends StatelessWidget {
   final double total;
 
   @override
+  State<_SpendingChart> createState() => _SpendingChartState();
+}
+
+class _SpendingChartState extends State<_SpendingChart>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+  late final Animation<double> _animValue;
+  String? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _animValue = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic);
+    if (widget.spending.isNotEmpty) _animCtrl.forward();
+  }
+
+  @override
+  void didUpdateWidget(_SpendingChart old) {
+    super.didUpdateWidget(old);
+    if (widget.spending.isNotEmpty && !_animCtrl.isCompleted) {
+      _animCtrl.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapCategory(String? category) {
+    setState(() {
+      _selectedCategory = _selectedCategory == category ? null : category;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final spending = widget.spending;
+    final colorMap = widget.colorMap;
+    final total = widget.total;
 
     // Sort by amount descending
     final sorted = spending.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+
+    final maxAmount = sorted.isEmpty ? 0.0 : sorted.first.value;
 
     return Card(
       child: Padding(
@@ -319,46 +372,122 @@ class _SpendingChart extends StatelessWidget {
                 ),
               )
             else ...[
-              SizedBox(
-                height: 180,
-                child: Center(
-                  child: _DonutChart(spending: spending, colorMap: colorMap),
+              GestureDetector(
+                onTapUp: (details) {
+                  // Tapping the chart area but not a segment => deselect
+                  _onTapCategory(null);
+                },
+                child: SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: AnimatedBuilder(
+                      animation: _animValue,
+                      builder: (context, _) => _DonutChart(
+                        spending: spending,
+                        colorMap: colorMap,
+                        total: total,
+                        progress: _animValue.value,
+                        selectedCategory: _selectedCategory,
+                        onTapCategory: _onTapCategory,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
               ...sorted.map((e) {
                 final pct = total > 0 ? (e.value / total * 100) : 0;
                 final color = colorMap[e.key] ?? AppColors.deepPurple;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
+                final isSelected = _selectedCategory == e.key;
+                final isDimmed =
+                    _selectedCategory != null && !isSelected;
+                final barRatio =
+                    maxAmount > 0 ? e.value / maxAmount : 0.0;
+                final isUncategorized = e.key == 'Uncategorized';
+
+                return GestureDetector(
+                  onTap: () => _onTapCategory(e.key),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isDimmed ? 0.35 : 1.0,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              if (isUncategorized)
+                                _HatchedSwatch(color: color, size: 12)
+                              else
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  e.key,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight:
+                                        isSelected ? FontWeight.w600 : null,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _currencyFormat.format(e.value),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight:
+                                      isSelected ? FontWeight.w600 : null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 42,
+                                child: Text(
+                                  '${pct.toStringAsFixed(0)}%',
+                                  style: theme.textTheme.labelSmall,
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: SizedBox(
+                              height: 4,
+                              child: AnimatedFractionallySizedBox(
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeOut,
+                                alignment: Alignment.centerLeft,
+                                widthFactor: barRatio.clamp(0.0, 1.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isUncategorized
+                                        ? null
+                                        : color.withValues(alpha: isSelected ? 1.0 : 0.6),
+                                    gradient: isUncategorized
+                                        ? LinearGradient(
+                                            colors: [
+                                              color.withValues(alpha: 0.6),
+                                              color.withValues(alpha: 0.3),
+                                              color.withValues(alpha: 0.6),
+                                            ],
+                                            stops: const [0, 0.5, 1],
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(e.key, style: theme.textTheme.bodyMedium),
-                      ),
-                      Text(
-                        _currencyFormat.format(e.value),
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        width: 42,
-                        child: Text(
-                          '${pct.toStringAsFixed(0)}%',
-                          style: theme.textTheme.labelSmall,
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               }),
@@ -370,24 +499,152 @@ class _SpendingChart extends StatelessWidget {
   }
 }
 
-class _DonutChart extends StatelessWidget {
-  const _DonutChart({required this.spending, required this.colorMap});
-  final Map<String, double> spending;
-  final Map<String, Color> colorMap;
+/// Small 12x12 swatch with diagonal hatching for "Uncategorized"
+class _HatchedSwatch extends StatelessWidget {
+  const _HatchedSwatch({required this.color, required this.size});
+  final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(160, 160),
-      painter: _DonutPainter(spending, colorMap),
+      size: Size(size, size),
+      painter: _HatchedSwatchPainter(color),
+    );
+  }
+}
+
+class _HatchedSwatchPainter extends CustomPainter {
+  _HatchedSwatchPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(3),
+    );
+    canvas.clipRRect(rrect);
+    // background
+    canvas.drawRRect(
+      rrect,
+      Paint()..color = color.withValues(alpha: 0.3),
+    );
+    // diagonal lines
+    final linePaint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    const step = 4.0;
+    for (double i = -size.height; i < size.width; i += step) {
+      canvas.drawLine(Offset(i, size.height), Offset(i + size.height, 0), linePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Animated donut chart with center label, tap-to-highlight, and hatched uncategorized segment
+class _DonutChart extends StatelessWidget {
+  const _DonutChart({
+    required this.spending,
+    required this.colorMap,
+    required this.total,
+    required this.progress,
+    this.selectedCategory,
+    this.onTapCategory,
+  });
+  final Map<String, double> spending;
+  final Map<String, Color> colorMap;
+  final double total;
+  final double progress;
+  final String? selectedCategory;
+  final ValueChanged<String?>? onTapCategory;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTapUp: (details) {
+        // Hit-test segments
+        final box = context.findRenderObject() as RenderBox;
+        final local = details.localPosition;
+        final center = Offset(box.size.width / 2, box.size.height / 2);
+        final radius = min(box.size.width, box.size.height) / 2;
+        final strokeWidth = radius * 0.35;
+        final dx = local.dx - center.dx;
+        final dy = local.dy - center.dy;
+        final dist = sqrt(dx * dx + dy * dy);
+        final innerR = radius - strokeWidth;
+        if (dist < innerR || dist > radius) {
+          onTapCategory?.call(null);
+          return;
+        }
+        var angle = atan2(dy, dx);
+        if (angle < -pi / 2) angle += 2 * pi;
+        angle += pi / 2;
+        if (angle > 2 * pi) angle -= 2 * pi;
+
+        var start = 0.0;
+        for (final entry in spending.entries) {
+          final sweep = (entry.value / total) * 2 * pi;
+          if (angle >= start && angle < start + sweep) {
+            onTapCategory?.call(entry.key);
+            return;
+          }
+          start += sweep;
+        }
+        onTapCategory?.call(null);
+      },
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CustomPaint(
+            size: const Size(180, 180),
+            painter: _DonutPainter(
+              spending,
+              colorMap,
+              progress,
+              selectedCategory,
+            ),
+          ),
+          // Center label
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _currencyFormat.format(total),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                'Total',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _DonutPainter extends CustomPainter {
-  _DonutPainter(this.spending, this.colorMap);
+  _DonutPainter(
+    this.spending,
+    this.colorMap,
+    this.progress,
+    this.selectedCategory,
+  );
   final Map<String, double> spending;
   final Map<String, Color> colorMap;
+  final double progress;
+  final String? selectedCategory;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -402,22 +659,148 @@ class _DonutPainter extends CustomPainter {
       radius: radius - strokeWidth / 2,
     );
 
+    // Draw track ring
+    canvas.drawCircle(
+      center,
+      radius - strokeWidth / 2,
+      Paint()
+        ..color = AppColors.surfaceElevated
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth,
+    );
+
+    final sweepLimit = 2 * pi * progress;
     var startAngle = -pi / 2;
     for (final entry in spending.entries) {
       final sweep = (entry.value / total) * 2 * pi;
-      final color = colorMap[entry.key] ?? AppColors.deepPurple;
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt;
-      canvas.drawArc(rect, startAngle, sweep, false, paint);
+      final clippedSweep = (startAngle + pi / 2 + sweep <= sweepLimit)
+          ? sweep
+          : max(0.0, sweepLimit - (startAngle + pi / 2));
+      if (clippedSweep <= 0) {
+        startAngle += sweep;
+        continue;
+      }
+
+      final isSelected = selectedCategory == entry.key;
+      final isDimmed = selectedCategory != null && !isSelected;
+      final color = (colorMap[entry.key] ?? AppColors.deepPurple)
+          .withValues(alpha: isDimmed ? 0.2 : 1.0);
+
+      final isUncategorized = entry.key == 'Uncategorized';
+
+      if (isUncategorized) {
+        // Save, clip to the arc, then draw hatching
+        canvas.save();
+        final path = Path()
+          ..arcTo(rect.inflate(strokeWidth / 2), startAngle, clippedSweep, true)
+          ..arcTo(rect.inflate(-strokeWidth / 2),
+              startAngle + clippedSweep, -clippedSweep, false)
+          ..close();
+        canvas.clipPath(path);
+        canvas.drawPath(
+          path,
+          Paint()..color = color.withValues(alpha: isDimmed ? 0.08 : 0.25),
+        );
+        // hatching
+        final hatchPaint = Paint()
+          ..color = color
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
+        const step = 6.0;
+        for (double i = -size.height; i < size.width + size.height; i += step) {
+          canvas.drawLine(
+            Offset(i, size.height),
+            Offset(i + size.height, 0),
+            hatchPaint,
+          );
+        }
+        canvas.restore();
+      } else {
+        final paint = Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = isSelected ? strokeWidth + 4 : strokeWidth
+          ..strokeCap = StrokeCap.butt;
+        canvas.drawArc(rect, startAngle, clippedSweep, false, paint);
+      }
       startAngle += sweep;
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DonutPainter old) =>
+      old.progress != progress || old.selectedCategory != selectedCategory;
+}
+
+/// AnimatedBuilder wrapper (Flutter doesn't export AnimatedBuilder, this is just ListenableBuilder)
+class AnimatedBuilder extends StatelessWidget {
+  const AnimatedBuilder({
+    super.key,
+    required this.animation,
+    required this.builder,
+  });
+  final Animation<double> animation;
+  final Widget Function(BuildContext, Widget?) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder._wrap(animation: animation, builder: builder);
+  }
+
+  static Widget _wrap({
+    required Animation<double> animation,
+    required Widget Function(BuildContext, Widget?) builder,
+  }) {
+    return ListenableBuilder(
+      listenable: animation,
+      builder: (context, child) => builder(context, child),
+    );
+  }
+}
+
+/// FractionallySizedBox with implicit animation
+class AnimatedFractionallySizedBox extends ImplicitlyAnimatedWidget {
+  const AnimatedFractionallySizedBox({
+    super.key,
+    required super.duration,
+    super.curve,
+    this.alignment = Alignment.center,
+    this.widthFactor,
+    this.heightFactor,
+    this.child,
+  });
+  final AlignmentGeometry alignment;
+  final double? widthFactor;
+  final double? heightFactor;
+  final Widget? child;
+
+  @override
+  AnimatedWidgetBaseState<AnimatedFractionallySizedBox> createState() =>
+      _AnimatedFractionallySizedBoxState();
+}
+
+class _AnimatedFractionallySizedBoxState
+    extends AnimatedWidgetBaseState<AnimatedFractionallySizedBox> {
+  Tween<double>? _widthFactor;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _widthFactor = visitor(
+      _widthFactor,
+      widget.widthFactor ?? 1.0,
+      (v) => Tween<double>(begin: v as double),
+    ) as Tween<double>?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      alignment: widget.alignment,
+      widthFactor: _widthFactor?.evaluate(animation),
+      heightFactor: widget.heightFactor,
+      child: widget.child,
+    );
+  }
 }
 
 class _UpcomingBills extends StatelessWidget {
