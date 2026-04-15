@@ -18,7 +18,7 @@ late final Client client;
 
 const _serverUrl = String.fromEnvironment(
   'SERVER_URL',
-  defaultValue: 'http://192.168.0.229:8080/',
+  defaultValue: 'http://localhost:8080/',
 );
 
 void main() async {
