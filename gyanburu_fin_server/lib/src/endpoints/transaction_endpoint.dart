@@ -151,19 +151,19 @@ class TransactionEndpoint extends Endpoint {
       );
     }
 
-    if (propagateCategory || propagateDisplayName) {
-      final siblings = await FinancialTransaction.db.find(
-        session,
-        where: (t) =>
-            t.userId.equals(userId) &
-            t.merchantName.equals(tx.merchantName) &
-            t.id.notEquals(transactionId),
-      );
-      for (final sibling in siblings) {
-        if (propagateCategory) sibling.category = effectiveCategory;
-        if (propagateDisplayName) sibling.displayName = effectiveDisplay;
-        await FinancialTransaction.db.updateRow(session, sibling);
-      }
+    final siblings = await FinancialTransaction.db.find(
+      session,
+      where: (t) =>
+          t.userId.equals(userId) &
+          t.merchantName.equals(tx.merchantName) &
+          t.id.notEquals(transactionId),
+    );
+    for (final sibling in siblings) {
+      if (propagateCategory) sibling.category = effectiveCategory;
+      // Name is either propagated to siblings or cleared, so unchecking the
+      // checkbox lets the user assign a different name per transaction.
+      sibling.displayName = propagateDisplayName ? effectiveDisplay : null;
+      await FinancialTransaction.db.updateRow(session, sibling);
     }
 
     return tx;

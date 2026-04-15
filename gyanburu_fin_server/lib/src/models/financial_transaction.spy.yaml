@@ -14,3 +14,5 @@ fields:
   installmentTotal: int?
   displayName: String?
   billingMonth: String?
+  source: String?
+  kind: String?

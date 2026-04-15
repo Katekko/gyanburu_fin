@@ -10,11 +10,7 @@ class OfxImportEndpoint extends Endpoint {
       UuidValue.fromString(session.authenticated!.userIdentifier);
 
   static const _maxTransactionsPerImport = 5000;
-  static const _importCooldown = Duration(minutes: 1);
   static const _maxFileSize = 5 * 1024 * 1024; // 5 MB
-
-  /// In-memory per-user cooldown tracker.
-  static final _lastImportAt = <String, DateTime>{};
 
   Future<ImportHistory> importOfx(
     Session session,
@@ -22,16 +18,6 @@ class OfxImportEndpoint extends Endpoint {
     String fileName,
   ) async {
     final userId = _userId(session);
-    final userKey = userId.toString();
-
-    // Rate limit: one import per user per minute
-    final lastImport = _lastImportAt[userKey];
-    if (lastImport != null &&
-        DateTime.now().difference(lastImport) < _importCooldown) {
-      throw Exception(
-        'Please wait at least one minute between imports.',
-      );
-    }
 
     // File size limit
     if (ofxContent.length > _maxFileSize) {
@@ -45,7 +31,7 @@ class OfxImportEndpoint extends Endpoint {
       throw ArgumentError('Invalid OFX file: missing <OFX> root tag');
     }
 
-    // Parse OFX
+    // Parse OFX (auto-detects credit card vs bank)
     final parsed = _parseOfx(ofxContent);
 
     if (parsed.transactions.length > _maxTransactionsPerImport) {
@@ -73,17 +59,22 @@ class OfxImportEndpoint extends Endpoint {
         if (t.externalId != null) t.externalId,
     };
 
-    final billingMonth =
-        '${parsed.dateEnd.year.toString().padLeft(4, '0')}-'
-        '${parsed.dateEnd.month.toString().padLeft(2, '0')}';
+    // Credit-card OFX → stamp billingMonth derived from DTEND
+    // (Nubank fatura month). Bank OFX → leave null, occurredAt drives grouping.
+    final billingMonth = parsed.isCreditCard
+        ? '${parsed.dateEnd.year.toString().padLeft(4, '0')}-'
+            '${parsed.dateEnd.month.toString().padLeft(2, '0')}'
+        : null;
+
+    final sourceTag = parsed.isCreditCard ? 'credit_card' : 'bank';
 
     var newCount = 0;
     var skippedDuplicates = 0;
     var skippedCredits = 0;
     for (final txn in parsed.transactions) {
       try {
-        // Skip credits (bill payments)
-        if (txn.type == 'CREDIT') {
+        // Credit-card CREDIT rows are refunds/payments we don't track.
+        if (parsed.isCreditCard && txn.type == 'CREDIT') {
           skippedCredits++;
           continue;
         }
@@ -94,10 +85,26 @@ class OfxImportEndpoint extends Endpoint {
           continue;
         }
 
-        // Parse merchant name and installments
-        final merchantInfo = _parseMerchantName(txn.memo);
+        // Parse merchant name and installments.
+        final merchantInfo = parsed.isCreditCard
+            ? _parseCardMemo(txn.memo)
+            : _parseBankMemo(txn.memo);
 
-        // Auto-categorize and apply display name from rules
+        // Decide transaction kind.
+        // Card: always expense. Bank: CREDIT=income, DEBIT=expense unless
+        // the memo looks like a fatura/boleto payment of the card itself.
+        final String kind;
+        if (parsed.isCreditCard) {
+          kind = 'expense';
+        } else if (txn.type == 'CREDIT') {
+          kind = 'income';
+        } else if (_isFaturaPayment(txn.memo)) {
+          kind = 'fatura_payment';
+        } else {
+          kind = 'expense';
+        }
+
+        // Auto-categorize and apply display name from rules.
         var category = '';
         String? displayName;
         final rule = ruleMap[merchantInfo.cleanName];
@@ -124,6 +131,8 @@ class OfxImportEndpoint extends Endpoint {
           installmentTotal: merchantInfo.installmentTotal,
           displayName: displayName,
           billingMonth: billingMonth,
+          source: sourceTag,
+          kind: kind,
         );
 
         await FinancialTransaction.db.insertRow(session, transaction);
@@ -146,7 +155,6 @@ class OfxImportEndpoint extends Endpoint {
       skippedCredits: skippedCredits,
     );
 
-    _lastImportAt[userKey] = DateTime.now();
     return ImportHistory.db.insertRow(session, history);
   }
 }
@@ -157,12 +165,14 @@ class _ParsedOfx {
   final String currency;
   final DateTime dateStart;
   final DateTime dateEnd;
+  final bool isCreditCard;
   final List<_ParsedTransaction> transactions;
 
   _ParsedOfx({
     required this.currency,
     required this.dateStart,
     required this.dateEnd,
+    required this.isCreditCard,
     required this.transactions,
   });
 }
@@ -196,6 +206,10 @@ class _MerchantInfo {
 }
 
 _ParsedOfx _parseOfx(String content) {
+  final lower = content.toLowerCase();
+  final isCreditCard = lower.contains('<creditcardmsgsrsv1>') ||
+      lower.contains('<ccstmtrs>');
+
   final currency = _extractTag(content, 'CURDEF') ?? 'BRL';
   final dateStart =
       _parseOfxDate(_extractTag(content, 'DTSTART') ?? '') ?? DateTime.now();
@@ -231,6 +245,7 @@ _ParsedOfx _parseOfx(String content) {
     currency: currency,
     dateStart: dateStart,
     dateEnd: dateEnd,
+    isCreditCard: isCreditCard,
     transactions: transactions,
   );
 }
@@ -264,10 +279,8 @@ DateTime? _parseOfxDate(String dateStr) {
   return DateTime(year, month, day);
 }
 
-/// Parses merchant name, extracting installment info if present.
-/// "Msc Cruzeiros - Parcela 9/12" -> cleanName: "Msc Cruzeiros", 9, 12
-/// "Pichau Informatica - NuPay - Parcela 9/15" -> cleanName: "Pichau Informatica - NuPay", 9, 15
-_MerchantInfo _parseMerchantName(String memo) {
+/// Credit-card memo: `"Msc Cruzeiros - Parcela 9/12"` → cleanName + installment.
+_MerchantInfo _parseCardMemo(String memo) {
   final installmentPattern = RegExp(r'\s*-\s*Parcela\s+(\d+)/(\d+)\s*$');
   final match = installmentPattern.firstMatch(memo);
 
@@ -283,4 +296,55 @@ _MerchantInfo _parseMerchantName(String memo) {
   }
 
   return _MerchantInfo(cleanName: memo.trim());
+}
+
+/// Bank-statement memo prefixes (Nubank, pt-BR):
+/// - `Transferência enviada pelo Pix - {name} - {CNPJ/CPF} - {bank info}`
+/// - `Transferência recebida pelo Pix - {name} - {CNPJ/CPF} - {bank info}`
+/// - `Transferência Recebida - {name} - {doc} - {bank info}`
+/// - `Transferência enviada - {name} - ...`
+/// - `Compra no débito via NuPay - {merchant}`
+/// - `Compra no débito - {merchant}`
+/// - `Pagamento de boleto efetuado - {name}`
+/// - `Pagamento de fatura` / `Débito automático` → left as-is (detected separately)
+_MerchantInfo _parseBankMemo(String memo) {
+  final trimmed = memo.trim();
+
+  // Ordered list of prefixes; first match wins.
+  const prefixes = <String>[
+    'Transferência enviada pelo Pix - ',
+    'Transferência recebida pelo Pix - ',
+    'Transferência Recebida - ',
+    'Transferência enviada - ',
+    'Compra no débito via NuPay - ',
+    'Compra no débito - ',
+    'Pagamento de boleto efetuado - ',
+  ];
+
+  for (final prefix in prefixes) {
+    if (trimmed.startsWith(prefix)) {
+      final rest = trimmed.substring(prefix.length);
+      // Name is everything up to the first " - " (which introduces
+      // CNPJ/CPF or bank metadata). If there's no separator, use all of it.
+      final dashIdx = rest.indexOf(' - ');
+      final name = dashIdx >= 0 ? rest.substring(0, dashIdx) : rest;
+      // Strip trailing parenthesised qualifiers like "(Transferência enviada)".
+      final cleanName =
+          name.replaceAll(RegExp(r'\s*\(.*?\)\s*$'), '').trim();
+      return _MerchantInfo(cleanName: cleanName);
+    }
+  }
+
+  return _MerchantInfo(cleanName: trimmed);
+}
+
+/// Heuristic for a Nubank credit-card bill payment on the bank statement.
+/// The exact wording Nubank uses isn't in the sample extrato yet, so this
+/// covers the most likely MEMO patterns.
+bool _isFaturaPayment(String memo) {
+  final lower = memo.toLowerCase();
+  return lower.contains('pagamento de fatura') ||
+      lower.contains('pagamento fatura') ||
+      lower.contains('débito automático') ||
+      lower.contains('debito automatico');
 }

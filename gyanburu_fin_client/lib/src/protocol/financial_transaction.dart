@@ -28,6 +28,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     this.installmentTotal,
     this.displayName,
     this.billingMonth,
+    this.source,
+    this.kind,
   });
 
   factory FinancialTransaction({
@@ -45,6 +47,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     int? installmentTotal,
     String? displayName,
     String? billingMonth,
+    String? source,
+    String? kind,
   }) = _FinancialTransactionImpl;
 
   factory FinancialTransaction.fromJson(
@@ -71,6 +75,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       installmentTotal: jsonSerialization['installmentTotal'] as int?,
       displayName: jsonSerialization['displayName'] as String?,
       billingMonth: jsonSerialization['billingMonth'] as String?,
+      source: jsonSerialization['source'] as String?,
+      kind: jsonSerialization['kind'] as String?,
     );
   }
 
@@ -105,6 +111,10 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
 
   String? billingMonth;
 
+  String? source;
+
+  String? kind;
+
   /// Returns a shallow copy of this [FinancialTransaction]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -123,6 +133,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     int? installmentTotal,
     String? displayName,
     String? billingMonth,
+    String? source,
+    String? kind,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -142,6 +154,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       if (installmentTotal != null) 'installmentTotal': installmentTotal,
       if (displayName != null) 'displayName': displayName,
       if (billingMonth != null) 'billingMonth': billingMonth,
+      if (source != null) 'source': source,
+      if (kind != null) 'kind': kind,
     };
   }
 
@@ -169,6 +183,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     int? installmentTotal,
     String? displayName,
     String? billingMonth,
+    String? source,
+    String? kind,
   }) : super._(
          id: id,
          userId: userId,
@@ -184,6 +200,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
          installmentTotal: installmentTotal,
          displayName: displayName,
          billingMonth: billingMonth,
+         source: source,
+         kind: kind,
        );
 
   /// Returns a shallow copy of this [FinancialTransaction]
@@ -205,6 +223,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     Object? installmentTotal = _Undefined,
     Object? displayName = _Undefined,
     Object? billingMonth = _Undefined,
+    Object? source = _Undefined,
+    Object? kind = _Undefined,
   }) {
     return FinancialTransaction(
       id: id is int? ? id : this.id,
@@ -227,6 +247,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
           : this.installmentTotal,
       displayName: displayName is String? ? displayName : this.displayName,
       billingMonth: billingMonth is String? ? billingMonth : this.billingMonth,
+      source: source is String? ? source : this.source,
+      kind: kind is String? ? kind : this.kind,
     );
   }
 }

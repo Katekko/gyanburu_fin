@@ -29,6 +29,8 @@ abstract class FinancialTransaction
     this.installmentTotal,
     this.displayName,
     this.billingMonth,
+    this.source,
+    this.kind,
   });
 
   factory FinancialTransaction({
@@ -46,6 +48,8 @@ abstract class FinancialTransaction
     int? installmentTotal,
     String? displayName,
     String? billingMonth,
+    String? source,
+    String? kind,
   }) = _FinancialTransactionImpl;
 
   factory FinancialTransaction.fromJson(
@@ -72,6 +76,8 @@ abstract class FinancialTransaction
       installmentTotal: jsonSerialization['installmentTotal'] as int?,
       displayName: jsonSerialization['displayName'] as String?,
       billingMonth: jsonSerialization['billingMonth'] as String?,
+      source: jsonSerialization['source'] as String?,
+      kind: jsonSerialization['kind'] as String?,
     );
   }
 
@@ -108,6 +114,10 @@ abstract class FinancialTransaction
 
   String? billingMonth;
 
+  String? source;
+
+  String? kind;
+
   @override
   _i1.Table<int?> get table => t;
 
@@ -129,6 +139,8 @@ abstract class FinancialTransaction
     int? installmentTotal,
     String? displayName,
     String? billingMonth,
+    String? source,
+    String? kind,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -148,6 +160,8 @@ abstract class FinancialTransaction
       if (installmentTotal != null) 'installmentTotal': installmentTotal,
       if (displayName != null) 'displayName': displayName,
       if (billingMonth != null) 'billingMonth': billingMonth,
+      if (source != null) 'source': source,
+      if (kind != null) 'kind': kind,
     };
   }
 
@@ -169,6 +183,8 @@ abstract class FinancialTransaction
       if (installmentTotal != null) 'installmentTotal': installmentTotal,
       if (displayName != null) 'displayName': displayName,
       if (billingMonth != null) 'billingMonth': billingMonth,
+      if (source != null) 'source': source,
+      if (kind != null) 'kind': kind,
     };
   }
 
@@ -220,6 +236,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     int? installmentTotal,
     String? displayName,
     String? billingMonth,
+    String? source,
+    String? kind,
   }) : super._(
          id: id,
          userId: userId,
@@ -235,6 +253,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
          installmentTotal: installmentTotal,
          displayName: displayName,
          billingMonth: billingMonth,
+         source: source,
+         kind: kind,
        );
 
   /// Returns a shallow copy of this [FinancialTransaction]
@@ -256,6 +276,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     Object? installmentTotal = _Undefined,
     Object? displayName = _Undefined,
     Object? billingMonth = _Undefined,
+    Object? source = _Undefined,
+    Object? kind = _Undefined,
   }) {
     return FinancialTransaction(
       id: id is int? ? id : this.id,
@@ -278,6 +300,8 @@ class _FinancialTransactionImpl extends FinancialTransaction {
           : this.installmentTotal,
       displayName: displayName is String? ? displayName : this.displayName,
       billingMonth: billingMonth is String? ? billingMonth : this.billingMonth,
+      source: source is String? ? source : this.source,
+      kind: kind is String? ? kind : this.kind,
     );
   }
 }
@@ -355,6 +379,16 @@ class FinancialTransactionUpdateTable
         table.billingMonth,
         value,
       );
+
+  _i1.ColumnValue<String, String> source(String? value) => _i1.ColumnValue(
+    table.source,
+    value,
+  );
+
+  _i1.ColumnValue<String, String> kind(String? value) => _i1.ColumnValue(
+    table.kind,
+    value,
+  );
 }
 
 class FinancialTransactionTable extends _i1.Table<int?> {
@@ -413,6 +447,14 @@ class FinancialTransactionTable extends _i1.Table<int?> {
       'billingMonth',
       this,
     );
+    source = _i1.ColumnString(
+      'source',
+      this,
+    );
+    kind = _i1.ColumnString(
+      'kind',
+      this,
+    );
   }
 
   late final FinancialTransactionUpdateTable updateTable;
@@ -443,6 +485,10 @@ class FinancialTransactionTable extends _i1.Table<int?> {
 
   late final _i1.ColumnString billingMonth;
 
+  late final _i1.ColumnString source;
+
+  late final _i1.ColumnString kind;
+
   @override
   List<_i1.Column> get columns => [
     id,
@@ -459,6 +505,8 @@ class FinancialTransactionTable extends _i1.Table<int?> {
     installmentTotal,
     displayName,
     billingMonth,
+    source,
+    kind,
   ];
 }
 

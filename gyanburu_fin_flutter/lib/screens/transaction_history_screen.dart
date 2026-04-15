@@ -17,12 +17,15 @@ class TransactionHistoryScreen extends StatefulWidget {
       _TransactionHistoryScreenState();
 }
 
+enum _SourceFilter { all, card, bank, income }
+
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   List<FinancialTransaction> _transactions = [];
   List<Category> _categories = [];
   List<CategoryRule> _rules = [];
   bool _loading = true;
   String? _selectedCategory;
+  _SourceFilter _selectedSource = _SourceFilter.all;
   final _searchController = TextEditingController();
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
@@ -71,6 +74,23 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   List<FinancialTransaction> get _filtered {
     var list = _transactions.toList();
+
+    switch (_selectedSource) {
+      case _SourceFilter.all:
+        break;
+      case _SourceFilter.card:
+        list = list.where((t) => t.source == 'credit_card').toList();
+        break;
+      case _SourceFilter.bank:
+        // Bank tab shows bank outflows (expenses + fatura payments), not income.
+        list = list
+            .where((t) => t.source == 'bank' && t.kind != 'income')
+            .toList();
+        break;
+      case _SourceFilter.income:
+        list = list.where((t) => t.kind == 'income').toList();
+        break;
+    }
 
     if (_selectedCategory != null) {
       list = list.where((t) => t.category == _selectedCategory).toList();
@@ -239,6 +259,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          // Source filter chips
+          _SourceFilterBar(
+            selected: _selectedSource,
+            onChanged: (s) => setState(() => _selectedSource = s),
+          ),
+          const SizedBox(height: 12),
           // Stats row
           _StatsRow(transactions: filtered),
           const SizedBox(height: 12),
@@ -351,6 +377,37 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 }
 
+class _SourceFilterBar extends StatelessWidget {
+  const _SourceFilterBar({required this.selected, required this.onChanged});
+  final _SourceFilter selected;
+  final ValueChanged<_SourceFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(_SourceFilter value, String label, IconData icon) {
+      final isSelected = selected == value;
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: FilterChip(
+          label: Text(label),
+          avatar: Icon(icon, size: 16),
+          selected: isSelected,
+          onSelected: (_) => onChanged(value),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        chip(_SourceFilter.all, 'All', Icons.all_inclusive),
+        chip(_SourceFilter.card, 'Card', Icons.credit_card),
+        chip(_SourceFilter.bank, 'Bank', Icons.account_balance),
+        chip(_SourceFilter.income, 'Income', Icons.trending_up),
+      ],
+    );
+  }
+}
+
 class _StatsRow extends StatelessWidget {
   const _StatsRow({required this.transactions});
   final List<FinancialTransaction> transactions;
@@ -358,40 +415,73 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final total = transactions.fold(0.0, (sum, t) => sum + t.amount);
-    final uncategorized = transactions.where((t) => t.category.isEmpty).length;
 
-    return Row(
-      children: [
-        Text(
-          '${transactions.length} transactions',
-          style: theme.textTheme.labelSmall,
-        ),
-        const SizedBox(width: 16),
-        Text(
-          'Total: ${_currencyFormat.format(total)}',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: AppColors.negative,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (uncategorized > 0) ...[
-          const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppColors.vibrantOrange.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '$uncategorized uncategorized',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: AppColors.vibrantOrange,
-                fontWeight: FontWeight.w600,
-              ),
+    // fatura_payment is informational only — exclude from both totals.
+    final income = transactions
+        .where((t) => t.kind == 'income')
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final expenses = transactions
+        .where((t) => t.kind != 'income' && t.kind != 'fatura_payment')
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final net = income - expenses;
+    final uncategorized = transactions
+        .where((t) => t.kind != 'income' && t.category.isEmpty)
+        .length;
+
+    Widget cell(String label, double value, Color color) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: theme.textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            _currencyFormat.format(value),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        cell('Income', income, AppColors.positive),
+        const SizedBox(width: 24),
+        cell('Expenses', expenses, AppColors.negative),
+        const SizedBox(width: 24),
+        cell('Net', net,
+            net >= 0 ? AppColors.positive : AppColors.negative),
+        const Spacer(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${transactions.length} transactions',
+              style: theme.textTheme.labelSmall,
+            ),
+            if (uncategorized > 0) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.vibrantOrange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$uncategorized uncategorized',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.vibrantOrange,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ],
     );
   }
@@ -411,16 +501,31 @@ class _TransactionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final isIncome = tx.kind == 'income';
+    final isFaturaPayment = tx.kind == 'fatura_payment';
     final hasCategory = tx.category.isNotEmpty;
     final catObj = hasCategory
         ? categories.where((c) => c.name == tx.category).firstOrNull
         : null;
-    final icon = catObj != null
-        ? (categoryIconMap[catObj.icon] ?? Icons.category)
-        : Icons.help_outline;
-    final color = catObj != null
-        ? Color(int.parse('FF${catObj.color}', radix: 16))
-        : AppColors.textMuted;
+
+    // Override icon/color for income and fatura payments so they read clearly
+    // even without a category assigned.
+    final IconData icon;
+    final Color color;
+    if (isIncome) {
+      icon = Icons.trending_up;
+      color = AppColors.positive;
+    } else if (isFaturaPayment) {
+      icon = Icons.sync_alt;
+      color = AppColors.textMuted;
+    } else {
+      icon = catObj != null
+          ? (categoryIconMap[catObj.icon] ?? Icons.category)
+          : Icons.help_outline;
+      color = catObj != null
+          ? Color(int.parse('FF${catObj.color}', radix: 16))
+          : AppColors.textMuted;
+    }
 
     final hasInstallment =
         tx.installmentCurrent != null && tx.installmentTotal != null;
@@ -482,7 +587,21 @@ class _TransactionRow extends StatelessWidget {
                       ),
                     Row(
                       children: [
-                        if (hasCategory)
+                        _SourceBadge(tx: tx),
+                        const SizedBox(width: 6),
+                        if (isIncome)
+                          Text('Income',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.positive,
+                                fontWeight: FontWeight.w600,
+                              ))
+                        else if (isFaturaPayment)
+                          Text('Fatura payment',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w600,
+                              ))
+                        else if (hasCategory)
                           Text(tx.category, style: theme.textTheme.labelSmall)
                         else
                           Text(
@@ -507,15 +626,75 @@ class _TransactionRow extends StatelessWidget {
                 ),
               ),
               Text(
-                _currencyFormat.format(tx.amount),
+                isIncome
+                    ? '+${_currencyFormat.format(tx.amount)}'
+                    : _currencyFormat.format(tx.amount),
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textPrimary,
+                  color: isIncome
+                      ? AppColors.positive
+                      : isFaturaPayment
+                          ? AppColors.textMuted
+                          : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
+                  decoration: isFaturaPayment
+                      ? TextDecoration.lineThrough
+                      : null,
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SourceBadge extends StatelessWidget {
+  const _SourceBadge({required this.tx});
+  final FinancialTransaction tx;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final IconData icon;
+    final Color color;
+    final String label;
+
+    if (tx.source == 'credit_card') {
+      icon = Icons.credit_card;
+      color = AppColors.deepPurple;
+      label = 'Card';
+    } else if (tx.source == 'bank') {
+      icon = Icons.account_balance;
+      color = AppColors.vibrantOrange;
+      label = 'Bank';
+    } else {
+      // Legacy rows with no source stamped.
+      icon = Icons.receipt_long;
+      color = AppColors.textMuted;
+      label = 'Manual';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
