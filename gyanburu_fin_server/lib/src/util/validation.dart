@@ -1,7 +1,7 @@
 /// Shared input validation utilities for endpoint methods.
 class Validate {
   static final _monthPattern = RegExp(r'^\d{4}-(0[1-9]|1[0-2])$');
-  static final _hexColorPattern = RegExp(r'^[0-9a-fA-F]{6}$');
+  static final _hexColorPattern = RegExp(r'^#?[0-9a-fA-F]{6}$');
 
   static void requireNotEmpty(String value, String fieldName) {
     if (value.trim().isEmpty) {

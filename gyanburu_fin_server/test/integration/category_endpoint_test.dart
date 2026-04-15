@@ -25,7 +25,7 @@ void main() {
             userId: UuidValue.fromString(userId),
             name: 'Food',
             icon: 'restaurant',
-            color: '#FF7043',
+            color: 'FF7043',
           ),
         );
 
@@ -42,7 +42,7 @@ void main() {
             userId: UuidValue.fromString(userId),
             name: 'Food',
             icon: 'restaurant',
-            color: '#FF7043',
+            color: 'FF7043',
           ),
         );
 
@@ -58,7 +58,7 @@ void main() {
             userId: UuidValue.fromString(userId),
             name: 'Temp',
             icon: 'delete',
-            color: '#000000',
+            color: '000000',
           ),
         );
 
@@ -77,11 +77,41 @@ void main() {
               userId: UuidValue.fromString(userId),
               name: '',
               icon: 'restaurant',
-              color: '#FF7043',
+              color: 'FF7043',
             ),
           ),
           throwsA(isA<ArgumentError>()),
         );
+      });
+
+      test('accepts bare hex color (client default)', () async {
+        await endpoints.category.create(
+          authed,
+          Category(
+            userId: UuidValue.fromString(userId),
+            name: 'Bare',
+            icon: 'palette',
+            color: '4CAF50',
+          ),
+        );
+        final list = await endpoints.category.list(authed);
+        expect(list, hasLength(1));
+        expect(list.first.color, '4CAF50');
+      });
+
+      test('accepts hash-prefixed hex color', () async {
+        await endpoints.category.create(
+          authed,
+          Category(
+            userId: UuidValue.fromString(userId),
+            name: 'Hashed',
+            icon: 'palette',
+            color: '#4CAF50',
+          ),
+        );
+        final list = await endpoints.category.list(authed);
+        expect(list, hasLength(1));
+        expect(list.first.color, '#4CAF50');
       });
 
       test('rejects invalid hex color', () async {
@@ -93,6 +123,21 @@ void main() {
               name: 'Food',
               icon: 'restaurant',
               color: 'not-a-color',
+            ),
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('rejects short hex color', () async {
+        expect(
+          () => endpoints.category.create(
+            authed,
+            Category(
+              userId: UuidValue.fromString(userId),
+              name: 'Food',
+              icon: 'restaurant',
+              color: 'FFF',
             ),
           ),
           throwsA(isA<ArgumentError>()),
@@ -114,7 +159,7 @@ void main() {
             userId: UuidValue.fromString(userId),
             name: 'MyCategory',
             icon: 'star',
-            color: '#FFFFFF',
+            color: 'FFFFFF',
           ),
         );
 
@@ -129,7 +174,7 @@ void main() {
             userId: UuidValue.fromString(userId),
             name: 'Protected',
             icon: 'lock',
-            color: '#FF0000',
+            color: 'FF0000',
           ),
         );
 
