@@ -122,7 +122,7 @@ class _NubankSyncScreenState extends State<NubankSyncScreen> {
                 valueColor: AppColors.textMuted,
               ),
               _ResultRow(
-                label: 'Skipped (credits)',
+                label: 'Skipped (card refunds/payments)',
                 value: '${result.skippedCredits}',
                 valueColor: AppColors.textMuted,
               ),
@@ -151,7 +151,8 @@ class _NubankSyncScreenState extends State<NubankSyncScreen> {
           Text('Nubank Import', style: theme.textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
-            'Import your Nubank credit card statement from an OFX file.',
+            'Import your Nubank credit card fatura or checking-account '
+            'statement (extrato) from an OFX file.',
             style: theme.textTheme.bodySmall,
           ),
           const SizedBox(height: 24),
@@ -210,7 +211,7 @@ class _ImportCard extends StatelessWidget {
                         style: theme.textTheme.titleMedium,
                       ),
                       Text(
-                        'Export from Nubank app and select the .ofx file',
+                        'Credit card fatura or bank extrato, .ofx format',
                         style: theme.textTheme.labelSmall,
                       ),
                     ],
@@ -233,11 +234,13 @@ class _ImportCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   _StepText(number: '1', text: 'Open Nubank app'),
                   _StepText(
-                      number: '2', text: 'Go to Credit Card > Your Bills'),
+                      number: '2',
+                      text:
+                          'Credit card: Cartão > Faturas; Bank: Conta > Extrato'),
                   _StepText(
                       number: '3',
-                      text: 'Select the month and tap "Share"'),
-                  _StepText(number: '4', text: 'Choose "OFX" format'),
+                      text: 'Tap "Share / Exportar" and choose OFX'),
+
                 ],
               ),
             ),
