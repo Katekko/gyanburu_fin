@@ -10,11 +10,9 @@ The gyanburu_fin server runs in a Proxmox LXC reachable only over Tailscale.
 ## Connection
 
 ```bash
-ssh <SERVER_USER>@<SERVER_HOST>
+ssh root@192.168.0.229
 cd /opt/gyanburu_fin/gyanburu_fin_server
 ```
-
-Replace `<SERVER_USER>` / `<SERVER_HOST>` with the values from the GitHub Actions secrets or the user's SSH config.
 
 ## Running SQL queries
 

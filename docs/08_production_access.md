@@ -9,11 +9,8 @@ key is the one registered in the `DEPLOY_SSH_KEY` GitHub secret.
 ## SSH into the server
 
 ```bash
-ssh <SERVER_USER>@<SERVER_HOST>
+ssh root@192.168.0.229
 ```
-
-Replace `<SERVER_USER>` / `<SERVER_HOST>` with the values stored in the
-GitHub Actions secrets (or whatever you have in `~/.ssh/config`).
 
 The app lives at `/opt/gyanburu_fin/gyanburu_fin_server`.
 

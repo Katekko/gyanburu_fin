@@ -2,10 +2,9 @@
 
 Run queries or inspect the production Postgres database via SSH + Docker.
 
-The server is on Tailscale. You need to be connected to run any command.
+The server is on the local network at `192.168.0.229` (Proxmox LXC).
 All work directory references assume `/opt/gyanburu_fin/gyanburu_fin_server`
-on the remote host. The SSH credentials come from the user's shell config
-or the `SERVER_USER` / `SERVER_HOST` values in `docs/08_production_access.md`.
+on the remote host.
 
 ## How to use this skill
 
@@ -30,7 +29,7 @@ do on the production database. Examples:
    show the command to the user and ask for confirmation before running.
 4. Run via Bash using the pattern:
    ```
-   ssh <USER>@<HOST> "cd /opt/gyanburu_fin/gyanburu_fin_server && \
+   ssh root@192.168.0.229 "cd /opt/gyanburu_fin/gyanburu_fin_server && \
      docker compose -f docker-compose.prod.yaml exec -T postgres \
      psql -U postgres gyanburu_fin -c \"<SQL>\""
    ```
