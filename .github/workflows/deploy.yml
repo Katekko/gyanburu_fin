@@ -41,6 +41,7 @@ jobs:
             --base-href /app/ \
             --wasm \
             --dart-define=SERVER_URL=http://192.168.0.229:8080/ \
+            --dart-define=APP_VERSION=${GITHUB_SHA::7} \
             --output ../gyanburu_fin_server/web/app
 
       - uses: docker/setup-buildx-action@v3

@@ -21,6 +21,11 @@ const _serverUrl = String.fromEnvironment(
   defaultValue: 'http://localhost:8080/',
 );
 
+const appVersion = String.fromEnvironment(
+  'APP_VERSION',
+  defaultValue: 'dev',
+);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -83,6 +88,21 @@ class _AppShellState extends State<AppShell> {
             },
             extended: true,
             minExtendedWidth: 200,
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'v$appVersion',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Row(
