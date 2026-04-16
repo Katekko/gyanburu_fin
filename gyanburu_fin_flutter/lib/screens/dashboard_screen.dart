@@ -65,19 +65,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  List<MonthlyEntry> get _incomeEntries =>
-      _entries.where((e) => e.type == EntryType.income).toList();
-
   List<MonthlyEntry> get _expenseEntries =>
       _entries.where((e) => e.type == EntryType.expense).toList();
 
-  double get _totalIncome => _incomeEntries.fold(0.0, (s, e) => s + e.amount);
+  double get _totalIncome => _transactions
+      .where((t) => t.kind == 'income')
+      .fold(0.0, (s, t) => s + t.amount);
 
   double get _totalBudgetedExpenses =>
       _expenseEntries.fold(0.0, (s, e) => s + e.amount);
 
-  double get _totalCardSpending =>
-      _transactions.fold(0.0, (s, t) => s + t.amount);
+  double get _totalCardSpending => _transactions
+      .where((t) => t.kind == 'expense')
+      .fold(0.0, (s, t) => s + t.amount);
 
   Category? _categoryFor(int id) {
     try {
@@ -165,10 +165,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _SummaryCard(
-                  label: 'Card Spending',
+                  label: 'Expenses',
                   value: _currencyFormat.format(_totalCardSpending),
                   color: AppColors.negative,
-                  icon: Icons.credit_card,
+                  icon: Icons.trending_down,
                 ),
               ),
               const SizedBox(width: 16),
