@@ -141,14 +141,50 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     if (result == null || !mounted) return;
 
     try {
-      await client.transaction.saveWithPropagation(
+      final updated = await client.transaction.saveWithPropagation(
         transaction.id!,
         result.category?.name,
         result.displayName,
         result.propagateDisplayName,
         result.propagateCategory,
       );
-      _loadData();
+
+      setState(() {
+        // Update the edited transaction in place.
+        final idx = _transactions.indexWhere((t) => t.id == updated.id);
+        if (idx != -1) _transactions[idx] = updated;
+
+        // Apply propagation to siblings in the local list.
+        final categoryName = result.category?.name ?? '';
+        for (var i = 0; i < _transactions.length; i++) {
+          final t = _transactions[i];
+          if (t.id == updated.id || t.merchantName != updated.merchantName) {
+            continue;
+          }
+          if (result.propagateCategory) t.category = categoryName;
+          if (result.propagateDisplayName) t.displayName = result.displayName;
+        }
+
+        // Update local rules cache.
+        final ruleIdx =
+            _rules.indexWhere((r) => r.merchantPattern == updated.merchantName);
+        if (ruleIdx != -1) {
+          if (result.propagateCategory) {
+            _rules[ruleIdx].categoryId = result.category?.id;
+          }
+          if (result.propagateDisplayName) {
+            _rules[ruleIdx].displayName = result.displayName;
+          }
+        } else if (result.propagateCategory || result.propagateDisplayName) {
+          _rules.add(CategoryRule(
+            userId: updated.userId,
+            merchantPattern: updated.merchantName,
+            categoryId: result.propagateCategory ? result.category?.id : null,
+            displayName:
+                result.propagateDisplayName ? result.displayName : null,
+          ));
+        }
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
