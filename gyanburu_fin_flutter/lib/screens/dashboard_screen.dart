@@ -24,6 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Category> _categories = [];
   List<FinancialTransaction> _transactions = [];
   bool _loading = true;
+  String? _selectedCategory;
 
   @override
   void initState() {
@@ -192,6 +193,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   spending: _transactionSpendingByCategory,
                   colorMap: _categoryColorMap,
                   total: _totalExpenseSpending,
+                  selectedCategory: _selectedCategory,
+                  onCategorySelected: (cat) =>
+                      setState(() => _selectedCategory = cat),
                 ),
               ),
               const SizedBox(width: 20),
@@ -217,8 +221,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 24),
           _RecentTransactions(
-            transactions: _transactions,
+            transactions: _selectedCategory != null
+                ? _expenseTransactions
+                    .where((t) =>
+                        _selectedCategory == 'Uncategorized'
+                            ? t.category.isEmpty
+                            : t.category == _selectedCategory)
+                    .toList()
+                : _transactions,
             categories: _categories,
+            filterLabel: _selectedCategory,
+            onClearFilter: _selectedCategory != null
+                ? () => setState(() => _selectedCategory = null)
+                : null,
           ),
         ],
       ),
@@ -271,11 +286,15 @@ class _SpendingChart extends StatefulWidget {
     required this.spending,
     required this.colorMap,
     required this.total,
+    this.selectedCategory,
+    this.onCategorySelected,
   });
 
   final Map<String, double> spending;
   final Map<String, Color> colorMap;
   final double total;
+  final String? selectedCategory;
+  final ValueChanged<String?>? onCategorySelected;
 
   @override
   State<_SpendingChart> createState() => _SpendingChartState();
@@ -285,7 +304,8 @@ class _SpendingChartState extends State<_SpendingChart>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animCtrl;
   late final Animation<double> _animValue;
-  String? _selectedCategory;
+
+  String? get _selectedCategory => widget.selectedCategory;
 
   @override
   void initState() {
@@ -313,9 +333,9 @@ class _SpendingChartState extends State<_SpendingChart>
   }
 
   void _onTapCategory(String? category) {
-    setState(() {
-      _selectedCategory = _selectedCategory == category ? null : category;
-    });
+    widget.onCategorySelected?.call(
+      _selectedCategory == category ? null : category,
+    );
   }
 
   @override
@@ -949,9 +969,13 @@ class _RecentTransactions extends StatelessWidget {
   const _RecentTransactions({
     required this.transactions,
     required this.categories,
+    this.filterLabel,
+    this.onClearFilter,
   });
   final List<FinancialTransaction> transactions;
   final List<Category> categories;
+  final String? filterLabel;
+  final VoidCallback? onClearFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -967,10 +991,20 @@ class _RecentTransactions extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text('Recent Transactions',
-                      style: theme.textTheme.titleMedium),
+                  child: Text(
+                    filterLabel != null
+                        ? '$filterLabel Transactions'
+                        : 'Recent Transactions',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
-                if (transactions.isNotEmpty)
+                if (filterLabel != null)
+                  IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    tooltip: 'Clear filter',
+                    onPressed: onClearFilter,
+                  )
+                else if (transactions.isNotEmpty)
                   Text(
                     '${transactions.length} this month',
                     style: theme.textTheme.labelSmall,
