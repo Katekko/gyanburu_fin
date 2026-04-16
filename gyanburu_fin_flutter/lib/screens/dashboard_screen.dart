@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../main.dart';
 import '../shared/icon_map.dart';
+import '../shared/transaction_edit_dialog.dart';
 import '../theme/app_theme.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -22,6 +23,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<MonthlyEntry> _entries = [];
   List<Category> _categories = [];
+  List<CategoryRule> _rules = [];
   List<FinancialTransaction> _transactions = [];
   bool _loading = true;
   String? _selectedCategory;
@@ -49,11 +51,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         client.monthlyEntry.listByMonth(_monthKey),
         client.category.list(),
         client.transaction.listByMonth(_currentMonth),
+        client.categoryRule.list(),
       ]);
       setState(() {
         _entries = results[0] as List<MonthlyEntry>;
         _categories = results[1] as List<Category>;
         _transactions = results[2] as List<FinancialTransaction>;
+        _rules = results[3] as List<CategoryRule>;
         _loading = false;
       });
     } catch (e) {
@@ -132,6 +136,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final unpaid = _entries.where((e) => !e.paid && e.dueDate != null).toList()
       ..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
     return unpaid;
+  }
+
+  Future<void> _showTransactionEditor(FinancialTransaction transaction) async {
+    final existingRule = _rules
+        .where((r) => r.merchantPattern == transaction.merchantName)
+        .firstOrNull;
+
+    final initialPropagateDisplayName = existingRule == null
+        ? true
+        : (existingRule.displayName != null &&
+            existingRule.displayName!.isNotEmpty);
+
+    final initialPropagateCategory = existingRule == null
+        ? true
+        : existingRule.categoryId != null;
+
+    final result = await showDialog<TransactionEditResult>(
+      context: context,
+      builder: (ctx) => TransactionEditDialog(
+        transaction: transaction,
+        categories: _categories,
+        existingDisplayName:
+            existingRule?.displayName ?? transaction.displayName,
+        initialPropagateDisplayName: initialPropagateDisplayName,
+        initialPropagateCategory: initialPropagateCategory,
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      await client.transaction.saveWithPropagation(
+        transaction.id!,
+        result.category?.name,
+        result.displayName,
+        result.propagateDisplayName,
+        result.propagateCategory,
+      );
+      _loadData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update: $e'),
+            backgroundColor: AppColors.negative,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -234,6 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onClearFilter: _selectedCategory != null
                 ? () => setState(() => _selectedCategory = null)
                 : null,
+            onTransactionTap: _showTransactionEditor,
           ),
         ],
       ),
@@ -971,11 +1025,13 @@ class _RecentTransactions extends StatelessWidget {
     required this.categories,
     this.filterLabel,
     this.onClearFilter,
+    this.onTransactionTap,
   });
   final List<FinancialTransaction> transactions;
   final List<Category> categories;
   final String? filterLabel;
   final VoidCallback? onClearFilter;
+  final void Function(FinancialTransaction)? onTransactionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1058,50 +1114,56 @@ class _RecentTransactions extends StatelessWidget {
                   mainName = tx.merchantName;
                 }
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                return InkWell(
+                  onTap: onTransactionTap != null
+                      ? () => onTransactionTap!(tx)
+                      : null,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(icon, color: color, size: 16),
                         ),
-                        child: Icon(icon, color: color, size: 16),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              mainName,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (hasDisplayName)
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                tx.merchantName,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: AppColors.textMuted,
-                                  fontSize: 11,
+                                mainName,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                          ],
+                              if (hasDisplayName)
+                                Text(
+                                  tx.merchantName,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        _currencyFormat.format(tx.amount),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        Text(
+                          _currencyFormat.format(tx.amount),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               }),
