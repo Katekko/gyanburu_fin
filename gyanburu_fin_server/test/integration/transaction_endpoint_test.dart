@@ -217,8 +217,7 @@ void main() {
             color: 'FFAB00',
           ),
         );
-        // Simulate the current broken state: both siblings share a
-        // propagated displayName.
+        // Both siblings share a propagated displayName.
         final a = await _insertTx(
             merchant: 'LAGUNA MOTORS',
             display: 'manutencao geral',
@@ -243,9 +242,8 @@ void main() {
             await FinancialTransaction.db.findById(sessionBuilder.build(), b.id!);
         expect(reloadedA!.displayName, 'Capacete rosa');
         expect(reloadedA.category, 'Moto');
-        expect(reloadedB!.displayName, isNull,
-            reason: 'sibling displayName cleared on uncheck so user can '
-                'edit it individually');
+        expect(reloadedB!.displayName, 'manutencao geral',
+            reason: 'sibling displayName left unchanged when not propagating');
         expect(reloadedB.category, 'Moto',
             reason: 'category always propagates');
 

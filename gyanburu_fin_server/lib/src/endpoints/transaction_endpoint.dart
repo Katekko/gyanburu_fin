@@ -160,9 +160,7 @@ class TransactionEndpoint extends Endpoint {
     );
     for (final sibling in siblings) {
       if (propagateCategory) sibling.category = effectiveCategory;
-      // Name is either propagated to siblings or cleared, so unchecking the
-      // checkbox lets the user assign a different name per transaction.
-      sibling.displayName = propagateDisplayName ? effectiveDisplay : null;
+      if (propagateDisplayName) sibling.displayName = effectiveDisplay;
       await FinancialTransaction.db.updateRow(session, sibling);
     }
 
