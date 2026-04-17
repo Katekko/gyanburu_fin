@@ -36,7 +36,7 @@ class ChatEndpoint extends Endpoint {
         'content-type': 'application/json',
       },
       body: jsonEncode({
-        'model': 'claude-haiku-4-5-20251001',
+        'model': 'claude-sonnet-4-6',
         'max_tokens': 1024,
         'system': '''Você é um assistente financeiro pessoal integrado ao Gyanburu Fin.
 Responda sempre em português do Brasil. Seja conciso e direto.
