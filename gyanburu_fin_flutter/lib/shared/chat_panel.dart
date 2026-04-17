@@ -26,6 +26,7 @@ class _ChatPanelState extends State<ChatPanel> {
   final List<ChatMessage> _history = [];
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
   bool _loading = false;
 
   Future<void> _send() async {
@@ -33,6 +34,7 @@ class _ChatPanelState extends State<ChatPanel> {
     if (text.isEmpty || _loading) return;
 
     _controller.clear();
+    _focusNode.requestFocus();
     final historyBeforeNewMessage = List<ChatMessage>.from(_history);
     setState(() {
       _history.add(ChatMessage(role: 'user', content: text));
@@ -75,6 +77,7 @@ class _ChatPanelState extends State<ChatPanel> {
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -198,6 +201,7 @@ class _ChatPanelState extends State<ChatPanel> {
           Expanded(
             child: TextField(
               controller: _controller,
+              focusNode: _focusNode,
               decoration: InputDecoration(
                 hintText: 'Pergunte algo...',
                 hintStyle: const TextStyle(fontSize: 13),
