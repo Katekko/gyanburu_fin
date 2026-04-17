@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 
 import '../main.dart' show client;
@@ -242,14 +243,72 @@ class _ChatBubble extends StatelessWidget {
               bottomRight: Radius.circular(isUser ? 4 : 16),
             ),
           ),
-          child: SelectableText(
-            message.content,
-            style: TextStyle(
-              color: isUser ? Colors.white : Colors.black87,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
+          child: isUser
+              ? SelectableText(
+                  message.content,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                )
+              : MarkdownBody(
+                  data: message.content,
+                  selectable: true,
+                  styleSheet: MarkdownStyleSheet(
+                    p: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                    strong: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    em: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    code: TextStyle(
+                      fontSize: 12,
+                      backgroundColor: Colors.grey.shade200,
+                      fontFamily: 'monospace',
+                    ),
+                    codeblockDecoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    listBullet: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13,
+                    ),
+                    blockquoteDecoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: AppColors.deepPurple,
+                          width: 3,
+                        ),
+                      ),
+                    ),
+                    h1: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h2: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h3: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
         ),
       ),
     );
