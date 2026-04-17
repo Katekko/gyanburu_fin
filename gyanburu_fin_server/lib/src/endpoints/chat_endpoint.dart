@@ -341,7 +341,7 @@ $context''';
               ? ' [Conta]'
               : '';
       sb.writeln(
-          '$date | $display | $cat$kindTag$sourceTag | $amountStr');
+          '[ID:${t.id}] $date | $display | $cat$kindTag$sourceTag | $amountStr');
     }
 
     sb.writeln();
