@@ -169,9 +169,11 @@ $context''';
       final id = block['id'] as String;
 
       if (name == 'categorize_transaction') {
+        final txId = (input['transaction_id'] as num).toInt();
         pendingActions.add(PendingAction(
           type: 'categorize_transaction',
-          transactionId: input['transaction_id'] as int,
+          transactionId: txId,
+          merchantName: txId.toString(), // fallback for old cached clients
           categoryName: input['category_name'] as String,
         ));
       } else if (name == 'create_category') {
@@ -247,7 +249,7 @@ $context''';
 
     for (final action in actions) {
       if (action.type == 'categorize_transaction') {
-        final txId = action.transactionId!;
+        final txId = action.transactionId ?? int.parse(action.merchantName!);
         final categoryName = action.categoryName!;
         print('[executeActions] categorize_transaction: id=$txId category="$categoryName"');
         final tx = await FinancialTransaction.db.findById(session, txId);

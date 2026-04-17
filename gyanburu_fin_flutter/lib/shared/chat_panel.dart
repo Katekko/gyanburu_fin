@@ -337,6 +337,10 @@ class _PendingActionsCard extends StatelessWidget {
     if (a.type == 'create_category') {
       return 'Criar categoria "${a.categoryName}"';
     }
+    if (a.type == 'categorize_transaction') {
+      final id = a.transactionId ?? int.tryParse(a.merchantName ?? '');
+      return 'Categorizar transação #$id como "${a.categoryName}"';
+    }
     if (a.type == 'categorize_merchant') {
       final scope = a.propagate == true ? 'todas as transações' : 'novas transações';
       return 'Categorizar "${a.merchantName}" como "${a.categoryName}" ($scope)';
