@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -234,26 +233,12 @@ class _ChatBubble extends StatelessWidget {
   const _ChatBubble({required this.message});
   final ChatMessage message;
 
-  void _copyToClipboard(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: message.content));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Mensagem copiada'),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        width: 200,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isUser = message.role == 'user';
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
-        onLongPress: () => _copyToClipboard(context),
-        child: Container(
+      child: Container(
           margin: const EdgeInsets.symmetric(vertical: 3),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           constraints: BoxConstraints(
@@ -355,7 +340,6 @@ class _ChatBubble extends StatelessWidget {
                     ),
                   ),
                 ),
-        ),
       ),
     );
   }
