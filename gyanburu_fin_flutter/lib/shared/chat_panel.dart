@@ -25,22 +25,36 @@ class ChatPanel extends StatefulWidget {
 class _ChatPanelState extends State<ChatPanel> {
   final List<ChatMessage> _history = [];
   List<PendingAction> _pendingActions = [];
+  String? _failedMessage;
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
   bool _loading = false;
 
-  Future<void> _send() async {
-    final text = _controller.text.trim();
+  Future<void> _send({String? retryText}) async {
+    final text = retryText ?? _controller.text.trim();
     if (text.isEmpty || _loading) return;
 
-    _controller.clear();
-    final historyBeforeNewMessage = List<ChatMessage>.from(_history);
-    setState(() {
-      _history.add(ChatMessage(role: 'user', content: text));
-      _pendingActions = [];
-      _loading = true;
-    });
+    final List<ChatMessage> historyBeforeNewMessage;
+    if (retryText == null) {
+      _controller.clear();
+      historyBeforeNewMessage = List<ChatMessage>.from(_history);
+      setState(() {
+        _history.add(ChatMessage(role: 'user', content: text));
+        _failedMessage = null;
+        _pendingActions = [];
+        _loading = true;
+      });
+    } else {
+      // Retry: user message already in history — slice it off for the API call
+      historyBeforeNewMessage =
+          List<ChatMessage>.from(_history.sublist(0, _history.length - 1));
+      setState(() {
+        _failedMessage = null;
+        _pendingActions = [];
+        _loading = true;
+      });
+    }
     _scrollToBottom();
 
     try {
@@ -55,13 +69,26 @@ class _ChatPanelState extends State<ChatPanel> {
       setState(() {
         _history.add(ChatMessage(
           role: 'assistant',
-          content: 'Erro ao processar sua mensagem. Tente novamente.',
+          content: 'Erro ao processar sua mensagem.',
         ));
+        _failedMessage = text;
         _loading = false;
       });
     }
     _scrollToBottom();
     WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
+  }
+
+  void _retry() {
+    final text = _failedMessage;
+    if (text == null) return;
+    setState(() {
+      // Remove the error bubble before retrying
+      if (_history.isNotEmpty && _history.last.role == 'assistant') {
+        _history.removeLast();
+      }
+    });
+    _send(retryText: text);
   }
 
   Future<void> _executeActions() async {
@@ -155,6 +182,7 @@ class _ChatPanelState extends State<ChatPanel> {
                   setState(() {
                     _history.clear();
                     _pendingActions = [];
+                    _failedMessage = null;
                   }),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -189,7 +217,7 @@ class _ChatPanelState extends State<ChatPanel> {
   }
 
   Widget _buildMessages() {
-    if (_history.isEmpty && !_loading && _pendingActions.isEmpty) {
+    if (_history.isEmpty && !_loading && _pendingActions.isEmpty && _failedMessage == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -220,9 +248,12 @@ class _ChatPanelState extends State<ChatPanel> {
       );
     }
 
+    final hasRetry = _failedMessage != null;
     final hasPending = _pendingActions.isNotEmpty;
-    final itemCount =
-        _history.length + (hasPending ? 1 : 0) + (_loading ? 1 : 0);
+    final itemCount = _history.length +
+        (hasRetry ? 1 : 0) +
+        (hasPending ? 1 : 0) +
+        (_loading ? 1 : 0);
 
     return SelectionArea(
       child: ListView.builder(
@@ -231,7 +262,12 @@ class _ChatPanelState extends State<ChatPanel> {
         itemCount: itemCount,
         itemBuilder: (context, i) {
           if (i < _history.length) return _ChatBubble(message: _history[i]);
-          if (hasPending && i == _history.length) {
+          int offset = _history.length;
+          if (hasRetry && i == offset) {
+            return _RetryButton(onRetry: _retry);
+          }
+          if (hasRetry) offset++;
+          if (hasPending && i == offset) {
             return _PendingActionsCard(
               actions: _pendingActions,
               onConfirm: _executeActions,
@@ -374,6 +410,31 @@ class _PendingActionsCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Retry button ─────────────────────────────────────────────────────────────
+
+class _RetryButton extends StatelessWidget {
+  const _RetryButton({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh, size: 14),
+          label: const Text('Tentar novamente',
+              style: TextStyle(fontSize: 12)),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.deepPurple,
+          ),
+        ),
       ),
     );
   }
