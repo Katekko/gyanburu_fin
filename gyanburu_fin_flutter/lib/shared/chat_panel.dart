@@ -178,14 +178,16 @@ class _ChatPanelState extends State<ChatPanel> {
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      itemCount: _history.length + (_loading ? 1 : 0),
-      itemBuilder: (context, i) {
-        if (i == _history.length) return const _TypingIndicator();
-        return _ChatBubble(message: _history[i]);
-      },
+    return SelectionArea(
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        itemCount: _history.length + (_loading ? 1 : 0),
+        itemBuilder: (context, i) {
+          if (i == _history.length) return const _TypingIndicator();
+          return _ChatBubble(message: _history[i]);
+        },
+      ),
     );
   }
 
@@ -267,7 +269,7 @@ class _ChatBubble extends StatelessWidget {
             ),
           ),
           child: isUser
-              ? SelectableText(
+              ? Text(
                   message.content,
                   style: const TextStyle(
                     color: Colors.white,
@@ -275,8 +277,7 @@ class _ChatBubble extends StatelessWidget {
                     height: 1.4,
                   ),
                 )
-              : SelectionArea(
-                  child: MarkdownBody(
+              : MarkdownBody(
                   data: message.content,
                   selectable: false,
                   extensionSet: md.ExtensionSet.gitHubFlavored,
@@ -353,7 +354,7 @@ class _ChatBubble extends StatelessWidget {
                       vertical: 6,
                     ),
                   ),
-                )),
+                ),
         ),
       ),
     );
