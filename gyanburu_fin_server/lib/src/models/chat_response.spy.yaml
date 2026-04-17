@@ -1,0 +1,4 @@
+class: ChatResponse
+fields:
+  reply: String
+  pendingActions: List<PendingAction>

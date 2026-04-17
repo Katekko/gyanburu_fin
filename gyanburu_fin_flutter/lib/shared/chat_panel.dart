@@ -24,6 +24,7 @@ class ChatPanel extends StatefulWidget {
 
 class _ChatPanelState extends State<ChatPanel> {
   final List<ChatMessage> _history = [];
+  List<PendingAction> _pendingActions = [];
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
@@ -38,15 +39,17 @@ class _ChatPanelState extends State<ChatPanel> {
     final historyBeforeNewMessage = List<ChatMessage>.from(_history);
     setState(() {
       _history.add(ChatMessage(role: 'user', content: text));
+      _pendingActions = [];
       _loading = true;
     });
     _scrollToBottom();
 
     try {
-      final reply =
+      final response =
           await client.chat.sendMessage(historyBeforeNewMessage, text);
       setState(() {
-        _history.add(ChatMessage(role: 'assistant', content: reply));
+        _history.add(ChatMessage(role: 'assistant', content: response.reply));
+        _pendingActions = response.pendingActions;
         _loading = false;
       });
     } catch (e) {
@@ -59,6 +62,37 @@ class _ChatPanelState extends State<ChatPanel> {
       });
     }
     _scrollToBottom();
+  }
+
+  Future<void> _executeActions() async {
+    final actions = List<PendingAction>.from(_pendingActions);
+    setState(() {
+      _pendingActions = [];
+      _loading = true;
+    });
+    _scrollToBottom();
+
+    try {
+      final result = await client.chat.executeActions(actions);
+      setState(() {
+        _history.add(ChatMessage(role: 'assistant', content: result));
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _history.add(ChatMessage(
+          role: 'assistant',
+          content: 'Erro ao executar as ações. Tente novamente.',
+        ));
+        _loading = false;
+      });
+    }
+    _scrollToBottom();
+  }
+
+  void _cancelActions() {
+    setState(() => _pendingActions = []);
+    _history.add(ChatMessage(role: 'assistant', content: 'Ações canceladas.'));
   }
 
   void _scrollToBottom() {
@@ -113,10 +147,14 @@ class _ChatPanelState extends State<ChatPanel> {
           ),
           if (_history.isNotEmpty)
             IconButton(
-              icon:
-                  const Icon(Icons.delete_outline, color: Colors.white70, size: 18),
+              icon: const Icon(Icons.delete_outline,
+                  color: Colors.white70, size: 18),
               tooltip: 'Limpar conversa',
-              onPressed: () => setState(() => _history.clear()),
+              onPressed: () =>
+                  setState(() {
+                    _history.clear();
+                    _pendingActions = [];
+                  }),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
@@ -150,14 +188,15 @@ class _ChatPanelState extends State<ChatPanel> {
   }
 
   Widget _buildMessages() {
-    if (_history.isEmpty && !_loading) {
+    if (_history.isEmpty && !_loading && _pendingActions.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.chat_bubble_outline, size: 48, color: AppColors.textMuted),
+              Icon(Icons.chat_bubble_outline,
+                  size: 48, color: AppColors.textMuted),
               const SizedBox(height: 12),
               Text(
                 'Pergunte sobre suas finanças',
@@ -170,7 +209,7 @@ class _ChatPanelState extends State<ChatPanel> {
               ),
               const SizedBox(height: 8),
               Text(
-                '"Quanto gastei com alimentação esse mês?"\n"Compare meus gastos de fevereiro e março"\n"Qual foi minha maior despesa?"',
+                '"Quanto gastei com alimentação esse mês?"\n"Categoriza os UBER como Transporte"\n"Cria a categoria Moto e categoriza a LAGUNA"',
                 style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                 textAlign: TextAlign.center,
               ),
@@ -180,14 +219,25 @@ class _ChatPanelState extends State<ChatPanel> {
       );
     }
 
+    final hasPending = _pendingActions.isNotEmpty;
+    final itemCount =
+        _history.length + (hasPending ? 1 : 0) + (_loading ? 1 : 0);
+
     return SelectionArea(
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        itemCount: _history.length + (_loading ? 1 : 0),
+        itemCount: itemCount,
         itemBuilder: (context, i) {
-          if (i == _history.length) return const _TypingIndicator();
-          return _ChatBubble(message: _history[i]);
+          if (i < _history.length) return _ChatBubble(message: _history[i]);
+          if (hasPending && i == _history.length) {
+            return _PendingActionsCard(
+              actions: _pendingActions,
+              onConfirm: _executeActions,
+              onCancel: _cancelActions,
+            );
+          }
+          return const _TypingIndicator();
         },
       ),
     );
@@ -233,6 +283,103 @@ class _ChatPanelState extends State<ChatPanel> {
   }
 }
 
+// ── Pending actions confirmation card ────────────────────────────────────────
+
+class _PendingActionsCard extends StatelessWidget {
+  const _PendingActionsCard({
+    required this.actions,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final List<PendingAction> actions;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  String _describe(PendingAction a) {
+    if (a.type == 'create_category') {
+      return 'Criar categoria "${a.categoryName}"';
+    }
+    if (a.type == 'categorize_merchant') {
+      final scope = a.propagate == true ? 'todas as transações' : 'novas transações';
+      return 'Categorizar "${a.merchantName}" como "${a.categoryName}" ($scope)';
+    }
+    return a.type;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.deepPurple.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.pending_actions_outlined,
+                  color: AppColors.deepPurple, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                'Ações pendentes',
+                style: TextStyle(
+                  color: AppColors.deepPurple,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...actions.map(
+            (a) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ',
+                      style:
+                          TextStyle(color: Colors.black87, fontSize: 13)),
+                  Expanded(
+                    child: Text(
+                      _describe(a),
+                      style: const TextStyle(
+                          color: Colors.black87, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: onCancel,
+                child: const Text('Cancelar'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: onConfirm,
+                icon: const Icon(Icons.check, size: 16),
+                label: const Text('Confirmar'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Chat bubble ───────────────────────────────────────────────────────────────
+
 class _ChatBubble extends StatelessWidget {
   const _ChatBubble({required this.message});
   final ChatMessage message;
@@ -243,111 +390,90 @@ class _ChatBubble extends StatelessWidget {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 3),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.72,
+        margin: const EdgeInsets.symmetric(vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.72,
+        ),
+        decoration: BoxDecoration(
+          color: isUser ? AppColors.deepPurple : Colors.grey.shade100,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isUser ? 16 : 4),
+            bottomRight: Radius.circular(isUser ? 4 : 16),
           ),
-          decoration: BoxDecoration(
-            color: isUser ? AppColors.deepPurple : Colors.grey.shade100,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(16),
-              topRight: const Radius.circular(16),
-              bottomLeft: Radius.circular(isUser ? 16 : 4),
-              bottomRight: Radius.circular(isUser ? 4 : 16),
-            ),
-          ),
-          child: isUser
-              ? Text(
-                  message.content,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                )
-              : MarkdownBody(
-                  data: message.content,
-                  selectable: false,
-                  extensionSet: md.ExtensionSet.gitHubFlavored,
-                  styleSheet: MarkdownStyleSheet(
-                    p: const TextStyle(
+        ),
+        child: isUser
+            ? Text(
+                message.content,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              )
+            : MarkdownBody(
+                data: message.content,
+                selectable: false,
+                extensionSet: md.ExtensionSet.gitHubFlavored,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(
+                      color: Colors.black87, fontSize: 13, height: 1.4),
+                  strong: const TextStyle(
                       color: Colors.black87,
                       fontSize: 13,
-                      height: 1.4,
-                    ),
-                    strong: const TextStyle(
+                      fontWeight: FontWeight.w600),
+                  em: const TextStyle(
                       color: Colors.black87,
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    em: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 13,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    code: TextStyle(
+                      fontStyle: FontStyle.italic),
+                  code: TextStyle(
                       fontSize: 12,
                       backgroundColor: Colors.grey.shade200,
-                      fontFamily: 'monospace',
-                    ),
-                    codeblockDecoration: BoxDecoration(
+                      fontFamily: 'monospace'),
+                  codeblockDecoration: BoxDecoration(
                       color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    listBullet: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 13,
-                    ),
-                    blockquoteDecoration: BoxDecoration(
-                      border: Border(
+                      borderRadius: BorderRadius.circular(6)),
+                  listBullet: const TextStyle(
+                      color: Colors.black87, fontSize: 13),
+                  blockquoteDecoration: BoxDecoration(
+                    border: Border(
                         left: BorderSide(
-                          color: AppColors.deepPurple,
-                          width: 3,
-                        ),
-                      ),
-                    ),
-                    h1: const TextStyle(
+                            color: AppColors.deepPurple, width: 3)),
+                  ),
+                  h1: const TextStyle(
                       color: Colors.black87,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h2: const TextStyle(
+                      fontWeight: FontWeight.bold),
+                  h2: const TextStyle(
                       color: Colors.black87,
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h3: const TextStyle(
+                      fontWeight: FontWeight.bold),
+                  h3: const TextStyle(
                       color: Colors.black87,
                       fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    tableHead: const TextStyle(
+                      fontWeight: FontWeight.bold),
+                  tableHead: const TextStyle(
                       color: Colors.black87,
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    tableBody: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 12,
-                    ),
-                    tableBorder: TableBorder.all(
-                      color: Color(0xFFBDBDBD),
-                      width: 1,
-                    ),
-                    tableCellsDecoration: const BoxDecoration(
-                      color: Colors.white,
-                    ),
-                    tableCellsPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                  ),
+                      fontWeight: FontWeight.w600),
+                  tableBody:
+                      const TextStyle(color: Colors.black87, fontSize: 12),
+                  tableBorder:
+                      TableBorder.all(color: const Color(0xFFBDBDBD), width: 1),
+                  tableCellsDecoration:
+                      const BoxDecoration(color: Colors.white),
+                  tableCellsPadding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
                 ),
+              ),
       ),
     );
   }
 }
+
+// ── Typing indicator ──────────────────────────────────────────────────────────
 
 class _TypingIndicator extends StatefulWidget {
   const _TypingIndicator();
@@ -381,7 +507,8 @@ class _TypingIndicatorState extends State<_TypingIndicator>
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.grey.shade100,
           borderRadius: const BorderRadius.only(
@@ -397,7 +524,9 @@ class _TypingIndicatorState extends State<_TypingIndicator>
             mainAxisSize: MainAxisSize.min,
             children: List.generate(3, (i) {
               final phase = (_ctrl.value - i * 0.2).clamp(0.0, 1.0);
-              final opacity = (0.3 + 0.7 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2)).clamp(0.3, 1.0);
+              final opacity =
+                  (0.3 + 0.7 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2))
+                      .clamp(0.3, 1.0);
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 width: 6,

@@ -33,6 +33,7 @@ categoryRule:
   - delete:
 chat:
   - sendMessage:
+  - executeActions:
 dashboard:
   - spendingByCategory:
   - recentTransactions:

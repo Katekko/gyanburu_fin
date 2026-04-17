@@ -1,0 +1,8 @@
+class: PendingAction
+fields:
+  type: String
+  merchantName: String?
+  categoryName: String?
+  propagate: bool?
+  categoryIcon: String?
+  categoryColor: String?

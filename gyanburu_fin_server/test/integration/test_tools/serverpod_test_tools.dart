@@ -20,16 +20,18 @@ import 'package:gyanburu_fin_server/src/generated/bill.dart' as _i5;
 import 'package:gyanburu_fin_server/src/generated/budget_category.dart' as _i6;
 import 'package:gyanburu_fin_server/src/generated/category.dart' as _i7;
 import 'package:gyanburu_fin_server/src/generated/category_rule.dart' as _i8;
-import 'package:gyanburu_fin_server/src/generated/chat_message.dart' as _i9;
+import 'package:gyanburu_fin_server/src/generated/chat_response.dart' as _i9;
+import 'package:gyanburu_fin_server/src/generated/chat_message.dart' as _i10;
+import 'package:gyanburu_fin_server/src/generated/pending_action.dart' as _i11;
 import 'package:gyanburu_fin_server/src/generated/financial_transaction.dart'
-    as _i10;
-import 'package:gyanburu_fin_server/src/generated/import_history.dart' as _i11;
-import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i12;
-import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i13;
-import 'package:gyanburu_fin_server/src/generated/nubank_account.dart' as _i14;
-import 'package:gyanburu_fin_server/src/generated/sync_log.dart' as _i15;
+    as _i12;
+import 'package:gyanburu_fin_server/src/generated/import_history.dart' as _i13;
+import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i14;
+import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i15;
+import 'package:gyanburu_fin_server/src/generated/nubank_account.dart' as _i16;
+import 'package:gyanburu_fin_server/src/generated/sync_log.dart' as _i17;
 import 'package:gyanburu_fin_server/src/generated/greetings/greeting.dart'
-    as _i16;
+    as _i18;
 import 'package:gyanburu_fin_server/src/generated/protocol.dart';
 import 'package:gyanburu_fin_server/src/generated/endpoints.dart';
 export 'package:serverpod_test/serverpod_test_public_exports.dart';
@@ -1168,9 +1170,9 @@ class _ChatEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<String> sendMessage(
+  _i3.Future<_i9.ChatResponse> sendMessage(
     _i1.TestSessionBuilder sessionBuilder,
-    List<_i9.ChatMessage> history,
+    List<_i10.ChatMessage> history,
     String userMessage,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
@@ -1188,6 +1190,37 @@ class _ChatEndpoint {
             'history': history,
             'userMessage': userMessage,
           }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i9.ChatResponse>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<String> executeActions(
+    _i1.TestSessionBuilder sessionBuilder,
+    List<_i11.PendingAction> actions,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'chat',
+            method: 'executeActions',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'chat',
+          methodName: 'executeActions',
+          parameters: _i1.testObjectToJson({'actions': actions}),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =
@@ -1245,7 +1278,7 @@ class _DashboardEndpoint {
     });
   }
 
-  _i3.Future<List<_i10.FinancialTransaction>> recentTransactions(
+  _i3.Future<List<_i12.FinancialTransaction>> recentTransactions(
     _i1.TestSessionBuilder sessionBuilder,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
@@ -1267,7 +1300,7 @@ class _DashboardEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i10.FinancialTransaction>>);
+                as _i3.Future<List<_i12.FinancialTransaction>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1317,7 +1350,7 @@ class _ImportHistoryEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<List<_i11.ImportHistory>> list(
+  _i3.Future<List<_i13.ImportHistory>> list(
     _i1.TestSessionBuilder sessionBuilder,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
@@ -1339,7 +1372,7 @@ class _ImportHistoryEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i11.ImportHistory>>);
+                as _i3.Future<List<_i13.ImportHistory>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1358,7 +1391,7 @@ class _IncomeEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<List<_i12.IncomeSource>> listByMonth(
+  _i3.Future<List<_i14.IncomeSource>> listByMonth(
     _i1.TestSessionBuilder sessionBuilder,
     DateTime month,
   ) async {
@@ -1381,7 +1414,7 @@ class _IncomeEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i12.IncomeSource>>);
+                as _i3.Future<List<_i14.IncomeSource>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1389,9 +1422,9 @@ class _IncomeEndpoint {
     });
   }
 
-  _i3.Future<_i12.IncomeSource> create(
+  _i3.Future<_i14.IncomeSource> create(
     _i1.TestSessionBuilder sessionBuilder,
-    _i12.IncomeSource source,
+    _i14.IncomeSource source,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1412,7 +1445,7 @@ class _IncomeEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i12.IncomeSource>);
+                as _i3.Future<_i14.IncomeSource>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1420,9 +1453,9 @@ class _IncomeEndpoint {
     });
   }
 
-  _i3.Future<_i12.IncomeSource> update(
+  _i3.Future<_i14.IncomeSource> update(
     _i1.TestSessionBuilder sessionBuilder,
-    _i12.IncomeSource source,
+    _i14.IncomeSource source,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1443,7 +1476,7 @@ class _IncomeEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i12.IncomeSource>);
+                as _i3.Future<_i14.IncomeSource>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1493,7 +1526,7 @@ class _MonthlyEntryEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<List<_i13.MonthlyEntry>> listByMonth(
+  _i3.Future<List<_i15.MonthlyEntry>> listByMonth(
     _i1.TestSessionBuilder sessionBuilder,
     String month,
   ) async {
@@ -1516,7 +1549,7 @@ class _MonthlyEntryEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i13.MonthlyEntry>>);
+                as _i3.Future<List<_i15.MonthlyEntry>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1524,9 +1557,9 @@ class _MonthlyEntryEndpoint {
     });
   }
 
-  _i3.Future<_i13.MonthlyEntry> create(
+  _i3.Future<_i15.MonthlyEntry> create(
     _i1.TestSessionBuilder sessionBuilder,
-    _i13.MonthlyEntry entry,
+    _i15.MonthlyEntry entry,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1547,7 +1580,7 @@ class _MonthlyEntryEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i13.MonthlyEntry>);
+                as _i3.Future<_i15.MonthlyEntry>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1555,9 +1588,9 @@ class _MonthlyEntryEndpoint {
     });
   }
 
-  _i3.Future<_i13.MonthlyEntry> update(
+  _i3.Future<_i15.MonthlyEntry> update(
     _i1.TestSessionBuilder sessionBuilder,
-    _i13.MonthlyEntry entry,
+    _i15.MonthlyEntry entry,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1578,7 +1611,7 @@ class _MonthlyEntryEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i13.MonthlyEntry>);
+                as _i3.Future<_i15.MonthlyEntry>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1628,7 +1661,7 @@ class _NubankAccountEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<List<_i14.NubankAccount>> list(
+  _i3.Future<List<_i16.NubankAccount>> list(
     _i1.TestSessionBuilder sessionBuilder,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
@@ -1650,7 +1683,7 @@ class _NubankAccountEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i14.NubankAccount>>);
+                as _i3.Future<List<_i16.NubankAccount>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1658,7 +1691,7 @@ class _NubankAccountEndpoint {
     });
   }
 
-  _i3.Future<_i14.NubankAccount?> findById(
+  _i3.Future<_i16.NubankAccount?> findById(
     _i1.TestSessionBuilder sessionBuilder,
     int id,
   ) async {
@@ -1681,7 +1714,7 @@ class _NubankAccountEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i14.NubankAccount?>);
+                as _i3.Future<_i16.NubankAccount?>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1689,7 +1722,7 @@ class _NubankAccountEndpoint {
     });
   }
 
-  _i3.Future<List<_i15.SyncLog>> syncLogs(
+  _i3.Future<List<_i17.SyncLog>> syncLogs(
     _i1.TestSessionBuilder sessionBuilder,
     int accountId,
   ) async {
@@ -1712,7 +1745,7 @@ class _NubankAccountEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i15.SyncLog>>);
+                as _i3.Future<List<_i17.SyncLog>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1731,7 +1764,7 @@ class _OfxImportEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<_i11.ImportHistory> importOfx(
+  _i3.Future<_i13.ImportHistory> importOfx(
     _i1.TestSessionBuilder sessionBuilder,
     String ofxContent,
     String fileName,
@@ -1758,7 +1791,7 @@ class _OfxImportEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i11.ImportHistory>);
+                as _i3.Future<_i13.ImportHistory>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1777,7 +1810,7 @@ class _TransactionEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<List<_i10.FinancialTransaction>> list(
+  _i3.Future<List<_i12.FinancialTransaction>> list(
     _i1.TestSessionBuilder sessionBuilder,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
@@ -1799,7 +1832,7 @@ class _TransactionEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i10.FinancialTransaction>>);
+                as _i3.Future<List<_i12.FinancialTransaction>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1807,7 +1840,7 @@ class _TransactionEndpoint {
     });
   }
 
-  _i3.Future<List<_i10.FinancialTransaction>> listByMonth(
+  _i3.Future<List<_i12.FinancialTransaction>> listByMonth(
     _i1.TestSessionBuilder sessionBuilder,
     DateTime month,
   ) async {
@@ -1830,7 +1863,7 @@ class _TransactionEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<List<_i10.FinancialTransaction>>);
+                as _i3.Future<List<_i12.FinancialTransaction>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1838,9 +1871,9 @@ class _TransactionEndpoint {
     });
   }
 
-  _i3.Future<_i10.FinancialTransaction> create(
+  _i3.Future<_i12.FinancialTransaction> create(
     _i1.TestSessionBuilder sessionBuilder,
-    _i10.FinancialTransaction transaction,
+    _i12.FinancialTransaction transaction,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1861,7 +1894,7 @@ class _TransactionEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i10.FinancialTransaction>);
+                as _i3.Future<_i12.FinancialTransaction>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1869,9 +1902,9 @@ class _TransactionEndpoint {
     });
   }
 
-  _i3.Future<_i10.FinancialTransaction> update(
+  _i3.Future<_i12.FinancialTransaction> update(
     _i1.TestSessionBuilder sessionBuilder,
-    _i10.FinancialTransaction transaction,
+    _i12.FinancialTransaction transaction,
   ) async {
     return _i1.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -1892,7 +1925,7 @@ class _TransactionEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i10.FinancialTransaction>);
+                as _i3.Future<_i12.FinancialTransaction>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1931,7 +1964,7 @@ class _TransactionEndpoint {
     });
   }
 
-  _i3.Future<_i10.FinancialTransaction> saveWithPropagation(
+  _i3.Future<_i12.FinancialTransaction> saveWithPropagation(
     _i1.TestSessionBuilder sessionBuilder,
     int transactionId,
     String? categoryName,
@@ -1964,7 +1997,7 @@ class _TransactionEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i10.FinancialTransaction>);
+                as _i3.Future<_i12.FinancialTransaction>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();
@@ -1983,7 +2016,7 @@ class _GreetingEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<_i16.Greeting> hello(
+  _i3.Future<_i18.Greeting> hello(
     _i1.TestSessionBuilder sessionBuilder,
     String name,
   ) async {
@@ -2006,7 +2039,7 @@ class _GreetingEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i16.Greeting>);
+                as _i3.Future<_i18.Greeting>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

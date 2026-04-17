@@ -31,14 +31,15 @@ import 'package:gyanburu_fin_server/src/generated/budget_category.dart' as _i18;
 import 'package:gyanburu_fin_server/src/generated/category.dart' as _i19;
 import 'package:gyanburu_fin_server/src/generated/category_rule.dart' as _i20;
 import 'package:gyanburu_fin_server/src/generated/chat_message.dart' as _i21;
-import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i22;
-import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i23;
+import 'package:gyanburu_fin_server/src/generated/pending_action.dart' as _i22;
+import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i23;
+import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i24;
 import 'package:gyanburu_fin_server/src/generated/financial_transaction.dart'
-    as _i24;
-import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _i25;
-import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
+import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _i26;
+import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
+    as _i27;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -686,6 +687,24 @@ class Endpoints extends _i1.EndpointDispatch {
                 params['userMessage'],
               ),
         ),
+        'executeActions': _i1.MethodConnector(
+          name: 'executeActions',
+          params: {
+            'actions': _i1.ParameterDescription(
+              name: 'actions',
+              type: _i1.getType<List<_i22.PendingAction>>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['chat'] as _i8.ChatEndpoint).executeActions(
+                session,
+                params['actions'],
+              ),
+        ),
       },
     );
     connectors['dashboard'] = _i1.EndpointConnector(
@@ -787,7 +806,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'source': _i1.ParameterDescription(
               name: 'source',
-              type: _i1.getType<_i22.IncomeSource>(),
+              type: _i1.getType<_i23.IncomeSource>(),
               nullable: false,
             ),
           },
@@ -805,7 +824,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'source': _i1.ParameterDescription(
               name: 'source',
-              type: _i1.getType<_i22.IncomeSource>(),
+              type: _i1.getType<_i23.IncomeSource>(),
               nullable: false,
             ),
           },
@@ -867,7 +886,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'entry': _i1.ParameterDescription(
               name: 'entry',
-              type: _i1.getType<_i23.MonthlyEntry>(),
+              type: _i1.getType<_i24.MonthlyEntry>(),
               nullable: false,
             ),
           },
@@ -887,7 +906,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'entry': _i1.ParameterDescription(
               name: 'entry',
-              type: _i1.getType<_i23.MonthlyEntry>(),
+              type: _i1.getType<_i24.MonthlyEntry>(),
               nullable: false,
             ),
           },
@@ -1050,7 +1069,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'transaction': _i1.ParameterDescription(
               name: 'transaction',
-              type: _i1.getType<_i24.FinancialTransaction>(),
+              type: _i1.getType<_i25.FinancialTransaction>(),
               nullable: false,
             ),
           },
@@ -1069,7 +1088,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'transaction': _i1.ParameterDescription(
               name: 'transaction',
-              type: _i1.getType<_i24.FinancialTransaction>(),
+              type: _i1.getType<_i25.FinancialTransaction>(),
               nullable: false,
             ),
           },
@@ -1171,9 +1190,9 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
-    modules['serverpod_auth_idp'] = _i25.Endpoints()
+    modules['serverpod_auth_idp'] = _i26.Endpoints()
       ..initializeEndpoints(server);
-    modules['serverpod_auth_core'] = _i26.Endpoints()
+    modules['serverpod_auth_core'] = _i27.Endpoints()
       ..initializeEndpoints(server);
   }
 }
