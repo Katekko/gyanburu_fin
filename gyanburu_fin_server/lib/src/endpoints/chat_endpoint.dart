@@ -212,6 +212,11 @@ $context''';
     final userId = _userId(session);
     final results = <String>[];
 
+    print('[executeActions] called with ${actions.length} actions, userId=$userId');
+    for (final a in actions) {
+      print('[executeActions] action: type=${a.type} merchant=${a.merchantName} category=${a.categoryName} propagate=${a.propagate}');
+    }
+
     for (final action in actions) {
       if (action.type == 'create_category') {
         final name = action.categoryName!;
@@ -248,6 +253,7 @@ $context''';
             .firstOrNull;
 
         int count = 0;
+        print('[executeActions] categorize_merchant: merchant="$merchant" category="$categoryName" propagate=$propagate cat=${cat?.id}');
         if (propagate) {
           final transactions = await FinancialTransaction.db.find(
             session,
@@ -255,7 +261,9 @@ $context''';
                 t.userId.equals(userId) &
                 t.merchantName.equals(merchant),
           );
+          print('[executeActions] found ${transactions.length} transactions for merchant="$merchant"');
           for (final tx in transactions) {
+            print('[executeActions] updating tx id=${tx.id} merchantName="${tx.merchantName}" category: "${tx.category}" -> "$categoryName"');
             tx.category = categoryName;
             await FinancialTransaction.db.updateRow(session, tx);
           }
