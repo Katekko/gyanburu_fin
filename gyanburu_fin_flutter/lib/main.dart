@@ -69,6 +69,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
   bool _chatOpen = false;
+  bool _chatFullscreen = false;
 
   void _navigateToBills() {
     setState(() {
@@ -180,13 +181,20 @@ class _AppShellState extends State<AppShell> {
         right: 0,
         top: 0,
         bottom: 0,
-        width: 380,
+        left: _chatFullscreen ? 0 : null,
+        width: _chatFullscreen ? null : 380,
         child: Offstage(
           offstage: !_chatOpen,
           child: Material(
             elevation: 8,
             child: ChatPanel(
-              onClose: () => setState(() => _chatOpen = false),
+              onClose: () => setState(() {
+                _chatOpen = false;
+                _chatFullscreen = false;
+              }),
+              onToggleFullscreen: () =>
+                  setState(() => _chatFullscreen = !_chatFullscreen),
+              isFullscreen: _chatFullscreen,
             ),
           ),
         ),

@@ -8,9 +8,16 @@ import '../main.dart' show client;
 import '../theme/app_theme.dart';
 
 class ChatPanel extends StatefulWidget {
-  const ChatPanel({super.key, this.onClose});
+  const ChatPanel({
+    super.key,
+    this.onClose,
+    this.onToggleFullscreen,
+    this.isFullscreen = false,
+  });
 
   final VoidCallback? onClose;
+  final VoidCallback? onToggleFullscreen;
+  final bool isFullscreen;
 
   @override
   State<ChatPanel> createState() => _ChatPanelState();
@@ -112,6 +119,21 @@ class _ChatPanelState extends State<ChatPanel> {
               constraints: const BoxConstraints(),
             ),
           if (_history.isNotEmpty) const SizedBox(width: 8),
+          if (widget.onToggleFullscreen != null)
+            IconButton(
+              icon: Icon(
+                widget.isFullscreen
+                    ? Icons.close_fullscreen
+                    : Icons.open_in_full,
+                color: Colors.white70,
+                size: 18,
+              ),
+              tooltip: widget.isFullscreen ? 'Reduzir' : 'Expandir',
+              onPressed: widget.onToggleFullscreen,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          const SizedBox(width: 8),
           if (widget.onClose != null)
             IconButton(
               icon: const Icon(Icons.close, color: Colors.white70, size: 18),
