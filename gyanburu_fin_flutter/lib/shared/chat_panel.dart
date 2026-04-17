@@ -275,9 +275,10 @@ class _ChatBubble extends StatelessWidget {
                     height: 1.4,
                   ),
                 )
-              : MarkdownBody(
+              : SelectionArea(
+                  child: MarkdownBody(
                   data: message.content,
-                  selectable: true,
+                  selectable: false,
                   extensionSet: md.ExtensionSet.gitHubFlavored,
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(
@@ -352,7 +353,7 @@ class _ChatBubble extends StatelessWidget {
                       vertical: 6,
                     ),
                   ),
-                ),
+                )),
         ),
       ),
     );
