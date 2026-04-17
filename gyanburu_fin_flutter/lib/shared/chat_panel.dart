@@ -35,7 +35,6 @@ class _ChatPanelState extends State<ChatPanel> {
     if (text.isEmpty || _loading) return;
 
     _controller.clear();
-    _focusNode.requestFocus();
     final historyBeforeNewMessage = List<ChatMessage>.from(_history);
     setState(() {
       _history.add(ChatMessage(role: 'user', content: text));
@@ -62,6 +61,7 @@ class _ChatPanelState extends State<ChatPanel> {
       });
     }
     _scrollToBottom();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
   }
 
   Future<void> _executeActions() async {
@@ -88,6 +88,7 @@ class _ChatPanelState extends State<ChatPanel> {
       });
     }
     _scrollToBottom();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
   }
 
   void _cancelActions() {
