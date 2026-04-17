@@ -331,6 +331,26 @@ class _ChatBubble extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
+                    tableHead: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    tableBody: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 12,
+                    ),
+                    tableBorder: TableBorder.all(
+                      color: Color(0xFFBDBDBD),
+                      width: 1,
+                    ),
+                    tableCellsDecoration: const BoxDecoration(
+                      color: Colors.white,
+                    ),
+                    tableCellsPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                   ),
                 ),
         ),
