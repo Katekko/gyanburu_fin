@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 
 import '../main.dart' show client;
@@ -207,32 +208,47 @@ class _ChatBubble extends StatelessWidget {
   const _ChatBubble({required this.message});
   final ChatMessage message;
 
+  void _copyToClipboard(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: message.content));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Mensagem copiada'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        width: 200,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUser = message.role == 'user';
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.72,
-        ),
-        decoration: BoxDecoration(
-          color: isUser ? AppColors.deepPurple : Colors.grey.shade100,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isUser ? 16 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 16),
+      child: GestureDetector(
+        onLongPress: () => _copyToClipboard(context),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.72,
           ),
-        ),
-        child: Text(
-          message.content,
-          style: TextStyle(
-            color: isUser ? Colors.white : Colors.black87,
-            fontSize: 13,
-            height: 1.4,
+          decoration: BoxDecoration(
+            color: isUser ? AppColors.deepPurple : Colors.grey.shade100,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(isUser ? 16 : 4),
+              bottomRight: Radius.circular(isUser ? 4 : 16),
+            ),
+          ),
+          child: SelectableText(
+            message.content,
+            style: TextStyle(
+              color: isUser ? Colors.white : Colors.black87,
+              fontSize: 13,
+              height: 1.4,
+            ),
           ),
         ),
       ),
