@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
+import 'package:markdown/markdown.dart' as md;
 
 import '../main.dart' show client;
 import '../theme/app_theme.dart';
@@ -255,6 +256,7 @@ class _ChatBubble extends StatelessWidget {
               : MarkdownBody(
                   data: message.content,
                   selectable: true,
+                  extensionSet: md.ExtensionSet.gitHubFlavored,
                   styleSheet: MarkdownStyleSheet(
                     p: const TextStyle(
                       color: Colors.black87,
