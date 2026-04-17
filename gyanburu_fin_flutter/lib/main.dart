@@ -5,6 +5,7 @@ import 'package:serverpod_flutter/serverpod_flutter.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import 'auth/web_local_storage.dart';
+import 'shared/chat_panel.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/monthly_overview_screen.dart';
 import 'screens/transaction_history_screen.dart';
@@ -67,6 +68,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
+  bool _chatOpen = false;
 
   void _navigateToBills() {
     setState(() {
@@ -77,9 +79,20 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => setState(() => _chatOpen = !_chatOpen),
+        tooltip: 'Assistente Financeiro',
+        backgroundColor: AppColors.deepPurple,
+        child: Icon(
+          _chatOpen ? Icons.close : Icons.smart_toy_outlined,
+          color: Colors.white,
+        ),
+      ),
+      body: Stack(
         children: [
-          NavigationRail(
+          Row(
+            children: [
+              NavigationRail(
             selectedIndex: _selectedIndex,
             onDestinationSelected: (index) {
               setState(() {
@@ -163,7 +176,24 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-    );
+      Positioned(
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: 380,
+        child: Offstage(
+          offstage: !_chatOpen,
+          child: Material(
+            elevation: 8,
+            child: ChatPanel(
+              onClose: () => setState(() => _chatOpen = false),
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);
   }
 
   Widget _buildScreen() {
