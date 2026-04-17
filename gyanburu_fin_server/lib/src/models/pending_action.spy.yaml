@@ -6,3 +6,4 @@ fields:
   propagate: bool?
   categoryIcon: String?
   categoryColor: String?
+  transactionId: int?

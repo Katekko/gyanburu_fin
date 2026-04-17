@@ -38,6 +38,27 @@ final _tools = [
     },
   },
   {
+    'name': 'categorize_transaction',
+    'description':
+        'Categoriza uma transação específica pelo seu ID. '
+            'Use quando o usuário quiser categorizar apenas uma transação individual.',
+    'input_schema': {
+      'type': 'object',
+      'properties': {
+        'transaction_id': {
+          'type': 'integer',
+          'description':
+              'ID da transação (número mostrado como [ID:X] na lista).',
+        },
+        'category_name': {
+          'type': 'string',
+          'description': 'Nome da categoria a ser aplicada.',
+        },
+      },
+      'required': ['transaction_id', 'category_name'],
+    },
+  },
+  {
     'name': 'create_category',
     'description': 'Cria uma nova categoria de gastos.',
     'input_schema': {
@@ -91,8 +112,9 @@ Responda sempre em português do Brasil. Seja conciso e direto.
 Valores negativos indicam despesas; positivos indicam receitas ou entradas.
 Transações do tipo "[Pagamento Fatura]" são pagamentos de cartão — não são despesas reais.
 
-Você tem acesso a duas ferramentas para modificar dados:
-- categorize_merchant: categoriza transações de um comerciante e cria a regra
+Você tem acesso a três ferramentas para modificar dados:
+- categorize_transaction: categoriza uma transação específica pelo ID (use quando o usuário mencionar um ID específico)
+- categorize_merchant: categoriza todas as transações de um comerciante e cria a regra
 - create_category: cria uma nova categoria
 
 IMPORTANTE: Quando usar ferramentas, suas ações ficam pendentes de confirmação do usuário antes de serem executadas. Após registrar as ações, explique o que será feito de forma resumida e peça confirmação.
@@ -146,7 +168,13 @@ $context''';
       final input = block['input'] as Map<String, dynamic>;
       final id = block['id'] as String;
 
-      if (name == 'create_category') {
+      if (name == 'categorize_transaction') {
+        pendingActions.add(PendingAction(
+          type: 'categorize_transaction',
+          transactionId: input['transaction_id'] as int,
+          categoryName: input['category_name'] as String,
+        ));
+      } else if (name == 'create_category') {
         pendingActions.add(PendingAction(
           type: 'create_category',
           categoryName: input['name'] as String,
@@ -218,7 +246,19 @@ $context''';
     }
 
     for (final action in actions) {
-      if (action.type == 'create_category') {
+      if (action.type == 'categorize_transaction') {
+        final txId = action.transactionId!;
+        final categoryName = action.categoryName!;
+        print('[executeActions] categorize_transaction: id=$txId category="$categoryName"');
+        final tx = await FinancialTransaction.db.findById(session, txId);
+        if (tx != null && tx.userId == userId) {
+          tx.category = categoryName;
+          await FinancialTransaction.db.updateRow(session, tx);
+          results.add('Transação #$txId → "$categoryName"');
+        } else {
+          results.add('Transação #$txId não encontrada');
+        }
+      } else if (action.type == 'create_category') {
         final name = action.categoryName!;
         final existing = (await Category.db.find(
           session,

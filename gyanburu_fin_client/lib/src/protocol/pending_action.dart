@@ -20,6 +20,7 @@ abstract class PendingAction implements _i1.SerializableModel {
     this.propagate,
     this.categoryIcon,
     this.categoryColor,
+    this.transactionId,
   });
 
   factory PendingAction({
@@ -29,6 +30,7 @@ abstract class PendingAction implements _i1.SerializableModel {
     bool? propagate,
     String? categoryIcon,
     String? categoryColor,
+    int? transactionId,
   }) = _PendingActionImpl;
 
   factory PendingAction.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -41,6 +43,7 @@ abstract class PendingAction implements _i1.SerializableModel {
           : _i1.BoolJsonExtension.fromJson(jsonSerialization['propagate']),
       categoryIcon: jsonSerialization['categoryIcon'] as String?,
       categoryColor: jsonSerialization['categoryColor'] as String?,
+      transactionId: jsonSerialization['transactionId'] as int?,
     );
   }
 
@@ -56,6 +59,8 @@ abstract class PendingAction implements _i1.SerializableModel {
 
   String? categoryColor;
 
+  int? transactionId;
+
   /// Returns a shallow copy of this [PendingAction]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -66,6 +71,7 @@ abstract class PendingAction implements _i1.SerializableModel {
     bool? propagate,
     String? categoryIcon,
     String? categoryColor,
+    int? transactionId,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -77,6 +83,7 @@ abstract class PendingAction implements _i1.SerializableModel {
       if (propagate != null) 'propagate': propagate,
       if (categoryIcon != null) 'categoryIcon': categoryIcon,
       if (categoryColor != null) 'categoryColor': categoryColor,
+      if (transactionId != null) 'transactionId': transactionId,
     };
   }
 
@@ -96,6 +103,7 @@ class _PendingActionImpl extends PendingAction {
     bool? propagate,
     String? categoryIcon,
     String? categoryColor,
+    int? transactionId,
   }) : super._(
          type: type,
          merchantName: merchantName,
@@ -103,6 +111,7 @@ class _PendingActionImpl extends PendingAction {
          propagate: propagate,
          categoryIcon: categoryIcon,
          categoryColor: categoryColor,
+         transactionId: transactionId,
        );
 
   /// Returns a shallow copy of this [PendingAction]
@@ -116,6 +125,7 @@ class _PendingActionImpl extends PendingAction {
     Object? propagate = _Undefined,
     Object? categoryIcon = _Undefined,
     Object? categoryColor = _Undefined,
+    Object? transactionId = _Undefined,
   }) {
     return PendingAction(
       type: type ?? this.type,
@@ -126,6 +136,7 @@ class _PendingActionImpl extends PendingAction {
       categoryColor: categoryColor is String?
           ? categoryColor
           : this.categoryColor,
+      transactionId: transactionId is int? ? transactionId : this.transactionId,
     );
   }
 }
