@@ -31,6 +31,7 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
     this.paidAmount,
     this.paymentMethod,
     this.paymentNote,
+    this.boletoCode,
   });
 
   factory MonthlyEntry({
@@ -50,6 +51,7 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
     double? paidAmount,
     String? paymentMethod,
     String? paymentNote,
+    String? boletoCode,
   }) = _MonthlyEntryImpl;
 
   factory MonthlyEntry.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -74,6 +76,7 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
       paidAmount: (jsonSerialization['paidAmount'] as num?)?.toDouble(),
       paymentMethod: jsonSerialization['paymentMethod'] as String?,
       paymentNote: jsonSerialization['paymentNote'] as String?,
+      boletoCode: jsonSerialization['boletoCode'] as String?,
     );
   }
 
@@ -112,6 +115,8 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
 
   String? paymentNote;
 
+  String? boletoCode;
+
   /// Returns a shallow copy of this [MonthlyEntry]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -132,6 +137,7 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
     double? paidAmount,
     String? paymentMethod,
     String? paymentNote,
+    String? boletoCode,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -153,6 +159,7 @@ abstract class MonthlyEntry implements _i1.SerializableModel {
       if (paidAmount != null) 'paidAmount': paidAmount,
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
       if (paymentNote != null) 'paymentNote': paymentNote,
+      if (boletoCode != null) 'boletoCode': boletoCode,
     };
   }
 
@@ -182,6 +189,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     double? paidAmount,
     String? paymentMethod,
     String? paymentNote,
+    String? boletoCode,
   }) : super._(
          id: id,
          userId: userId,
@@ -199,6 +207,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
          paidAmount: paidAmount,
          paymentMethod: paymentMethod,
          paymentNote: paymentNote,
+         boletoCode: boletoCode,
        );
 
   /// Returns a shallow copy of this [MonthlyEntry]
@@ -222,6 +231,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     Object? paidAmount = _Undefined,
     Object? paymentMethod = _Undefined,
     Object? paymentNote = _Undefined,
+    Object? boletoCode = _Undefined,
   }) {
     return MonthlyEntry(
       id: id is int? ? id : this.id,
@@ -242,6 +252,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
           ? paymentMethod
           : this.paymentMethod,
       paymentNote: paymentNote is String? ? paymentNote : this.paymentNote,
+      boletoCode: boletoCode is String? ? boletoCode : this.boletoCode,
     );
   }
 }

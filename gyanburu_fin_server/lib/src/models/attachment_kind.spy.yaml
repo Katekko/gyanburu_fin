@@ -1,0 +1,5 @@
+enum: AttachmentKind
+serialized: byName
+values:
+  - boleto
+  - receipt

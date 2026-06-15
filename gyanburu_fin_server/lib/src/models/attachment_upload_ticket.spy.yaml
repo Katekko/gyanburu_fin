@@ -1,0 +1,7 @@
+### Returned by AttachmentEndpoint.requestUpload. Carries the storage path the
+### client must echo back on confirmUpload, plus the Serverpod upload description
+### that the client feeds to FileUploader.
+class: AttachmentUploadTicket
+fields:
+  path: String
+  uploadDescription: String

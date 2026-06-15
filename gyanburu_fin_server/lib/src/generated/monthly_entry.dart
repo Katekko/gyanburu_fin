@@ -32,6 +32,7 @@ abstract class MonthlyEntry
     this.paidAmount,
     this.paymentMethod,
     this.paymentNote,
+    this.boletoCode,
   });
 
   factory MonthlyEntry({
@@ -51,6 +52,7 @@ abstract class MonthlyEntry
     double? paidAmount,
     String? paymentMethod,
     String? paymentNote,
+    String? boletoCode,
   }) = _MonthlyEntryImpl;
 
   factory MonthlyEntry.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -75,6 +77,7 @@ abstract class MonthlyEntry
       paidAmount: (jsonSerialization['paidAmount'] as num?)?.toDouble(),
       paymentMethod: jsonSerialization['paymentMethod'] as String?,
       paymentNote: jsonSerialization['paymentNote'] as String?,
+      boletoCode: jsonSerialization['boletoCode'] as String?,
     );
   }
 
@@ -115,6 +118,8 @@ abstract class MonthlyEntry
 
   String? paymentNote;
 
+  String? boletoCode;
+
   @override
   _i1.Table<int?> get table => t;
 
@@ -138,6 +143,7 @@ abstract class MonthlyEntry
     double? paidAmount,
     String? paymentMethod,
     String? paymentNote,
+    String? boletoCode,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -159,6 +165,7 @@ abstract class MonthlyEntry
       if (paidAmount != null) 'paidAmount': paidAmount,
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
       if (paymentNote != null) 'paymentNote': paymentNote,
+      if (boletoCode != null) 'boletoCode': boletoCode,
     };
   }
 
@@ -182,6 +189,7 @@ abstract class MonthlyEntry
       if (paidAmount != null) 'paidAmount': paidAmount,
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
       if (paymentNote != null) 'paymentNote': paymentNote,
+      if (boletoCode != null) 'boletoCode': boletoCode,
     };
   }
 
@@ -235,6 +243,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     double? paidAmount,
     String? paymentMethod,
     String? paymentNote,
+    String? boletoCode,
   }) : super._(
          id: id,
          userId: userId,
@@ -252,6 +261,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
          paidAmount: paidAmount,
          paymentMethod: paymentMethod,
          paymentNote: paymentNote,
+         boletoCode: boletoCode,
        );
 
   /// Returns a shallow copy of this [MonthlyEntry]
@@ -275,6 +285,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
     Object? paidAmount = _Undefined,
     Object? paymentMethod = _Undefined,
     Object? paymentNote = _Undefined,
+    Object? boletoCode = _Undefined,
   }) {
     return MonthlyEntry(
       id: id is int? ? id : this.id,
@@ -295,6 +306,7 @@ class _MonthlyEntryImpl extends MonthlyEntry {
           ? paymentMethod
           : this.paymentMethod,
       paymentNote: paymentNote is String? ? paymentNote : this.paymentNote,
+      boletoCode: boletoCode is String? ? boletoCode : this.boletoCode,
     );
   }
 }
@@ -381,6 +393,11 @@ class MonthlyEntryUpdateTable extends _i1.UpdateTable<MonthlyEntryTable> {
     table.paymentNote,
     value,
   );
+
+  _i1.ColumnValue<String, String> boletoCode(String? value) => _i1.ColumnValue(
+    table.boletoCode,
+    value,
+  );
 }
 
 class MonthlyEntryTable extends _i1.Table<int?> {
@@ -447,6 +464,10 @@ class MonthlyEntryTable extends _i1.Table<int?> {
       'paymentNote',
       this,
     );
+    boletoCode = _i1.ColumnString(
+      'boletoCode',
+      this,
+    );
   }
 
   late final MonthlyEntryUpdateTable updateTable;
@@ -481,6 +502,8 @@ class MonthlyEntryTable extends _i1.Table<int?> {
 
   late final _i1.ColumnString paymentNote;
 
+  late final _i1.ColumnString boletoCode;
+
   @override
   List<_i1.Column> get columns => [
     id,
@@ -499,6 +522,7 @@ class MonthlyEntryTable extends _i1.Table<int?> {
     paidAmount,
     paymentMethod,
     paymentNote,
+    boletoCode,
   ];
 }
 

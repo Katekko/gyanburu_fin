@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
+import '../shared/attachments_section.dart';
 import '../shared/icon_map.dart';
 import '../shared/category_manager_dialog.dart';
 import '../theme/app_theme.dart';
@@ -64,8 +66,7 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
   List<MonthlyEntry> get _expenseEntries =>
       _monthEntries.where((e) => e.type == EntryType.expense).toList();
 
-  double get _totalIncome =>
-      _incomeEntries.fold(0.0, (s, e) => s + e.amount);
+  double get _totalIncome => _incomeEntries.fold(0.0, (s, e) => s + e.amount);
 
   double get _totalExpenses =>
       _expenseEntries.fold(0.0, (s, e) => s + e.amount);
@@ -95,8 +96,10 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
 
   void _changeMonth(int delta) {
     setState(() {
-      _selectedMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month + delta);
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + delta,
+      );
     });
     _loadData();
   }
@@ -133,7 +136,7 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
         existing: entry,
         onManageCategories: _openCategoryManager,
         onDelete: () async {
-          Navigator.pop(context); 
+          Navigator.pop(context);
           _deleteEntry(entry);
         },
       ),
@@ -160,8 +163,7 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete',
-                style: TextStyle(color: AppColors.negative)),
+            child: Text('Delete', style: TextStyle(color: AppColors.negative)),
           ),
         ],
       ),
@@ -173,8 +175,7 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
   }
 
   void _toggleConfirmed(MonthlyEntry entry) async {
-    final updated =
-        entry.copyWith(confirmed: !entry.confirmed);
+    final updated = entry.copyWith(confirmed: !entry.confirmed);
     final saved = await client.monthlyEntry.update(updated);
     setState(() {
       final idx = _entries.indexWhere((e) => e.id == entry.id);
@@ -206,8 +207,10 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('Monthly Overview',
-                    style: theme.textTheme.headlineMedium),
+                child: Text(
+                  'Monthly Overview',
+                  style: theme.textTheme.headlineMedium,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.category, size: 20),
@@ -229,21 +232,27 @@ class _MonthlyOverviewScreenState extends State<MonthlyOverviewScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.vibrantOrange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded,
-                        color: AppColors.vibrantOrange, size: 20),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.vibrantOrange,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       '$_unconfirmedCount variable ${_unconfirmedCount == 1 ? 'item needs' : 'items need'} value confirmation',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: AppColors.vibrantOrange),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.vibrantOrange,
+                      ),
                     ),
                   ],
                 ),
@@ -331,9 +340,12 @@ class _MonthPicker extends StatelessWidget {
               onPressed: onPrevious,
             ),
             const SizedBox(width: 8),
-            Text(label,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.chevron_right),
@@ -438,9 +450,13 @@ class _SummaryChip extends StatelessWidget {
         children: [
           Text(label, style: theme.textTheme.labelSmall),
           const SizedBox(height: 4),
-          Text(value,
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(color: color, fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -507,8 +523,10 @@ class _EntryColumn extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
-                  child: Text('No entries yet',
-                      style: theme.textTheme.bodySmall),
+                  child: Text(
+                    'No entries yet',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ),
               )
             else
@@ -594,48 +612,68 @@ class _EntryRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(entry.name,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w500)),
+                      Text(
+                        entry.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       Row(
                         children: [
                           if (category != null)
-                            Text(category!.name,
-                                style: theme.textTheme.labelSmall),
+                            Text(
+                              category!.name,
+                              style: theme.textTheme.labelSmall,
+                            ),
                           if (entry.recurrent) ...[
                             if (category != null)
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 4),
-                                child: Text('·',
-                                    style: theme.textTheme.labelSmall),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                child: Text(
+                                  '·',
+                                  style: theme.textTheme.labelSmall,
+                                ),
                               ),
-                            Icon(Icons.repeat,
-                                size: 12, color: AppColors.textMuted),
+                            Icon(
+                              Icons.repeat,
+                              size: 12,
+                              color: AppColors.textMuted,
+                            ),
                             const SizedBox(width: 2),
-                            Text('Recurrent',
-                                style: theme.textTheme.labelSmall),
+                            Text(
+                              'Recurrent',
+                              style: theme.textTheme.labelSmall,
+                            ),
                           ],
                           if (entry.variable) ...[
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text('·',
-                                  style: theme.textTheme.labelSmall),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                '·',
+                                style: theme.textTheme.labelSmall,
+                              ),
                             ),
-                            Icon(Icons.swap_vert,
-                                size: 12,
+                            Icon(
+                              Icons.swap_vert,
+                              size: 12,
+                              color: needsConfirmation
+                                  ? AppColors.vibrantOrange
+                                  : AppColors.textMuted,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              'Variable',
+                              style: theme.textTheme.labelSmall?.copyWith(
                                 color: needsConfirmation
                                     ? AppColors.vibrantOrange
-                                    : AppColors.textMuted),
-                            const SizedBox(width: 2),
-                            Text('Variable',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: needsConfirmation
-                                      ? AppColors.vibrantOrange
-                                      : null,
-                                )),
+                                    : null,
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -645,8 +683,11 @@ class _EntryRow extends StatelessWidget {
                 // Confirm button for variable items
                 if (needsConfirmation)
                   IconButton(
-                    icon: Icon(Icons.check_circle_outline,
-                        color: AppColors.vibrantOrange, size: 20),
+                    icon: Icon(
+                      Icons.check_circle_outline,
+                      color: AppColors.vibrantOrange,
+                      size: 20,
+                    ),
                     tooltip: 'Confirm value',
                     onPressed: onToggleConfirmed,
                   ),
@@ -695,6 +736,7 @@ class _EntryDialogState extends State<_EntryDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _amountController;
+  late final TextEditingController _boletoCodeController;
   late int _categoryId;
   late bool _recurrent;
   late bool _variable;
@@ -705,11 +747,15 @@ class _EntryDialogState extends State<_EntryDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.existing?.name ?? '');
+    _nameController = TextEditingController(text: widget.existing?.name ?? '');
     _amountController = TextEditingController(
-        text: widget.existing?.amount.toStringAsFixed(2) ?? '');
-    _categoryId = widget.existing?.categoryId ??
+      text: widget.existing?.amount.toStringAsFixed(2) ?? '',
+    );
+    _boletoCodeController = TextEditingController(
+      text: widget.existing?.boletoCode ?? '',
+    );
+    _categoryId =
+        widget.existing?.categoryId ??
         (widget.categories.isNotEmpty ? widget.categories.first.id! : 0);
     _recurrent = widget.existing?.recurrent ?? true;
     _variable = widget.existing?.variable ?? false;
@@ -720,7 +766,17 @@ class _EntryDialogState extends State<_EntryDialog> {
   void dispose() {
     _nameController.dispose();
     _amountController.dispose();
+    _boletoCodeController.dispose();
     super.dispose();
+  }
+
+  void _copyBoletoCode() {
+    final code = _boletoCodeController.text.trim();
+    if (code.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: code));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Code copied')),
+    );
   }
 
   void _save() {
@@ -743,6 +799,9 @@ class _EntryDialogState extends State<_EntryDialog> {
       paidAmount: widget.existing?.paidAmount,
       paymentMethod: widget.existing?.paymentMethod,
       paymentNote: widget.existing?.paymentNote,
+      boletoCode: _boletoCodeController.text.trim().isEmpty
+          ? null
+          : _boletoCodeController.text.trim(),
     );
     Navigator.pop(context, entry);
   }
@@ -767,140 +826,203 @@ class _EntryDialogState extends State<_EntryDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(isIncome ? Icons.trending_up : Icons.trending_down,
-                        color: accentColor, size: 22),
-                    const SizedBox(width: 8),
-                    Text(title, style: theme.textTheme.titleLarge),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _amountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Amount (R\$)',
-                    prefixText: 'R\$ ',
-                  ),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Required';
-                    if (double.tryParse(v.trim()) == null) return 'Invalid';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Category dropdown
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        initialValue: _categoryId,
-                        decoration:
-                            const InputDecoration(labelText: 'Category'),
-                        items: widget.categories.map((cat) {
-                          final icon =
-                              categoryIconMap[cat.icon] ??
-                                  Icons.category;
-                          final color = Color(
-                              int.parse('FF${cat.color}', radix: 16));
-                          return DropdownMenuItem(
-                            value: cat.id,
-                            child: Row(
-                              children: [
-                                Icon(icon, size: 18, color: color),
-                                const SizedBox(width: 8),
-                                Text(cat.name),
-                              ],
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              isIncome
+                                  ? Icons.trending_up
+                                  : Icons.trending_down,
+                              color: accentColor,
+                              size: 22,
                             ),
-                          );
-                        }).toList(),
-                        onChanged: (v) {
-                          if (v != null) setState(() => _categoryId = v);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline, size: 20),
-                      tooltip: 'Manage Categories',
-                      onPressed: () {
-                        Navigator.pop(context);
-                        widget.onManageCategories();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Due date
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _dueDate ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) setState(() => _dueDate = picked);
-                  },
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: 'Due Date',
-                      suffixIcon: _dueDate != null
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () =>
-                                  setState(() => _dueDate = null),
-                            )
-                          : const Icon(Icons.calendar_today, size: 18),
-                    ),
-                    child: Text(
-                      _dueDate != null
-                          ? DateFormat('dd/MM/yyyy').format(_dueDate!)
-                          : 'No due date',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: _dueDate != null ? null : AppColors.textMuted,
+                            const SizedBox(width: 8),
+                            Text(title, style: theme.textTheme.titleLarge),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(labelText: 'Name'),
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Required'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountController,
+                          decoration: const InputDecoration(
+                            labelText: 'Amount (R\$)',
+                            prefixText: 'R\$ ',
                           ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Required';
+                            }
+                            if (double.tryParse(v.trim()) == null) {
+                              return 'Invalid';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // Category dropdown
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<int>(
+                                initialValue: _categoryId,
+                                decoration: const InputDecoration(
+                                  labelText: 'Category',
+                                ),
+                                items: widget.categories.map((cat) {
+                                  final icon =
+                                      categoryIconMap[cat.icon] ??
+                                      Icons.category;
+                                  final color = Color(
+                                    int.parse('FF${cat.color}', radix: 16),
+                                  );
+                                  return DropdownMenuItem(
+                                    value: cat.id,
+                                    child: Row(
+                                      children: [
+                                        Icon(icon, size: 18, color: color),
+                                        const SizedBox(width: 8),
+                                        Text(cat.name),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setState(() => _categoryId = v);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                size: 20,
+                              ),
+                              tooltip: 'Manage Categories',
+                              onPressed: () {
+                                Navigator.pop(context);
+                                widget.onManageCategories();
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Due date
+                        InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _dueDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null) {
+                              setState(() => _dueDate = picked);
+                            }
+                          },
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Due Date',
+                              suffixIcon: _dueDate != null
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, size: 18),
+                                      onPressed: () =>
+                                          setState(() => _dueDate = null),
+                                    )
+                                  : const Icon(Icons.calendar_today, size: 18),
+                            ),
+                            child: Text(
+                              _dueDate != null
+                                  ? DateFormat('dd/MM/yyyy').format(_dueDate!)
+                                  : 'No due date',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: _dueDate != null
+                                        ? null
+                                        : AppColors.textMuted,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Checkboxes
+                        Row(
+                          children: [
+                            Expanded(
+                              child: CheckboxListTile(
+                                value: _recurrent,
+                                onChanged: (v) =>
+                                    setState(() => _recurrent = v ?? false),
+                                title: const Text('Recurrent'),
+                                subtitle: const Text('Appears every month'),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                              ),
+                            ),
+                            Expanded(
+                              child: CheckboxListTile(
+                                value: _variable,
+                                onChanged: (v) =>
+                                    setState(() => _variable = v ?? false),
+                                title: const Text('Variable'),
+                                subtitle: const Text('Value changes monthly'),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        // Boleto / PIX code
+                        TextFormField(
+                          controller: _boletoCodeController,
+                          decoration: InputDecoration(
+                            labelText: 'Boleto / PIX code',
+                            hintText: 'Paste barcode digits or PIX code',
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.copy, size: 18),
+                              tooltip: 'Copy',
+                              onPressed: _copyBoletoCode,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (_isEditing)
+                          AttachmentsSection(
+                            entryId: widget.existing!.id!,
+                            kind: AttachmentKind.boleto,
+                            title: 'Boleto / bill documents',
+                          )
+                        else
+                          Text(
+                            'Save the bill first, then re-open it to attach a boleto.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                // Checkboxes
-                Row(
-                  children: [
-                    Expanded(
-                      child: CheckboxListTile(
-                        value: _recurrent,
-                        onChanged: (v) =>
-                            setState(() => _recurrent = v ?? false),
-                        title: const Text('Recurrent'),
-                        subtitle: const Text('Appears every month'),
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                      ),
-                    ),
-                    Expanded(
-                      child: CheckboxListTile(
-                        value: _variable,
-                        onChanged: (v) =>
-                            setState(() => _variable = v ?? false),
-                        title: const Text('Variable'),
-                        subtitle: const Text('Value changes monthly'),
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 24),
                 // Actions
@@ -908,8 +1030,10 @@ class _EntryDialogState extends State<_EntryDialog> {
                   children: [
                     if (_isEditing && widget.onDelete != null)
                       IconButton(
-                        icon: Icon(Icons.delete_outline,
-                            color: AppColors.negative),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: AppColors.negative,
+                        ),
                         tooltip: 'Delete',
                         onPressed: widget.onDelete,
                       ),
@@ -933,4 +1057,3 @@ class _EntryDialogState extends State<_EntryDialog> {
     );
   }
 }
-

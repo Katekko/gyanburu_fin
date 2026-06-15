@@ -16,23 +16,28 @@ import 'package:serverpod_client/serverpod_client.dart' as _i2;
 import 'dart:async' as _i3;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
-import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i5;
-import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i6;
-import 'package:gyanburu_fin_client/src/protocol/category.dart' as _i7;
-import 'package:gyanburu_fin_client/src/protocol/category_rule.dart' as _i8;
-import 'package:gyanburu_fin_client/src/protocol/chat_response.dart' as _i9;
-import 'package:gyanburu_fin_client/src/protocol/chat_message.dart' as _i10;
-import 'package:gyanburu_fin_client/src/protocol/pending_action.dart' as _i11;
+import 'package:gyanburu_fin_client/src/protocol/attachment_upload_ticket.dart'
+    as _i5;
+import 'package:gyanburu_fin_client/src/protocol/attachment_kind.dart' as _i6;
+import 'package:gyanburu_fin_client/src/protocol/attachment.dart' as _i7;
+import 'dart:typed_data' as _i8;
+import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i9;
+import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i10;
+import 'package:gyanburu_fin_client/src/protocol/category.dart' as _i11;
+import 'package:gyanburu_fin_client/src/protocol/category_rule.dart' as _i12;
+import 'package:gyanburu_fin_client/src/protocol/chat_response.dart' as _i13;
+import 'package:gyanburu_fin_client/src/protocol/chat_message.dart' as _i14;
+import 'package:gyanburu_fin_client/src/protocol/pending_action.dart' as _i15;
 import 'package:gyanburu_fin_client/src/protocol/financial_transaction.dart'
-    as _i12;
-import 'package:gyanburu_fin_client/src/protocol/import_history.dart' as _i13;
-import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i14;
-import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i15;
-import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i16;
-import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i17;
+    as _i16;
+import 'package:gyanburu_fin_client/src/protocol/import_history.dart' as _i17;
+import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i18;
+import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i19;
+import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i20;
+import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i21;
 import 'package:gyanburu_fin_client/src/protocol/greetings/greeting.dart'
-    as _i18;
-import 'protocol.dart' as _i19;
+    as _i22;
+import 'protocol.dart' as _i23;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -255,6 +260,86 @@ class EndpointJwtRefresh extends _i4.EndpointRefreshJwtTokens {
   );
 }
 
+/// Manages payment documents (boletos and receipts) attached to a
+/// [MonthlyEntry]. Files live in Serverpod's built-in `private` cloud storage
+/// and are only ever served back to their owner through [getData].
+/// {@category Endpoint}
+class EndpointAttachment extends _i2.EndpointRef {
+  EndpointAttachment(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'attachment';
+
+  /// Step 1 of upload: verify ownership and hand the client a direct-upload
+  /// description plus the storage path it must echo back to [confirmUpload].
+  _i3.Future<_i5.AttachmentUploadTicket> requestUpload(
+    int entryId,
+    _i6.AttachmentKind kind,
+    String fileName,
+    int contentLength,
+  ) => caller.callServerEndpoint<_i5.AttachmentUploadTicket>(
+    'attachment',
+    'requestUpload',
+    {
+      'entryId': entryId,
+      'kind': kind,
+      'fileName': fileName,
+      'contentLength': contentLength,
+    },
+  );
+
+  /// Step 2 of upload: confirm the file landed in storage and record it.
+  _i3.Future<_i7.Attachment> confirmUpload(
+    int entryId,
+    _i6.AttachmentKind kind,
+    String path,
+    String fileName,
+    String contentType,
+    int sizeBytes,
+  ) => caller.callServerEndpoint<_i7.Attachment>(
+    'attachment',
+    'confirmUpload',
+    {
+      'entryId': entryId,
+      'kind': kind,
+      'path': path,
+      'fileName': fileName,
+      'contentType': contentType,
+      'sizeBytes': sizeBytes,
+    },
+  );
+
+  _i3.Future<List<_i7.Attachment>> listForEntry(int entryId) =>
+      caller.callServerEndpoint<List<_i7.Attachment>>(
+        'attachment',
+        'listForEntry',
+        {'entryId': entryId},
+      );
+
+  /// Returns the subset of [entryIds] (owned by the user) that have at least
+  /// one attachment — used to show an indicator on bill rows in one round trip.
+  _i3.Future<List<int>> entryIdsWithAttachments(List<int> entryIds) =>
+      caller.callServerEndpoint<List<int>>(
+        'attachment',
+        'entryIdsWithAttachments',
+        {'entryIds': entryIds},
+      );
+
+  _i3.Future<_i8.ByteData?> getData(int attachmentId) =>
+      caller.callServerEndpoint<_i8.ByteData?>(
+        'attachment',
+        'getData',
+        {'attachmentId': attachmentId},
+      );
+
+  _i3.Future<void> deleteAttachment(int attachmentId) =>
+      caller.callServerEndpoint<void>(
+        'attachment',
+        'deleteAttachment',
+        {'attachmentId': attachmentId},
+      );
+}
+
 /// {@category Endpoint}
 class EndpointBill extends _i2.EndpointRef {
   EndpointBill(_i2.EndpointCaller caller) : super(caller);
@@ -262,36 +347,36 @@ class EndpointBill extends _i2.EndpointRef {
   @override
   String get name => 'bill';
 
-  _i3.Future<List<_i5.Bill>> list() =>
-      caller.callServerEndpoint<List<_i5.Bill>>(
+  _i3.Future<List<_i9.Bill>> list() =>
+      caller.callServerEndpoint<List<_i9.Bill>>(
         'bill',
         'list',
         {},
       );
 
-  _i3.Future<List<_i5.Bill>> listUpcoming() =>
-      caller.callServerEndpoint<List<_i5.Bill>>(
+  _i3.Future<List<_i9.Bill>> listUpcoming() =>
+      caller.callServerEndpoint<List<_i9.Bill>>(
         'bill',
         'listUpcoming',
         {},
       );
 
-  _i3.Future<_i5.Bill> create(_i5.Bill bill) =>
-      caller.callServerEndpoint<_i5.Bill>(
+  _i3.Future<_i9.Bill> create(_i9.Bill bill) =>
+      caller.callServerEndpoint<_i9.Bill>(
         'bill',
         'create',
         {'bill': bill},
       );
 
-  _i3.Future<_i5.Bill> update(_i5.Bill bill) =>
-      caller.callServerEndpoint<_i5.Bill>(
+  _i3.Future<_i9.Bill> update(_i9.Bill bill) =>
+      caller.callServerEndpoint<_i9.Bill>(
         'bill',
         'update',
         {'bill': bill},
       );
 
-  _i3.Future<_i5.Bill> markAsPaid(int id) =>
-      caller.callServerEndpoint<_i5.Bill>(
+  _i3.Future<_i9.Bill> markAsPaid(int id) =>
+      caller.callServerEndpoint<_i9.Bill>(
         'bill',
         'markAsPaid',
         {'id': id},
@@ -311,22 +396,22 @@ class EndpointBudget extends _i2.EndpointRef {
   @override
   String get name => 'budget';
 
-  _i3.Future<List<_i6.BudgetCategory>> listByMonth(DateTime month) =>
-      caller.callServerEndpoint<List<_i6.BudgetCategory>>(
+  _i3.Future<List<_i10.BudgetCategory>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i10.BudgetCategory>>(
         'budget',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i6.BudgetCategory> create(_i6.BudgetCategory category) =>
-      caller.callServerEndpoint<_i6.BudgetCategory>(
+  _i3.Future<_i10.BudgetCategory> create(_i10.BudgetCategory category) =>
+      caller.callServerEndpoint<_i10.BudgetCategory>(
         'budget',
         'create',
         {'category': category},
       );
 
-  _i3.Future<_i6.BudgetCategory> update(_i6.BudgetCategory category) =>
-      caller.callServerEndpoint<_i6.BudgetCategory>(
+  _i3.Future<_i10.BudgetCategory> update(_i10.BudgetCategory category) =>
+      caller.callServerEndpoint<_i10.BudgetCategory>(
         'budget',
         'update',
         {'category': category},
@@ -346,22 +431,22 @@ class EndpointCategory extends _i2.EndpointRef {
   @override
   String get name => 'category';
 
-  _i3.Future<List<_i7.Category>> list() =>
-      caller.callServerEndpoint<List<_i7.Category>>(
+  _i3.Future<List<_i11.Category>> list() =>
+      caller.callServerEndpoint<List<_i11.Category>>(
         'category',
         'list',
         {},
       );
 
-  _i3.Future<_i7.Category> create(_i7.Category category) =>
-      caller.callServerEndpoint<_i7.Category>(
+  _i3.Future<_i11.Category> create(_i11.Category category) =>
+      caller.callServerEndpoint<_i11.Category>(
         'category',
         'create',
         {'category': category},
       );
 
-  _i3.Future<_i7.Category> update(_i7.Category category) =>
-      caller.callServerEndpoint<_i7.Category>(
+  _i3.Future<_i11.Category> update(_i11.Category category) =>
+      caller.callServerEndpoint<_i11.Category>(
         'category',
         'update',
         {'category': category},
@@ -381,22 +466,22 @@ class EndpointCategoryRule extends _i2.EndpointRef {
   @override
   String get name => 'categoryRule';
 
-  _i3.Future<List<_i8.CategoryRule>> list() =>
-      caller.callServerEndpoint<List<_i8.CategoryRule>>(
+  _i3.Future<List<_i12.CategoryRule>> list() =>
+      caller.callServerEndpoint<List<_i12.CategoryRule>>(
         'categoryRule',
         'list',
         {},
       );
 
-  _i3.Future<_i8.CategoryRule> create(_i8.CategoryRule rule) =>
-      caller.callServerEndpoint<_i8.CategoryRule>(
+  _i3.Future<_i12.CategoryRule> create(_i12.CategoryRule rule) =>
+      caller.callServerEndpoint<_i12.CategoryRule>(
         'categoryRule',
         'create',
         {'rule': rule},
       );
 
-  _i3.Future<_i8.CategoryRule> update(_i8.CategoryRule rule) =>
-      caller.callServerEndpoint<_i8.CategoryRule>(
+  _i3.Future<_i12.CategoryRule> update(_i12.CategoryRule rule) =>
+      caller.callServerEndpoint<_i12.CategoryRule>(
         'categoryRule',
         'update',
         {'rule': rule},
@@ -416,10 +501,10 @@ class EndpointChat extends _i2.EndpointRef {
   @override
   String get name => 'chat';
 
-  _i3.Future<_i9.ChatResponse> sendMessage(
-    List<_i10.ChatMessage> history,
+  _i3.Future<_i13.ChatResponse> sendMessage(
+    List<_i14.ChatMessage> history,
     String userMessage,
-  ) => caller.callServerEndpoint<_i9.ChatResponse>(
+  ) => caller.callServerEndpoint<_i13.ChatResponse>(
     'chat',
     'sendMessage',
     {
@@ -428,7 +513,7 @@ class EndpointChat extends _i2.EndpointRef {
     },
   );
 
-  _i3.Future<String> executeActions(List<_i11.PendingAction> actions) =>
+  _i3.Future<String> executeActions(List<_i15.PendingAction> actions) =>
       caller.callServerEndpoint<String>(
         'chat',
         'executeActions',
@@ -450,8 +535,8 @@ class EndpointDashboard extends _i2.EndpointRef {
         {'month': month},
       );
 
-  _i3.Future<List<_i12.FinancialTransaction>> recentTransactions() =>
-      caller.callServerEndpoint<List<_i12.FinancialTransaction>>(
+  _i3.Future<List<_i16.FinancialTransaction>> recentTransactions() =>
+      caller.callServerEndpoint<List<_i16.FinancialTransaction>>(
         'dashboard',
         'recentTransactions',
         {},
@@ -472,8 +557,8 @@ class EndpointImportHistory extends _i2.EndpointRef {
   @override
   String get name => 'importHistory';
 
-  _i3.Future<List<_i13.ImportHistory>> list() =>
-      caller.callServerEndpoint<List<_i13.ImportHistory>>(
+  _i3.Future<List<_i17.ImportHistory>> list() =>
+      caller.callServerEndpoint<List<_i17.ImportHistory>>(
         'importHistory',
         'list',
         {},
@@ -487,22 +572,22 @@ class EndpointIncome extends _i2.EndpointRef {
   @override
   String get name => 'income';
 
-  _i3.Future<List<_i14.IncomeSource>> listByMonth(DateTime month) =>
-      caller.callServerEndpoint<List<_i14.IncomeSource>>(
+  _i3.Future<List<_i18.IncomeSource>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i18.IncomeSource>>(
         'income',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i14.IncomeSource> create(_i14.IncomeSource source) =>
-      caller.callServerEndpoint<_i14.IncomeSource>(
+  _i3.Future<_i18.IncomeSource> create(_i18.IncomeSource source) =>
+      caller.callServerEndpoint<_i18.IncomeSource>(
         'income',
         'create',
         {'source': source},
       );
 
-  _i3.Future<_i14.IncomeSource> update(_i14.IncomeSource source) =>
-      caller.callServerEndpoint<_i14.IncomeSource>(
+  _i3.Future<_i18.IncomeSource> update(_i18.IncomeSource source) =>
+      caller.callServerEndpoint<_i18.IncomeSource>(
         'income',
         'update',
         {'source': source},
@@ -522,22 +607,22 @@ class EndpointMonthlyEntry extends _i2.EndpointRef {
   @override
   String get name => 'monthlyEntry';
 
-  _i3.Future<List<_i15.MonthlyEntry>> listByMonth(String month) =>
-      caller.callServerEndpoint<List<_i15.MonthlyEntry>>(
+  _i3.Future<List<_i19.MonthlyEntry>> listByMonth(String month) =>
+      caller.callServerEndpoint<List<_i19.MonthlyEntry>>(
         'monthlyEntry',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i15.MonthlyEntry> create(_i15.MonthlyEntry entry) =>
-      caller.callServerEndpoint<_i15.MonthlyEntry>(
+  _i3.Future<_i19.MonthlyEntry> create(_i19.MonthlyEntry entry) =>
+      caller.callServerEndpoint<_i19.MonthlyEntry>(
         'monthlyEntry',
         'create',
         {'entry': entry},
       );
 
-  _i3.Future<_i15.MonthlyEntry> update(_i15.MonthlyEntry entry) =>
-      caller.callServerEndpoint<_i15.MonthlyEntry>(
+  _i3.Future<_i19.MonthlyEntry> update(_i19.MonthlyEntry entry) =>
+      caller.callServerEndpoint<_i19.MonthlyEntry>(
         'monthlyEntry',
         'update',
         {'entry': entry},
@@ -557,22 +642,22 @@ class EndpointNubankAccount extends _i2.EndpointRef {
   @override
   String get name => 'nubankAccount';
 
-  _i3.Future<List<_i16.NubankAccount>> list() =>
-      caller.callServerEndpoint<List<_i16.NubankAccount>>(
+  _i3.Future<List<_i20.NubankAccount>> list() =>
+      caller.callServerEndpoint<List<_i20.NubankAccount>>(
         'nubankAccount',
         'list',
         {},
       );
 
-  _i3.Future<_i16.NubankAccount?> findById(int id) =>
-      caller.callServerEndpoint<_i16.NubankAccount?>(
+  _i3.Future<_i20.NubankAccount?> findById(int id) =>
+      caller.callServerEndpoint<_i20.NubankAccount?>(
         'nubankAccount',
         'findById',
         {'id': id},
       );
 
-  _i3.Future<List<_i17.SyncLog>> syncLogs(int accountId) =>
-      caller.callServerEndpoint<List<_i17.SyncLog>>(
+  _i3.Future<List<_i21.SyncLog>> syncLogs(int accountId) =>
+      caller.callServerEndpoint<List<_i21.SyncLog>>(
         'nubankAccount',
         'syncLogs',
         {'accountId': accountId},
@@ -586,10 +671,10 @@ class EndpointOfxImport extends _i2.EndpointRef {
   @override
   String get name => 'ofxImport';
 
-  _i3.Future<_i13.ImportHistory> importOfx(
+  _i3.Future<_i17.ImportHistory> importOfx(
     String ofxContent,
     String fileName,
-  ) => caller.callServerEndpoint<_i13.ImportHistory>(
+  ) => caller.callServerEndpoint<_i17.ImportHistory>(
     'ofxImport',
     'importOfx',
     {
@@ -606,31 +691,31 @@ class EndpointTransaction extends _i2.EndpointRef {
   @override
   String get name => 'transaction';
 
-  _i3.Future<List<_i12.FinancialTransaction>> list() =>
-      caller.callServerEndpoint<List<_i12.FinancialTransaction>>(
+  _i3.Future<List<_i16.FinancialTransaction>> list() =>
+      caller.callServerEndpoint<List<_i16.FinancialTransaction>>(
         'transaction',
         'list',
         {},
       );
 
-  _i3.Future<List<_i12.FinancialTransaction>> listByMonth(DateTime month) =>
-      caller.callServerEndpoint<List<_i12.FinancialTransaction>>(
+  _i3.Future<List<_i16.FinancialTransaction>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i16.FinancialTransaction>>(
         'transaction',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i12.FinancialTransaction> create(
-    _i12.FinancialTransaction transaction,
-  ) => caller.callServerEndpoint<_i12.FinancialTransaction>(
+  _i3.Future<_i16.FinancialTransaction> create(
+    _i16.FinancialTransaction transaction,
+  ) => caller.callServerEndpoint<_i16.FinancialTransaction>(
     'transaction',
     'create',
     {'transaction': transaction},
   );
 
-  _i3.Future<_i12.FinancialTransaction> update(
-    _i12.FinancialTransaction transaction,
-  ) => caller.callServerEndpoint<_i12.FinancialTransaction>(
+  _i3.Future<_i16.FinancialTransaction> update(
+    _i16.FinancialTransaction transaction,
+  ) => caller.callServerEndpoint<_i16.FinancialTransaction>(
     'transaction',
     'update',
     {'transaction': transaction},
@@ -651,13 +736,13 @@ class EndpointTransaction extends _i2.EndpointRef {
   /// - Display name propagates only when [propagateDisplayName] is true.
   /// - When a flag is false the corresponding field on the rule (and
   ///   siblings) is left unchanged from its current value.
-  _i3.Future<_i12.FinancialTransaction> saveWithPropagation(
+  _i3.Future<_i16.FinancialTransaction> saveWithPropagation(
     int transactionId,
     String? categoryName,
     String? displayName,
     bool propagateDisplayName,
     bool propagateCategory,
-  ) => caller.callServerEndpoint<_i12.FinancialTransaction>(
+  ) => caller.callServerEndpoint<_i16.FinancialTransaction>(
     'transaction',
     'saveWithPropagation',
     {
@@ -680,8 +765,8 @@ class EndpointGreeting extends _i2.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i18.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i18.Greeting>(
+  _i3.Future<_i22.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i22.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -719,7 +804,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i19.Protocol(),
+         _i23.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -730,6 +815,7 @@ class Client extends _i2.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    attachment = EndpointAttachment(this);
     bill = EndpointBill(this);
     budget = EndpointBudget(this);
     category = EndpointCategory(this);
@@ -749,6 +835,8 @@ class Client extends _i2.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointAttachment attachment;
 
   late final EndpointBill bill;
 
@@ -782,6 +870,7 @@ class Client extends _i2.ServerpodClientShared {
   Map<String, _i2.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'attachment': attachment,
     'bill': bill,
     'budget': budget,
     'category': category,

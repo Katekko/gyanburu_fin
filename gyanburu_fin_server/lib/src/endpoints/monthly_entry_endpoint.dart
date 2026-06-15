@@ -103,10 +103,28 @@ class MonthlyEntryEndpoint extends Endpoint {
   }
 
   Future<void> delete(Session session, int id) async {
+    final userId = _userId(session);
+
+    // Remove attached documents (storage files + rows) so nothing is orphaned
+    // in cloud storage when the bill goes away.
+    final attachments = await Attachment.db.find(
+      session,
+      where: (a) => a.entryId.equals(id) & a.userId.equals(userId),
+    );
+    for (final a in attachments) {
+      await session.storage
+          .deleteFile(storageId: 'private', path: a.storagePath);
+    }
+    if (attachments.isNotEmpty) {
+      await Attachment.db.deleteWhere(
+        session,
+        where: (a) => a.entryId.equals(id) & a.userId.equals(userId),
+      );
+    }
+
     await MonthlyEntry.db.deleteWhere(
       session,
-      where: (t) =>
-          t.id.equals(id) & t.userId.equals(_userId(session)),
+      where: (t) => t.id.equals(id) & t.userId.equals(userId),
     );
   }
 }

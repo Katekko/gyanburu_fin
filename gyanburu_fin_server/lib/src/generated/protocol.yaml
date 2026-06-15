@@ -9,6 +9,13 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+attachment:
+  - requestUpload:
+  - confirmUpload:
+  - listForEntry:
+  - entryIdsWithAttachments:
+  - getData:
+  - deleteAttachment:
 bill:
   - list:
   - listUpcoming:

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
+import '../shared/attachment_service.dart';
+import '../shared/attachments_section.dart';
 import '../shared/icon_map.dart';
 import '../theme/app_theme.dart';
 
@@ -29,6 +32,7 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
   late DateTime _selectedMonth;
   List<MonthlyEntry> _entries = [];
   List<Category> _categories = [];
+  Set<int> _withAttachments = {};
   bool _loading = true;
 
   @override
@@ -49,9 +53,15 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
         client.monthlyEntry.listByMonth(_monthKey),
         client.category.list(),
       ]);
+      final entries = results[0] as List<MonthlyEntry>;
+      final categories = results[1] as List<Category>;
+      final withAttachments = await AttachmentService.entryIdsWithAttachments(
+        entries.map((e) => e.id!).toList(),
+      );
       setState(() {
-        _entries = results[0] as List<MonthlyEntry>;
-        _categories = results[1] as List<Category>;
+        _entries = entries;
+        _categories = categories;
+        _withAttachments = withAttachments;
         _loading = false;
       });
     } catch (e) {
@@ -102,8 +112,9 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
   double _totalPending(List<MonthlyEntry> entries) =>
       entries.where((e) => !e.paid).fold(0.0, (s, e) => s + e.amount);
 
-  double _totalPaid(List<MonthlyEntry> entries) =>
-      entries.where((e) => e.paid).fold(0.0, (s, e) => s + (e.paidAmount ?? e.amount));
+  double _totalPaid(List<MonthlyEntry> entries) => entries
+      .where((e) => e.paid)
+      .fold(0.0, (s, e) => s + (e.paidAmount ?? e.amount));
 
   double _total(List<MonthlyEntry> entries) =>
       entries.fold(0.0, (s, e) => s + e.amount);
@@ -128,8 +139,10 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
 
   void _changeMonth(int delta) {
     setState(() {
-      _selectedMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month + delta);
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + delta,
+      );
     });
     _loadData();
   }
@@ -145,6 +158,20 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
         final idx = _entries.indexWhere((e) => e.id == entry.id);
         if (idx != -1) _entries[idx] = saved;
       });
+    }
+    // A receipt may have been attached inside the dialog regardless of whether
+    // the payment itself was saved.
+    await _refreshAttachments();
+  }
+
+  Future<void> _refreshAttachments() async {
+    try {
+      final withAttachments = await AttachmentService.entryIdsWithAttachments(
+        _entries.map((e) => e.id!).toList(),
+      );
+      if (mounted) setState(() => _withAttachments = withAttachments);
+    } catch (_) {
+      // Non-fatal: the indicator just won't update until the next reload.
     }
   }
 
@@ -208,6 +235,7 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
             iconFor: _iconFor,
             onMarkAsPaid: _markAsPaid,
             onUndoPaid: _undoPaid,
+            withAttachments: _withAttachments,
           ),
           const SizedBox(height: 24),
           // Income section
@@ -227,6 +255,7 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
             iconFor: _iconFor,
             onMarkAsPaid: _markAsPaid,
             onUndoPaid: _undoPaid,
+            withAttachments: _withAttachments,
           ),
         ],
       ),
@@ -264,9 +293,12 @@ class _MonthPicker extends StatelessWidget {
               onPressed: onPrevious,
             ),
             const SizedBox(width: 8),
-            Text(label,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.chevron_right),
@@ -300,6 +332,7 @@ class _BillSection extends StatelessWidget {
     required this.iconFor,
     required this.onMarkAsPaid,
     required this.onUndoPaid,
+    required this.withAttachments,
   });
   final String title;
   final IconData icon;
@@ -316,6 +349,7 @@ class _BillSection extends StatelessWidget {
   final IconData Function(Category?) iconFor;
   final Future<void> Function(MonthlyEntry) onMarkAsPaid;
   final Future<void> Function(MonthlyEntry) onUndoPaid;
+  final Set<int> withAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -371,44 +405,55 @@ class _BillSection extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: paidFraction,
                   backgroundColor: AppColors.surfaceElevated,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.positive),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.positive),
                 ),
               ),
             ),
             const SizedBox(height: 20),
             // Pending entries
             if (pending.isNotEmpty) ...[
-              Text(pendingLabel,
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(color: AppColors.textMuted)),
+              Text(
+                pendingLabel,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
               const SizedBox(height: 8),
-              ...pending.map((entry) => _BillEntryRow(
-                    entry: entry,
-                    isOverdue: isOverdue(entry),
-                    category: categoryFor(entry.categoryId),
-                    colorFor: colorFor,
-                    iconFor: iconFor,
-                    onMarkAsPaid: () => onMarkAsPaid(entry),
-                    paidLabel: paidLabel,
-                  )),
+              ...pending.map(
+                (entry) => _BillEntryRow(
+                  entry: entry,
+                  isOverdue: isOverdue(entry),
+                  category: categoryFor(entry.categoryId),
+                  colorFor: colorFor,
+                  iconFor: iconFor,
+                  onMarkAsPaid: () => onMarkAsPaid(entry),
+                  paidLabel: paidLabel,
+                  hasAttachments: withAttachments.contains(entry.id),
+                ),
+              ),
             ],
             // Paid entries
             if (paid.isNotEmpty) ...[
               const SizedBox(height: 16),
-              Text(paidLabel,
-                  style: theme.textTheme.labelMedium
-                      ?.copyWith(color: AppColors.textMuted)),
+              Text(
+                paidLabel,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
               const SizedBox(height: 8),
-              ...paid.map((entry) => _BillEntryRow(
-                    entry: entry,
-                    isOverdue: false,
-                    category: categoryFor(entry.categoryId),
-                    colorFor: colorFor,
-                    iconFor: iconFor,
-                    onUndoPaid: () => onUndoPaid(entry),
-                    paidLabel: paidLabel,
-                  )),
+              ...paid.map(
+                (entry) => _BillEntryRow(
+                  entry: entry,
+                  isOverdue: false,
+                  category: categoryFor(entry.categoryId),
+                  colorFor: colorFor,
+                  iconFor: iconFor,
+                  onUndoPaid: () => onUndoPaid(entry),
+                  paidLabel: paidLabel,
+                  hasAttachments: withAttachments.contains(entry.id),
+                ),
+              ),
             ],
             // Empty state
             if (entries.isEmpty)
@@ -457,9 +502,13 @@ class _SummaryChip extends StatelessWidget {
           children: [
             Text(label, style: theme.textTheme.labelSmall),
             const SizedBox(height: 2),
-            Text(value,
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(color: color, fontWeight: FontWeight.w700)),
+            Text(
+              value,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),
@@ -481,6 +530,7 @@ class _BillEntryRow extends StatelessWidget {
     this.onMarkAsPaid,
     this.onUndoPaid,
     required this.paidLabel,
+    this.hasAttachments = false,
   });
   final MonthlyEntry entry;
   final bool isOverdue;
@@ -490,6 +540,7 @@ class _BillEntryRow extends StatelessWidget {
   final VoidCallback? onMarkAsPaid;
   final VoidCallback? onUndoPaid;
   final String paidLabel;
+  final bool hasAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -529,8 +580,7 @@ class _BillEntryRow extends StatelessWidget {
                       entry.name,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-                        decoration:
-                            isPaid ? TextDecoration.lineThrough : null,
+                        decoration: isPaid ? TextDecoration.lineThrough : null,
                         color: isPaid ? AppColors.textMuted : null,
                       ),
                     ),
@@ -538,59 +588,72 @@ class _BillEntryRow extends StatelessWidget {
                     Row(
                       children: [
                         if (category != null)
-                          Text(category!.name,
-                              style: theme.textTheme.labelSmall),
+                          Text(
+                            category!.name,
+                            style: theme.textTheme.labelSmall,
+                          ),
                         if (entry.dueDate != null) ...[
                           if (category != null)
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text('·',
-                                  style: theme.textTheme.labelSmall),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                '·',
+                                style: theme.textTheme.labelSmall,
+                              ),
                             ),
-                          Icon(Icons.calendar_today,
-                              size: 11,
-                              color: isOverdue
-                                  ? AppColors.negative
-                                  : AppColors.textMuted),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 11,
+                            color: isOverdue
+                                ? AppColors.negative
+                                : AppColors.textMuted,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             _dateFormat.format(entry.dueDate!),
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color:
-                                  isOverdue ? AppColors.negative : null,
-                              fontWeight:
-                                  isOverdue ? FontWeight.w600 : null,
+                              color: isOverdue ? AppColors.negative : null,
+                              fontWeight: isOverdue ? FontWeight.w600 : null,
                             ),
                           ),
                         ],
                         if (isOverdue) ...[
                           const SizedBox(width: 6),
                           _StatusBadge(
-                              label: 'Overdue',
-                              color: AppColors.negative),
+                            label: 'Overdue',
+                            color: AppColors.negative,
+                          ),
                         ],
                         if (isPaid && entry.paymentMethod != null) ...[
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 4),
-                            child: Text('·',
-                                style: theme.textTheme.labelSmall),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text('·', style: theme.textTheme.labelSmall),
                           ),
-                          Text(entry.paymentMethod!,
-                              style: theme.textTheme.labelSmall),
+                          Text(
+                            entry.paymentMethod!,
+                            style: theme.textTheme.labelSmall,
+                          ),
                         ],
                         if (isPaid && entry.paidAt != null) ...[
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 4),
-                            child: Text('·',
-                                style: theme.textTheme.labelSmall),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text('·', style: theme.textTheme.labelSmall),
                           ),
                           Text(
                             '$paidLabel ${_dateFormat.format(entry.paidAt!)}',
-                            style: theme.textTheme.labelSmall
-                                ?.copyWith(color: AppColors.positive),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.positive,
+                            ),
+                          ),
+                        ],
+                        if (hasAttachments) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.attach_file,
+                            size: 12,
+                            color: AppColors.textSecondary,
                           ),
                         ],
                       ],
@@ -601,7 +664,8 @@ class _BillEntryRow extends StatelessWidget {
               // Amount
               Text(
                 _currencyFormat.format(
-                    isPaid ? (entry.paidAmount ?? entry.amount) : entry.amount),
+                  isPaid ? (entry.paidAmount ?? entry.amount) : entry.amount,
+                ),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: isPaid ? AppColors.positive : null,
@@ -651,10 +715,10 @@ class _StatusBadge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 10,
-            ),
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
       ),
     );
   }
@@ -684,7 +748,8 @@ class _MarkAsPaidDialogState extends State<_MarkAsPaidDialog> {
   void initState() {
     super.initState();
     _amountController = TextEditingController(
-        text: widget.entry.amount.toStringAsFixed(2));
+      text: widget.entry.amount.toStringAsFixed(2),
+    );
     _noteController = TextEditingController();
     _paidAt = DateTime.now();
   }
@@ -705,8 +770,9 @@ class _MarkAsPaidDialogState extends State<_MarkAsPaidDialog> {
       paidAt: _paidAt,
       paidAmount: amount,
       paymentMethod: _paymentMethod,
-      paymentNote:
-          _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      paymentNote: _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim(),
     );
     Navigator.pop(context, updated);
   }
@@ -725,79 +791,116 @@ class _MarkAsPaidDialogState extends State<_MarkAsPaidDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    _isIncome ? Icons.savings : Icons.payment,
-                    color: AppColors.positive,
-                    size: 22,
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            _isIncome ? Icons.savings : Icons.payment,
+                            color: AppColors.positive,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _isIncome
+                                  ? 'Mark "${widget.entry.name}" as Received'
+                                  : 'Pay "${widget.entry.name}"',
+                              style: theme.textTheme.titleLarge,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // Amount
+                      TextField(
+                        controller: _amountController,
+                        decoration: const InputDecoration(
+                          labelText: 'Amount (R\$)',
+                          prefixText: 'R\$ ',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Payment date
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _paidAt,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null) setState(() => _paidAt = picked);
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: _isIncome
+                                ? 'Received Date'
+                                : 'Payment Date',
+                            suffixIcon: const Icon(
+                              Icons.calendar_today,
+                              size: 18,
+                            ),
+                          ),
+                          child: Text(
+                            _dateFormat.format(_paidAt),
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Payment method
+                      DropdownButtonFormField<String>(
+                        initialValue: _paymentMethod,
+                        decoration: const InputDecoration(
+                          labelText: 'Payment Method',
+                        ),
+                        items: _paymentMethods.map((m) {
+                          return DropdownMenuItem(value: m, child: Text(m));
+                        }).toList(),
+                        onChanged: (v) => setState(() => _paymentMethod = v),
+                      ),
+                      const SizedBox(height: 16),
+                      // Notes
+                      TextField(
+                        controller: _noteController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes (optional)',
+                        ),
+                        maxLines: 2,
+                      ),
+                      // Boleto reference (expenses only) — see what you're paying.
+                      if (!_isIncome) ...[
+                        const SizedBox(height: 20),
+                        if (widget.entry.boletoCode != null &&
+                            widget.entry.boletoCode!.trim().isNotEmpty)
+                          _BoletoCodeRow(code: widget.entry.boletoCode!.trim()),
+                        AttachmentsSection(
+                          entryId: widget.entry.id!,
+                          kind: AttachmentKind.boleto,
+                          title: 'Boleto / bill documents',
+                          readOnly: true,
+                        ),
+                      ],
+                      // Receipt / proof of payment.
+                      const SizedBox(height: 20),
+                      AttachmentsSection(
+                        entryId: widget.entry.id!,
+                        kind: AttachmentKind.receipt,
+                        title: _isIncome
+                            ? 'Receipt / proof'
+                            : 'Payment receipt',
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _isIncome
-                          ? 'Mark "${widget.entry.name}" as Received'
-                          : 'Pay "${widget.entry.name}"',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Amount
-              TextField(
-                controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount (R\$)',
-                  prefixText: 'R\$ ',
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-              ),
-              const SizedBox(height: 16),
-              // Payment date
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _paidAt,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2100),
-                  );
-                  if (picked != null) setState(() => _paidAt = picked);
-                },
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: _isIncome ? 'Received Date' : 'Payment Date',
-                    suffixIcon:
-                        const Icon(Icons.calendar_today, size: 18),
-                  ),
-                  child: Text(
-                    _dateFormat.format(_paidAt),
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Payment method
-              DropdownButtonFormField<String>(
-                initialValue: _paymentMethod,
-                decoration: const InputDecoration(
-                  labelText: 'Payment Method',
-                ),
-                items: _paymentMethods.map((m) {
-                  return DropdownMenuItem(value: m, child: Text(m));
-                }).toList(),
-                onChanged: (v) => setState(() => _paymentMethod = v),
-              ),
-              const SizedBox(height: 16),
-              // Notes
-              TextField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                ),
-                maxLines: 2,
               ),
               const SizedBox(height: 24),
               // Actions
@@ -819,6 +922,57 @@ class _MarkAsPaidDialogState extends State<_MarkAsPaidDialog> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Boleto code row (read-only, with copy)
+// ---------------------------------------------------------------------------
+
+class _BoletoCodeRow extends StatelessWidget {
+  const _BoletoCodeRow({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Boleto / PIX code',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  code,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy, size: 18),
+            tooltip: 'Copy',
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: code));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Code copied')),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

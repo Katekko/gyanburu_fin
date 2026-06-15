@@ -1,0 +1,14 @@
+class: Attachment
+table: attachment
+fields:
+  userId: UuidValue
+  entryId: int
+  kind: AttachmentKind
+  storagePath: String
+  fileName: String
+  contentType: String
+  sizeBytes: int
+  uploadedAt: DateTime
+indexes:
+  attachment_entry_idx:
+    fields: entryId

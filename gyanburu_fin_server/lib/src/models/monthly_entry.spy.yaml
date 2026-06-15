@@ -16,3 +16,4 @@ fields:
   paidAmount: double?
   paymentMethod: String?
   paymentNote: String?
+  boletoCode: String?
