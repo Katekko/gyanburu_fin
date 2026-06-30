@@ -7,6 +7,9 @@ import '../main.dart';
 import 'attachment_opener_stub.dart'
     if (dart.library.js_interop) 'attachment_opener_web.dart'
     as opener;
+import 'clipboard_image_stub.dart'
+    if (dart.library.js_interop) 'clipboard_image_web.dart'
+    as clipboard;
 
 /// Wraps the Serverpod direct-upload flow and private-file retrieval for bill
 /// attachments (boletos and receipts).
@@ -41,12 +44,35 @@ class AttachmentService {
     if (bytes == null) {
       throw Exception('Could not read the selected file.');
     }
+    return _upload(entryId, kind, bytes, file.name, contentTypeFor(file.name));
+  }
+
+  /// Reads an image from the system clipboard (web only) and uploads it for
+  /// [entryId] as [kind]. Returns the created [Attachment], or null if the
+  /// clipboard had no image. Throws on read/upload failure.
+  static Future<Attachment?> pasteAndUpload(
+    int entryId,
+    AttachmentKind kind,
+  ) async {
+    final image = await clipboard.readClipboardImage();
+    if (image == null) return null;
+    final ext = _imageExtension(image.contentType);
+    final fileName = 'pasted-${DateTime.now().millisecondsSinceEpoch}.$ext';
+    return _upload(entryId, kind, image.bytes, fileName, image.contentType);
+  }
+
+  /// Shared upload path: validates size, runs Serverpod's direct-upload
+  /// request → upload → confirm round trip, and returns the recorded row.
+  static Future<Attachment> _upload(
+    int entryId,
+    AttachmentKind kind,
+    Uint8List bytes,
+    String fileName,
+    String contentType,
+  ) async {
     if (bytes.length > maxFileSize) {
       throw Exception('File too large. Maximum size is 10 MB.');
     }
-
-    final fileName = file.name;
-    final contentType = contentTypeFor(fileName);
 
     final ticket = await client.attachment.requestUpload(
       entryId,
@@ -71,6 +97,18 @@ class AttachmentService {
       contentType,
       bytes.length,
     );
+  }
+
+  static String _imageExtension(String contentType) {
+    switch (contentType) {
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/webp':
+        return 'webp';
+      case 'image/png':
+      default:
+        return 'png';
+    }
   }
 
   static Future<List<Attachment>> listForEntry(int entryId) =>

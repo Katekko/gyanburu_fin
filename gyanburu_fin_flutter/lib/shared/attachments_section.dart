@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 
@@ -59,6 +60,24 @@ class _AttachmentsSectionState extends State<AttachmentsSection> {
       }
     } catch (e) {
       _showError('Upload failed: $e');
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  Future<void> _paste() async {
+    setState(() => _busy = true);
+    try {
+      final created = await AttachmentService.pasteAndUpload(
+        widget.entryId,
+        widget.kind,
+      );
+      if (created != null) {
+        setState(() => _items = [..._items, created]);
+      } else {
+        _showError('No image found on the clipboard.');
+      }
+    } catch (e) {
+      _showError('Paste failed: $e');
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -167,12 +186,19 @@ class _AttachmentsSectionState extends State<AttachmentsSection> {
                 height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            if (!widget.readOnly && !_busy)
+            if (!widget.readOnly && !_busy) ...[
+              if (kIsWeb)
+                TextButton.icon(
+                  onPressed: _paste,
+                  icon: const Icon(Icons.content_paste, size: 18),
+                  label: const Text('Paste'),
+                ),
               TextButton.icon(
                 onPressed: _add,
                 icon: const Icon(Icons.attach_file, size: 18),
                 label: const Text('Add'),
               ),
+            ],
           ],
         ),
         if (_loading)
