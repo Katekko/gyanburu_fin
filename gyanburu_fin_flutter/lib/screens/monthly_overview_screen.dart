@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
 import '../shared/attachments_section.dart';
+import '../shared/clipboard_helper.dart';
 import '../shared/icon_map.dart';
 import '../shared/category_manager_dialog.dart';
 import '../theme/app_theme.dart';
@@ -770,13 +770,20 @@ class _EntryDialogState extends State<_EntryDialog> {
     super.dispose();
   }
 
-  void _copyBoletoCode() {
+  Future<void> _copyBoletoCode() async {
     final code = _boletoCodeController.text.trim();
     if (code.isEmpty) return;
-    Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Code copied')),
-    );
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await copyToClipboard(code);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Code copied')),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not copy: $e')),
+      );
+    }
   }
 
   void _save() {

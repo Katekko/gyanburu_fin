@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
 import '../shared/attachment_service.dart';
 import '../shared/attachments_section.dart';
+import '../shared/clipboard_helper.dart';
 import '../shared/icon_map.dart';
 import '../theme/app_theme.dart';
 
@@ -965,11 +965,18 @@ class _BoletoCodeRow extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.copy, size: 18),
             tooltip: 'Copy',
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: code));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Code copied')),
-              );
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await copyToClipboard(code);
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Code copied')),
+                );
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text('Could not copy: $e')),
+                );
+              }
             },
           ),
         ],
