@@ -1,0 +1,26 @@
+name: Debug Tailscale connectivity
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Join Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-secret: ${{ secrets.TS_AUTHKEY }}
+          tags: tag:github-katekko
+          args: --accept-routes
+
+      - name: Probe server connectivity
+        run: |
+          echo "--- tailscale status ---"
+          sudo tailscale status || true
+          echo "--- tailscale ping (LAN IP via subnet router) ---"
+          sudo tailscale ping -c 4 --timeout 5s 192.168.0.229 || echo "TAILSCALE_PING_FAILED"
+          echo "--- ip routes for 192.168.0.0/24 ---"
+          ip route get 192.168.0.229 || true
+          echo "--- ssh-keyscan ---"
+          ssh-keyscan -T 5 192.168.0.229 || echo "KEYSCAN_FAILED"
