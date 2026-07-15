@@ -68,7 +68,10 @@ jobs:
       - name: Join Tailscale
         uses: tailscale/github-action@v2
         with:
+          # TS_AUTHKEY holds an OAuth client secret (tskey-client-...), which
+          # never expires but requires advertising the client's tag.
           authkey: ${{ secrets.TS_AUTHKEY }}
+          tags: tag:github-katekko
           args: --accept-routes
 
       - name: Configure SSH
