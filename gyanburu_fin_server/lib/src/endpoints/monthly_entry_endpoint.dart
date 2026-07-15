@@ -89,8 +89,14 @@ class MonthlyEntryEndpoint extends Endpoint {
     MonthlyEntry entry,
   ) async {
     _validate(entry);
-    entry.userId = _userId(session);
-    return MonthlyEntry.db.insertRow(session, entry);
+    final userId = _userId(session);
+    entry.userId = userId;
+    final saved = await MonthlyEntry.db.insertRow(session, entry);
+
+    if (saved.recurrent) {
+      await _copyIntoMaterializedFutureMonths(session, userId, saved);
+    }
+    return saved;
   }
 
   Future<MonthlyEntry> update(
@@ -98,8 +104,108 @@ class MonthlyEntryEndpoint extends Endpoint {
     MonthlyEntry entry,
   ) async {
     _validate(entry);
-    entry.userId = _userId(session);
-    return MonthlyEntry.db.updateRow(session, entry);
+    final userId = _userId(session);
+    entry.userId = userId;
+
+    final before = await MonthlyEntry.db.findFirstRow(
+      session,
+      where: (t) => t.id.equals(entry.id) & t.userId.equals(userId),
+    );
+    if (before == null) throw Exception('Entry not found');
+
+    final saved = await MonthlyEntry.db.updateRow(session, entry);
+
+    if (before.recurrent) {
+      await _propagateToFutureMonths(session, userId, before, saved);
+    }
+    return saved;
+  }
+
+  // Months materialize a snapshot of the prior month on first access, so a
+  // month opened before an edit would otherwise keep the stale values
+  // forever. Carries edits to a recurrent entry forward into every
+  // already-materialized future month, matching by the pre-edit name so
+  // renames follow too. Paid entries are left untouched, and no-op saves
+  // (e.g. toggling confirmed) don't overwrite future months.
+  Future<void> _propagateToFutureMonths(
+    Session session,
+    UuidValue userId,
+    MonthlyEntry before,
+    MonthlyEntry saved,
+  ) async {
+    final changed = before.name != saved.name ||
+        before.categoryId != saved.categoryId ||
+        before.amount != saved.amount ||
+        before.variable != saved.variable ||
+        before.dueDate != saved.dueDate;
+    if (!changed) return;
+
+    final future = await MonthlyEntry.db.find(
+      session,
+      where: (t) =>
+          t.userId.equals(userId) &
+          (t.month > saved.month) &
+          t.recurrent.equals(true) &
+          t.paid.equals(false) &
+          t.name.equals(before.name) &
+          t.type.equals(before.type),
+    );
+    if (future.isEmpty) return;
+
+    await MonthlyEntry.db.update(
+      session,
+      future
+          .map((f) => f.copyWith(
+                name: saved.name,
+                categoryId: saved.categoryId,
+                amount: saved.amount,
+                variable: saved.variable,
+                dueDate: _rollDueDate(saved.dueDate, f.month),
+              ))
+          .toList(),
+    );
+  }
+
+  // A recurrent entry created in a month whose following months were already
+  // materialized would never show up in them; insert the copies directly,
+  // skipping months that already have an entry with the same name and type.
+  Future<void> _copyIntoMaterializedFutureMonths(
+    Session session,
+    UuidValue userId,
+    MonthlyEntry saved,
+  ) async {
+    final futureRows = await MonthlyEntry.db.find(
+      session,
+      where: (t) => t.userId.equals(userId) & (t.month > saved.month),
+    );
+    if (futureRows.isEmpty) return;
+
+    final occupied = futureRows
+        .where((f) => f.name == saved.name && f.type == saved.type)
+        .map((f) => f.month)
+        .toSet();
+    final targetMonths = futureRows.map((f) => f.month).toSet()
+      ..removeAll(occupied);
+    if (targetMonths.isEmpty) return;
+
+    await MonthlyEntry.db.insert(
+      session,
+      targetMonths
+          .map((m) => MonthlyEntry(
+                userId: userId,
+                categoryId: saved.categoryId,
+                name: saved.name,
+                type: saved.type,
+                amount: saved.amount,
+                month: m,
+                recurrent: true,
+                variable: saved.variable,
+                confirmed: !saved.variable,
+                dueDate: _rollDueDate(saved.dueDate, m),
+                paid: false,
+              ))
+          .toList(),
+    );
   }
 
   Future<void> delete(Session session, int id) async {
