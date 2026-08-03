@@ -16,6 +16,20 @@ Future<void> main(List<String> args) async {
   parser.addCommand('transactions');
   parser.addCommand('uncategorized');
   parser.addCommand('imports');
+  parser.addCommand('categories');
+  parser.addCommand('entry-delete');
+
+  parser.addCommand('entry-new')
+    ..addOption('month', help: 'Mês do lançamento (YYYY-MM)', mandatory: true)
+    ..addOption('name', mandatory: true)
+    ..addOption('amount', mandatory: true)
+    ..addOption('type', allowed: ['income', 'expense'], defaultsTo: 'expense')
+    ..addOption('category-id', mandatory: true)
+    ..addOption('due', help: 'Data de vencimento (YYYY-MM-DD)')
+    ..addFlag('recurrent', defaultsTo: true)
+    ..addFlag('variable', defaultsTo: false)
+    ..addFlag('confirmed', defaultsTo: true)
+    ..addFlag('paid', defaultsTo: false);
 
   parser.addCommand('entry-set')
     ..addOption('month', help: 'Mês do lançamento (YYYY-MM)', mandatory: true)
@@ -62,6 +76,12 @@ Future<void> main(List<String> args) async {
         await _entries(client, _month(command.rest));
       case 'entry-set':
         await _entrySet(client, command);
+      case 'entry-new':
+        await _entryNew(client, command);
+      case 'entry-delete':
+        await _entryDelete(client, command.rest);
+      case 'categories':
+        await _categories(client);
       case 'transactions':
         await _transactions(client, _month(command.rest),
             onlyUncategorized: false);
@@ -97,6 +117,9 @@ Comandos:
   import-ofx <arquivo...>    Importa um ou mais OFX (dedup + regras aplicadas)
   entries <YYYY-MM>          Lista os lançamentos do mês
   entry-set --month --id     Altera um lançamento (ver flags abaixo)
+  entry-new --month --name   Cria um lançamento (--amount --category-id)
+  entry-delete <id>          Remove um lançamento
+  categories                 Lista as categorias
   transactions <YYYY-MM>     Lista as transações do mês
   uncategorized [YYYY-MM]    Transações sem categoria
   imports                    Histórico de importações
@@ -271,6 +294,51 @@ Future<void> _entrySet(Client client, ArgResults cmd) async {
   if (saved.recurrent) {
     stdout.writeln('\nLançamento recorrente: a alteração foi propagada para '
         'os meses futuros já materializados (exceto os já pagos).');
+  }
+}
+
+Future<void> _entryNew(Client client, ArgResults cmd) async {
+  final categoryId = int.tryParse(cmd['category-id'] as String);
+  if (categoryId == null) throw StateError('--category-id inválido.');
+
+  final entry = MonthlyEntry(
+    userId: UuidValue.fromString('00000000-0000-0000-0000-000000000000'),
+    categoryId: categoryId,
+    name: cmd['name'] as String,
+    type: (cmd['type'] as String) == 'income'
+        ? EntryType.income
+        : EntryType.expense,
+    amount: _parseAmount(cmd['amount'] as String, 'amount'),
+    month: cmd['month'] as String,
+    recurrent: cmd['recurrent'] as bool,
+    variable: cmd['variable'] as bool,
+    confirmed: cmd['confirmed'] as bool,
+    dueDate:
+        cmd['due'] == null ? null : DateTime.parse(cmd['due'] as String),
+    paid: cmd['paid'] as bool,
+  );
+
+  final saved = await client.monthlyEntry.create(entry);
+  stdout.writeln('Criado #${saved.id}: ${saved.name} ${_money(saved.amount)} '
+      '(${saved.type.name}) venc=${_date(saved.dueDate)} '
+      'em ${saved.month}');
+  if (saved.recurrent) {
+    stdout.writeln('Recorrente: copiado para os meses futuros já abertos.');
+  }
+}
+
+Future<void> _entryDelete(Client client, List<String> rest) async {
+  if (rest.isEmpty) throw StateError('Informe o id do lançamento.');
+  final id = int.tryParse(rest.first);
+  if (id == null) throw StateError('Id inválido.');
+  await client.monthlyEntry.delete(id);
+  stdout.writeln('Lançamento $id removido.');
+}
+
+Future<void> _categories(Client client) async {
+  final categories = await client.category.list();
+  for (final c in categories) {
+    stdout.writeln('  ${_pad(c.id.toString(), 5)}${c.name}');
   }
 }
 
