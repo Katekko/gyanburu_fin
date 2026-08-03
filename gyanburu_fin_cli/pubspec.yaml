@@ -1,0 +1,16 @@
+name: gyanburu_fin_cli
+description: CLI para operar o Gyanburu Fin pelos endpoints do servidor.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: '^3.8.0'
+
+resolution: workspace
+
+dependencies:
+  args: ^2.6.0
+  gyanburu_fin_client:
+    path: ../gyanburu_fin_client
+  serverpod_auth_core_client: 3.4.11
+  serverpod_client: 3.4.11

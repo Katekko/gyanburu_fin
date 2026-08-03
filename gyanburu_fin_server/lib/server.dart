@@ -1,10 +1,8 @@
 import 'dart:io';
 
 import 'package:serverpod/serverpod.dart';
-import 'package:serverpod_auth_idp_server/core.dart';
-import 'package:serverpod_auth_idp_server/providers/email.dart';
 
-import 'src/email/email_service.dart';
+import 'src/auth/owner_authentication.dart';
 import 'src/generated/endpoints.dart';
 import 'src/generated/protocol.dart';
 import 'src/web/routes/app_config_route.dart';
@@ -12,24 +10,13 @@ import 'src/web/routes/root.dart';
 
 /// The starting point of the Serverpod server.
 void run(List<String> args) async {
-  // Initialize Serverpod and connect it with your generated code.
-  final pod = Serverpod(args, Protocol(), Endpoints());
-
-  // Initialize authentication services for the server.
-  // Token managers will be used to validate and issue authentication keys,
-  // and the identity providers will be the authentication options available for users.
-  pod.initializeAuthServices(
-    tokenManagerBuilders: [
-      // Use JWT for authentication keys towards the server.
-      JwtConfigFromPasswords(),
-    ],
-    identityProviderBuilders: [
-      // Configure the email identity provider for email/password authentication.
-      EmailIdpConfigFromPasswords(
-        sendRegistrationVerificationCode: _sendRegistrationCode,
-        sendPasswordResetVerificationCode: _sendPasswordResetCode,
-      ),
-    ],
+  // Single-user app: every request carries a shared secret and resolves to the
+  // owner's fixed user id. See [OwnerAuthentication].
+  final pod = Serverpod(
+    args,
+    Protocol(),
+    Endpoints(),
+    authenticationHandler: OwnerAuthentication.handler,
   );
 
   // Setup a default page at the web root.
@@ -76,34 +63,4 @@ void run(List<String> args) async {
 
   // Start the server.
   await pod.start();
-}
-
-Future<void> _sendRegistrationCode(
-  Session session, {
-  required String email,
-  required UuidValue accountRequestId,
-  required String verificationCode,
-  required Transaction? transaction,
-}) async {
-  session.log('[EmailIdp] Registration code ($email): $verificationCode');
-  await EmailService.sendRegistrationCode(
-    session,
-    toEmail: email,
-    code: verificationCode,
-  );
-}
-
-Future<void> _sendPasswordResetCode(
-  Session session, {
-  required String email,
-  required UuidValue passwordResetRequestId,
-  required String verificationCode,
-  required Transaction? transaction,
-}) async {
-  session.log('[EmailIdp] Password reset code ($email): $verificationCode');
-  await EmailService.sendPasswordResetCode(
-    session,
-    toEmail: email,
-    code: verificationCode,
-  );
 }

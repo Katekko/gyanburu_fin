@@ -51,9 +51,18 @@ SyncLog
 
 ## Auth approach
 
-Custom auth — no email/password or Serverpod IDP. Use `serverpod_auth_idp_server`
-as a base and implement your own token-based flow (consistent with other projects
-in this workspace that use a custom auth pattern).
+Single user — the owner. No login, no identity provider, no user table.
+
+Every request carries a shared secret in the auth header. On the server,
+`OwnerAuthentication` (`lib/src/auth/owner_authentication.dart`) compares it
+against `apiToken` from `passwords.yaml` and returns an `AuthenticationInfo`
+built on `ownerUserId`, so endpoints keep reading `session.authenticated` and
+the `userId` columns stay as they are.
+
+The Flutter app asks for the token once and keeps it in `SharedPreferences`
+(`TokenGate`); the CLI reads it from `~/.config/gyanburu/token` or
+`GYANBURU_TOKEN`. Never bake the token into the web build — anything compiled
+into the bundle is readable by whoever loads the page.
 
 ## Nubank integration note
 

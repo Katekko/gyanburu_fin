@@ -10,274 +10,49 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
-    as _i1;
-import 'package:serverpod_client/serverpod_client.dart' as _i2;
-import 'dart:async' as _i3;
-import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
-    as _i4;
+import 'package:serverpod_client/serverpod_client.dart' as _i1;
+import 'dart:async' as _i2;
 import 'package:gyanburu_fin_client/src/protocol/attachment_upload_ticket.dart'
-    as _i5;
-import 'package:gyanburu_fin_client/src/protocol/attachment_kind.dart' as _i6;
-import 'package:gyanburu_fin_client/src/protocol/attachment.dart' as _i7;
-import 'dart:typed_data' as _i8;
-import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i9;
-import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i10;
-import 'package:gyanburu_fin_client/src/protocol/category.dart' as _i11;
-import 'package:gyanburu_fin_client/src/protocol/category_rule.dart' as _i12;
-import 'package:gyanburu_fin_client/src/protocol/chat_response.dart' as _i13;
-import 'package:gyanburu_fin_client/src/protocol/chat_message.dart' as _i14;
-import 'package:gyanburu_fin_client/src/protocol/pending_action.dart' as _i15;
+    as _i3;
+import 'package:gyanburu_fin_client/src/protocol/attachment_kind.dart' as _i4;
+import 'package:gyanburu_fin_client/src/protocol/attachment.dart' as _i5;
+import 'dart:typed_data' as _i6;
+import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i7;
+import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i8;
+import 'package:gyanburu_fin_client/src/protocol/category.dart' as _i9;
+import 'package:gyanburu_fin_client/src/protocol/category_rule.dart' as _i10;
+import 'package:gyanburu_fin_client/src/protocol/chat_response.dart' as _i11;
+import 'package:gyanburu_fin_client/src/protocol/chat_message.dart' as _i12;
+import 'package:gyanburu_fin_client/src/protocol/pending_action.dart' as _i13;
 import 'package:gyanburu_fin_client/src/protocol/financial_transaction.dart'
-    as _i16;
-import 'package:gyanburu_fin_client/src/protocol/import_history.dart' as _i17;
-import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i18;
-import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i19;
-import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i20;
-import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i21;
+    as _i14;
+import 'package:gyanburu_fin_client/src/protocol/import_history.dart' as _i15;
+import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i16;
+import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i17;
+import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i18;
+import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i19;
 import 'package:gyanburu_fin_client/src/protocol/greetings/greeting.dart'
-    as _i22;
-import 'protocol.dart' as _i23;
-
-/// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
-/// are made available on the server and enable the corresponding sign-in widget
-/// on the client.
-/// {@category Endpoint}
-class EndpointEmailIdp extends _i1.EndpointEmailIdpBase {
-  EndpointEmailIdp(_i2.EndpointCaller caller) : super(caller);
-
-  @override
-  String get name => 'emailIdp';
-
-  /// Logs in the user and returns a new session.
-  ///
-  /// Throws an [EmailAccountLoginException] in case of errors, with reason:
-  /// - [EmailAccountLoginExceptionReason.invalidCredentials] if the email or
-  ///   password is incorrect.
-  /// - [EmailAccountLoginExceptionReason.tooManyAttempts] if there have been
-  ///   too many failed login attempts.
-  ///
-  /// Throws an [AuthUserBlockedException] if the auth user is blocked.
-  @override
-  _i3.Future<_i4.AuthSuccess> login({
-    required String email,
-    required String password,
-  }) => caller.callServerEndpoint<_i4.AuthSuccess>(
-    'emailIdp',
-    'login',
-    {
-      'email': email,
-      'password': password,
-    },
-  );
-
-  /// Starts the registration for a new user account with an email-based login
-  /// associated to it.
-  ///
-  /// Upon successful completion of this method, an email will have been
-  /// sent to [email] with a verification link, which the user must open to
-  /// complete the registration.
-  ///
-  /// Always returns a account request ID, which can be used to complete the
-  /// registration. If the email is already registered, the returned ID will not
-  /// be valid.
-  @override
-  _i3.Future<_i2.UuidValue> startRegistration({required String email}) =>
-      caller.callServerEndpoint<_i2.UuidValue>(
-        'emailIdp',
-        'startRegistration',
-        {'email': email},
-      );
-
-  /// Verifies an account request code and returns a token
-  /// that can be used to complete the account creation.
-  ///
-  /// Throws an [EmailAccountRequestException] in case of errors, with reason:
-  /// - [EmailAccountRequestExceptionReason.expired] if the account request has
-  ///   already expired.
-  /// - [EmailAccountRequestExceptionReason.policyViolation] if the password
-  ///   does not comply with the password policy.
-  /// - [EmailAccountRequestExceptionReason.invalid] if no request exists
-  ///   for the given [accountRequestId] or [verificationCode] is invalid.
-  @override
-  _i3.Future<String> verifyRegistrationCode({
-    required _i2.UuidValue accountRequestId,
-    required String verificationCode,
-  }) => caller.callServerEndpoint<String>(
-    'emailIdp',
-    'verifyRegistrationCode',
-    {
-      'accountRequestId': accountRequestId,
-      'verificationCode': verificationCode,
-    },
-  );
-
-  /// Completes a new account registration, creating a new auth user with a
-  /// profile and attaching the given email account to it.
-  ///
-  /// Throws an [EmailAccountRequestException] in case of errors, with reason:
-  /// - [EmailAccountRequestExceptionReason.expired] if the account request has
-  ///   already expired.
-  /// - [EmailAccountRequestExceptionReason.policyViolation] if the password
-  ///   does not comply with the password policy.
-  /// - [EmailAccountRequestExceptionReason.invalid] if the [registrationToken]
-  ///   is invalid.
-  ///
-  /// Throws an [AuthUserBlockedException] if the auth user is blocked.
-  ///
-  /// Returns a session for the newly created user.
-  @override
-  _i3.Future<_i4.AuthSuccess> finishRegistration({
-    required String registrationToken,
-    required String password,
-  }) => caller.callServerEndpoint<_i4.AuthSuccess>(
-    'emailIdp',
-    'finishRegistration',
-    {
-      'registrationToken': registrationToken,
-      'password': password,
-    },
-  );
-
-  /// Requests a password reset for [email].
-  ///
-  /// If the email address is registered, an email with reset instructions will
-  /// be send out. If the email is unknown, this method will have no effect.
-  ///
-  /// Always returns a password reset request ID, which can be used to complete
-  /// the reset. If the email is not registered, the returned ID will not be
-  /// valid.
-  ///
-  /// Throws an [EmailAccountPasswordResetException] in case of errors, with reason:
-  /// - [EmailAccountPasswordResetExceptionReason.tooManyAttempts] if the user has
-  ///   made too many attempts trying to request a password reset.
-  ///
-  @override
-  _i3.Future<_i2.UuidValue> startPasswordReset({required String email}) =>
-      caller.callServerEndpoint<_i2.UuidValue>(
-        'emailIdp',
-        'startPasswordReset',
-        {'email': email},
-      );
-
-  /// Verifies a password reset code and returns a finishPasswordResetToken
-  /// that can be used to finish the password reset.
-  ///
-  /// Throws an [EmailAccountPasswordResetException] in case of errors, with reason:
-  /// - [EmailAccountPasswordResetExceptionReason.expired] if the password reset
-  ///   request has already expired.
-  /// - [EmailAccountPasswordResetExceptionReason.tooManyAttempts] if the user has
-  ///   made too many attempts trying to verify the password reset.
-  /// - [EmailAccountPasswordResetExceptionReason.invalid] if no request exists
-  ///   for the given [passwordResetRequestId] or [verificationCode] is invalid.
-  ///
-  /// If multiple steps are required to complete the password reset, this endpoint
-  /// should be overridden to return credentials for the next step instead
-  /// of the credentials for setting the password.
-  @override
-  _i3.Future<String> verifyPasswordResetCode({
-    required _i2.UuidValue passwordResetRequestId,
-    required String verificationCode,
-  }) => caller.callServerEndpoint<String>(
-    'emailIdp',
-    'verifyPasswordResetCode',
-    {
-      'passwordResetRequestId': passwordResetRequestId,
-      'verificationCode': verificationCode,
-    },
-  );
-
-  /// Completes a password reset request by setting a new password.
-  ///
-  /// The [verificationCode] returned from [verifyPasswordResetCode] is used to
-  /// validate the password reset request.
-  ///
-  /// Throws an [EmailAccountPasswordResetException] in case of errors, with reason:
-  /// - [EmailAccountPasswordResetExceptionReason.expired] if the password reset
-  ///   request has already expired.
-  /// - [EmailAccountPasswordResetExceptionReason.policyViolation] if the new
-  ///   password does not comply with the password policy.
-  /// - [EmailAccountPasswordResetExceptionReason.invalid] if no request exists
-  ///   for the given [passwordResetRequestId] or [verificationCode] is invalid.
-  ///
-  /// Throws an [AuthUserBlockedException] if the auth user is blocked.
-  @override
-  _i3.Future<void> finishPasswordReset({
-    required String finishPasswordResetToken,
-    required String newPassword,
-  }) => caller.callServerEndpoint<void>(
-    'emailIdp',
-    'finishPasswordReset',
-    {
-      'finishPasswordResetToken': finishPasswordResetToken,
-      'newPassword': newPassword,
-    },
-  );
-
-  @override
-  _i3.Future<bool> hasAccount() => caller.callServerEndpoint<bool>(
-    'emailIdp',
-    'hasAccount',
-    {},
-  );
-}
-
-/// By extending [RefreshJwtTokensEndpoint], the JWT token refresh endpoint
-/// is made available on the server and enables automatic token refresh on the client.
-/// {@category Endpoint}
-class EndpointJwtRefresh extends _i4.EndpointRefreshJwtTokens {
-  EndpointJwtRefresh(_i2.EndpointCaller caller) : super(caller);
-
-  @override
-  String get name => 'jwtRefresh';
-
-  /// Creates a new token pair for the given [refreshToken].
-  ///
-  /// Can throw the following exceptions:
-  /// -[RefreshTokenMalformedException]: refresh token is malformed and could
-  ///   not be parsed. Not expected to happen for tokens issued by the server.
-  /// -[RefreshTokenNotFoundException]: refresh token is unknown to the server.
-  ///   Either the token was deleted or generated by a different server.
-  /// -[RefreshTokenExpiredException]: refresh token has expired. Will happen
-  ///   only if it has not been used within configured `refreshTokenLifetime`.
-  /// -[RefreshTokenInvalidSecretException]: refresh token is incorrect, meaning
-  ///   it does not refer to the current secret refresh token. This indicates
-  ///   either a malfunctioning client or a malicious attempt by someone who has
-  ///   obtained the refresh token. In this case the underlying refresh token
-  ///   will be deleted, and access to it will expire fully when the last access
-  ///   token is elapsed.
-  ///
-  /// This endpoint is unauthenticated, meaning the client won't include any
-  /// authentication information with the call.
-  @override
-  _i3.Future<_i4.AuthSuccess> refreshAccessToken({
-    required String refreshToken,
-  }) => caller.callServerEndpoint<_i4.AuthSuccess>(
-    'jwtRefresh',
-    'refreshAccessToken',
-    {'refreshToken': refreshToken},
-    authenticated: false,
-  );
-}
+    as _i20;
+import 'protocol.dart' as _i21;
 
 /// Manages payment documents (boletos and receipts) attached to a
 /// [MonthlyEntry]. Files live in Serverpod's built-in `private` cloud storage
 /// and are only ever served back to their owner through [getData].
 /// {@category Endpoint}
-class EndpointAttachment extends _i2.EndpointRef {
-  EndpointAttachment(_i2.EndpointCaller caller) : super(caller);
+class EndpointAttachment extends _i1.EndpointRef {
+  EndpointAttachment(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'attachment';
 
   /// Step 1 of upload: verify ownership and hand the client a direct-upload
   /// description plus the storage path it must echo back to [confirmUpload].
-  _i3.Future<_i5.AttachmentUploadTicket> requestUpload(
+  _i2.Future<_i3.AttachmentUploadTicket> requestUpload(
     int entryId,
-    _i6.AttachmentKind kind,
+    _i4.AttachmentKind kind,
     String fileName,
     int contentLength,
-  ) => caller.callServerEndpoint<_i5.AttachmentUploadTicket>(
+  ) => caller.callServerEndpoint<_i3.AttachmentUploadTicket>(
     'attachment',
     'requestUpload',
     {
@@ -289,14 +64,14 @@ class EndpointAttachment extends _i2.EndpointRef {
   );
 
   /// Step 2 of upload: confirm the file landed in storage and record it.
-  _i3.Future<_i7.Attachment> confirmUpload(
+  _i2.Future<_i5.Attachment> confirmUpload(
     int entryId,
-    _i6.AttachmentKind kind,
+    _i4.AttachmentKind kind,
     String path,
     String fileName,
     String contentType,
     int sizeBytes,
-  ) => caller.callServerEndpoint<_i7.Attachment>(
+  ) => caller.callServerEndpoint<_i5.Attachment>(
     'attachment',
     'confirmUpload',
     {
@@ -309,8 +84,8 @@ class EndpointAttachment extends _i2.EndpointRef {
     },
   );
 
-  _i3.Future<List<_i7.Attachment>> listForEntry(int entryId) =>
-      caller.callServerEndpoint<List<_i7.Attachment>>(
+  _i2.Future<List<_i5.Attachment>> listForEntry(int entryId) =>
+      caller.callServerEndpoint<List<_i5.Attachment>>(
         'attachment',
         'listForEntry',
         {'entryId': entryId},
@@ -318,21 +93,21 @@ class EndpointAttachment extends _i2.EndpointRef {
 
   /// Returns the subset of [entryIds] (owned by the user) that have at least
   /// one attachment — used to show an indicator on bill rows in one round trip.
-  _i3.Future<List<int>> entryIdsWithAttachments(List<int> entryIds) =>
+  _i2.Future<List<int>> entryIdsWithAttachments(List<int> entryIds) =>
       caller.callServerEndpoint<List<int>>(
         'attachment',
         'entryIdsWithAttachments',
         {'entryIds': entryIds},
       );
 
-  _i3.Future<_i8.ByteData?> getData(int attachmentId) =>
-      caller.callServerEndpoint<_i8.ByteData?>(
+  _i2.Future<_i6.ByteData?> getData(int attachmentId) =>
+      caller.callServerEndpoint<_i6.ByteData?>(
         'attachment',
         'getData',
         {'attachmentId': attachmentId},
       );
 
-  _i3.Future<void> deleteAttachment(int attachmentId) =>
+  _i2.Future<void> deleteAttachment(int attachmentId) =>
       caller.callServerEndpoint<void>(
         'attachment',
         'deleteAttachment',
@@ -341,48 +116,48 @@ class EndpointAttachment extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointBill extends _i2.EndpointRef {
-  EndpointBill(_i2.EndpointCaller caller) : super(caller);
+class EndpointBill extends _i1.EndpointRef {
+  EndpointBill(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'bill';
 
-  _i3.Future<List<_i9.Bill>> list() =>
-      caller.callServerEndpoint<List<_i9.Bill>>(
+  _i2.Future<List<_i7.Bill>> list() =>
+      caller.callServerEndpoint<List<_i7.Bill>>(
         'bill',
         'list',
         {},
       );
 
-  _i3.Future<List<_i9.Bill>> listUpcoming() =>
-      caller.callServerEndpoint<List<_i9.Bill>>(
+  _i2.Future<List<_i7.Bill>> listUpcoming() =>
+      caller.callServerEndpoint<List<_i7.Bill>>(
         'bill',
         'listUpcoming',
         {},
       );
 
-  _i3.Future<_i9.Bill> create(_i9.Bill bill) =>
-      caller.callServerEndpoint<_i9.Bill>(
+  _i2.Future<_i7.Bill> create(_i7.Bill bill) =>
+      caller.callServerEndpoint<_i7.Bill>(
         'bill',
         'create',
         {'bill': bill},
       );
 
-  _i3.Future<_i9.Bill> update(_i9.Bill bill) =>
-      caller.callServerEndpoint<_i9.Bill>(
+  _i2.Future<_i7.Bill> update(_i7.Bill bill) =>
+      caller.callServerEndpoint<_i7.Bill>(
         'bill',
         'update',
         {'bill': bill},
       );
 
-  _i3.Future<_i9.Bill> markAsPaid(int id) =>
-      caller.callServerEndpoint<_i9.Bill>(
+  _i2.Future<_i7.Bill> markAsPaid(int id) =>
+      caller.callServerEndpoint<_i7.Bill>(
         'bill',
         'markAsPaid',
         {'id': id},
       );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'bill',
     'delete',
     {'id': id},
@@ -390,34 +165,34 @@ class EndpointBill extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointBudget extends _i2.EndpointRef {
-  EndpointBudget(_i2.EndpointCaller caller) : super(caller);
+class EndpointBudget extends _i1.EndpointRef {
+  EndpointBudget(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'budget';
 
-  _i3.Future<List<_i10.BudgetCategory>> listByMonth(DateTime month) =>
-      caller.callServerEndpoint<List<_i10.BudgetCategory>>(
+  _i2.Future<List<_i8.BudgetCategory>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i8.BudgetCategory>>(
         'budget',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i10.BudgetCategory> create(_i10.BudgetCategory category) =>
-      caller.callServerEndpoint<_i10.BudgetCategory>(
+  _i2.Future<_i8.BudgetCategory> create(_i8.BudgetCategory category) =>
+      caller.callServerEndpoint<_i8.BudgetCategory>(
         'budget',
         'create',
         {'category': category},
       );
 
-  _i3.Future<_i10.BudgetCategory> update(_i10.BudgetCategory category) =>
-      caller.callServerEndpoint<_i10.BudgetCategory>(
+  _i2.Future<_i8.BudgetCategory> update(_i8.BudgetCategory category) =>
+      caller.callServerEndpoint<_i8.BudgetCategory>(
         'budget',
         'update',
         {'category': category},
       );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'budget',
     'delete',
     {'id': id},
@@ -425,34 +200,34 @@ class EndpointBudget extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointCategory extends _i2.EndpointRef {
-  EndpointCategory(_i2.EndpointCaller caller) : super(caller);
+class EndpointCategory extends _i1.EndpointRef {
+  EndpointCategory(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'category';
 
-  _i3.Future<List<_i11.Category>> list() =>
-      caller.callServerEndpoint<List<_i11.Category>>(
+  _i2.Future<List<_i9.Category>> list() =>
+      caller.callServerEndpoint<List<_i9.Category>>(
         'category',
         'list',
         {},
       );
 
-  _i3.Future<_i11.Category> create(_i11.Category category) =>
-      caller.callServerEndpoint<_i11.Category>(
+  _i2.Future<_i9.Category> create(_i9.Category category) =>
+      caller.callServerEndpoint<_i9.Category>(
         'category',
         'create',
         {'category': category},
       );
 
-  _i3.Future<_i11.Category> update(_i11.Category category) =>
-      caller.callServerEndpoint<_i11.Category>(
+  _i2.Future<_i9.Category> update(_i9.Category category) =>
+      caller.callServerEndpoint<_i9.Category>(
         'category',
         'update',
         {'category': category},
       );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'category',
     'delete',
     {'id': id},
@@ -460,34 +235,34 @@ class EndpointCategory extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointCategoryRule extends _i2.EndpointRef {
-  EndpointCategoryRule(_i2.EndpointCaller caller) : super(caller);
+class EndpointCategoryRule extends _i1.EndpointRef {
+  EndpointCategoryRule(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'categoryRule';
 
-  _i3.Future<List<_i12.CategoryRule>> list() =>
-      caller.callServerEndpoint<List<_i12.CategoryRule>>(
+  _i2.Future<List<_i10.CategoryRule>> list() =>
+      caller.callServerEndpoint<List<_i10.CategoryRule>>(
         'categoryRule',
         'list',
         {},
       );
 
-  _i3.Future<_i12.CategoryRule> create(_i12.CategoryRule rule) =>
-      caller.callServerEndpoint<_i12.CategoryRule>(
+  _i2.Future<_i10.CategoryRule> create(_i10.CategoryRule rule) =>
+      caller.callServerEndpoint<_i10.CategoryRule>(
         'categoryRule',
         'create',
         {'rule': rule},
       );
 
-  _i3.Future<_i12.CategoryRule> update(_i12.CategoryRule rule) =>
-      caller.callServerEndpoint<_i12.CategoryRule>(
+  _i2.Future<_i10.CategoryRule> update(_i10.CategoryRule rule) =>
+      caller.callServerEndpoint<_i10.CategoryRule>(
         'categoryRule',
         'update',
         {'rule': rule},
       );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'categoryRule',
     'delete',
     {'id': id},
@@ -495,16 +270,16 @@ class EndpointCategoryRule extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointChat extends _i2.EndpointRef {
-  EndpointChat(_i2.EndpointCaller caller) : super(caller);
+class EndpointChat extends _i1.EndpointRef {
+  EndpointChat(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'chat';
 
-  _i3.Future<_i13.ChatResponse> sendMessage(
-    List<_i14.ChatMessage> history,
+  _i2.Future<_i11.ChatResponse> sendMessage(
+    List<_i12.ChatMessage> history,
     String userMessage,
-  ) => caller.callServerEndpoint<_i13.ChatResponse>(
+  ) => caller.callServerEndpoint<_i11.ChatResponse>(
     'chat',
     'sendMessage',
     {
@@ -513,7 +288,7 @@ class EndpointChat extends _i2.EndpointRef {
     },
   );
 
-  _i3.Future<String> executeActions(List<_i15.PendingAction> actions) =>
+  _i2.Future<String> executeActions(List<_i13.PendingAction> actions) =>
       caller.callServerEndpoint<String>(
         'chat',
         'executeActions',
@@ -522,27 +297,27 @@ class EndpointChat extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointDashboard extends _i2.EndpointRef {
-  EndpointDashboard(_i2.EndpointCaller caller) : super(caller);
+class EndpointDashboard extends _i1.EndpointRef {
+  EndpointDashboard(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'dashboard';
 
-  _i3.Future<Map<String, double>> spendingByCategory(DateTime month) =>
+  _i2.Future<Map<String, double>> spendingByCategory(DateTime month) =>
       caller.callServerEndpoint<Map<String, double>>(
         'dashboard',
         'spendingByCategory',
         {'month': month},
       );
 
-  _i3.Future<List<_i16.FinancialTransaction>> recentTransactions() =>
-      caller.callServerEndpoint<List<_i16.FinancialTransaction>>(
+  _i2.Future<List<_i14.FinancialTransaction>> recentTransactions() =>
+      caller.callServerEndpoint<List<_i14.FinancialTransaction>>(
         'dashboard',
         'recentTransactions',
         {},
       );
 
-  _i3.Future<double> netBalance(DateTime month) =>
+  _i2.Future<double> netBalance(DateTime month) =>
       caller.callServerEndpoint<double>(
         'dashboard',
         'netBalance',
@@ -551,14 +326,14 @@ class EndpointDashboard extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointImportHistory extends _i2.EndpointRef {
-  EndpointImportHistory(_i2.EndpointCaller caller) : super(caller);
+class EndpointImportHistory extends _i1.EndpointRef {
+  EndpointImportHistory(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'importHistory';
 
-  _i3.Future<List<_i17.ImportHistory>> list() =>
-      caller.callServerEndpoint<List<_i17.ImportHistory>>(
+  _i2.Future<List<_i15.ImportHistory>> list() =>
+      caller.callServerEndpoint<List<_i15.ImportHistory>>(
         'importHistory',
         'list',
         {},
@@ -566,34 +341,34 @@ class EndpointImportHistory extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointIncome extends _i2.EndpointRef {
-  EndpointIncome(_i2.EndpointCaller caller) : super(caller);
+class EndpointIncome extends _i1.EndpointRef {
+  EndpointIncome(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'income';
 
-  _i3.Future<List<_i18.IncomeSource>> listByMonth(DateTime month) =>
-      caller.callServerEndpoint<List<_i18.IncomeSource>>(
+  _i2.Future<List<_i16.IncomeSource>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i16.IncomeSource>>(
         'income',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i18.IncomeSource> create(_i18.IncomeSource source) =>
-      caller.callServerEndpoint<_i18.IncomeSource>(
+  _i2.Future<_i16.IncomeSource> create(_i16.IncomeSource source) =>
+      caller.callServerEndpoint<_i16.IncomeSource>(
         'income',
         'create',
         {'source': source},
       );
 
-  _i3.Future<_i18.IncomeSource> update(_i18.IncomeSource source) =>
-      caller.callServerEndpoint<_i18.IncomeSource>(
+  _i2.Future<_i16.IncomeSource> update(_i16.IncomeSource source) =>
+      caller.callServerEndpoint<_i16.IncomeSource>(
         'income',
         'update',
         {'source': source},
       );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'income',
     'delete',
     {'id': id},
@@ -601,34 +376,34 @@ class EndpointIncome extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointMonthlyEntry extends _i2.EndpointRef {
-  EndpointMonthlyEntry(_i2.EndpointCaller caller) : super(caller);
+class EndpointMonthlyEntry extends _i1.EndpointRef {
+  EndpointMonthlyEntry(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'monthlyEntry';
 
-  _i3.Future<List<_i19.MonthlyEntry>> listByMonth(String month) =>
-      caller.callServerEndpoint<List<_i19.MonthlyEntry>>(
+  _i2.Future<List<_i17.MonthlyEntry>> listByMonth(String month) =>
+      caller.callServerEndpoint<List<_i17.MonthlyEntry>>(
         'monthlyEntry',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i19.MonthlyEntry> create(_i19.MonthlyEntry entry) =>
-      caller.callServerEndpoint<_i19.MonthlyEntry>(
+  _i2.Future<_i17.MonthlyEntry> create(_i17.MonthlyEntry entry) =>
+      caller.callServerEndpoint<_i17.MonthlyEntry>(
         'monthlyEntry',
         'create',
         {'entry': entry},
       );
 
-  _i3.Future<_i19.MonthlyEntry> update(_i19.MonthlyEntry entry) =>
-      caller.callServerEndpoint<_i19.MonthlyEntry>(
+  _i2.Future<_i17.MonthlyEntry> update(_i17.MonthlyEntry entry) =>
+      caller.callServerEndpoint<_i17.MonthlyEntry>(
         'monthlyEntry',
         'update',
         {'entry': entry},
       );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'monthlyEntry',
     'delete',
     {'id': id},
@@ -636,28 +411,28 @@ class EndpointMonthlyEntry extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointNubankAccount extends _i2.EndpointRef {
-  EndpointNubankAccount(_i2.EndpointCaller caller) : super(caller);
+class EndpointNubankAccount extends _i1.EndpointRef {
+  EndpointNubankAccount(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'nubankAccount';
 
-  _i3.Future<List<_i20.NubankAccount>> list() =>
-      caller.callServerEndpoint<List<_i20.NubankAccount>>(
+  _i2.Future<List<_i18.NubankAccount>> list() =>
+      caller.callServerEndpoint<List<_i18.NubankAccount>>(
         'nubankAccount',
         'list',
         {},
       );
 
-  _i3.Future<_i20.NubankAccount?> findById(int id) =>
-      caller.callServerEndpoint<_i20.NubankAccount?>(
+  _i2.Future<_i18.NubankAccount?> findById(int id) =>
+      caller.callServerEndpoint<_i18.NubankAccount?>(
         'nubankAccount',
         'findById',
         {'id': id},
       );
 
-  _i3.Future<List<_i21.SyncLog>> syncLogs(int accountId) =>
-      caller.callServerEndpoint<List<_i21.SyncLog>>(
+  _i2.Future<List<_i19.SyncLog>> syncLogs(int accountId) =>
+      caller.callServerEndpoint<List<_i19.SyncLog>>(
         'nubankAccount',
         'syncLogs',
         {'accountId': accountId},
@@ -665,16 +440,16 @@ class EndpointNubankAccount extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointOfxImport extends _i2.EndpointRef {
-  EndpointOfxImport(_i2.EndpointCaller caller) : super(caller);
+class EndpointOfxImport extends _i1.EndpointRef {
+  EndpointOfxImport(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'ofxImport';
 
-  _i3.Future<_i17.ImportHistory> importOfx(
+  _i2.Future<_i15.ImportHistory> importOfx(
     String ofxContent,
     String fileName,
-  ) => caller.callServerEndpoint<_i17.ImportHistory>(
+  ) => caller.callServerEndpoint<_i15.ImportHistory>(
     'ofxImport',
     'importOfx',
     {
@@ -685,43 +460,43 @@ class EndpointOfxImport extends _i2.EndpointRef {
 }
 
 /// {@category Endpoint}
-class EndpointTransaction extends _i2.EndpointRef {
-  EndpointTransaction(_i2.EndpointCaller caller) : super(caller);
+class EndpointTransaction extends _i1.EndpointRef {
+  EndpointTransaction(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'transaction';
 
-  _i3.Future<List<_i16.FinancialTransaction>> list() =>
-      caller.callServerEndpoint<List<_i16.FinancialTransaction>>(
+  _i2.Future<List<_i14.FinancialTransaction>> list() =>
+      caller.callServerEndpoint<List<_i14.FinancialTransaction>>(
         'transaction',
         'list',
         {},
       );
 
-  _i3.Future<List<_i16.FinancialTransaction>> listByMonth(DateTime month) =>
-      caller.callServerEndpoint<List<_i16.FinancialTransaction>>(
+  _i2.Future<List<_i14.FinancialTransaction>> listByMonth(DateTime month) =>
+      caller.callServerEndpoint<List<_i14.FinancialTransaction>>(
         'transaction',
         'listByMonth',
         {'month': month},
       );
 
-  _i3.Future<_i16.FinancialTransaction> create(
-    _i16.FinancialTransaction transaction,
-  ) => caller.callServerEndpoint<_i16.FinancialTransaction>(
+  _i2.Future<_i14.FinancialTransaction> create(
+    _i14.FinancialTransaction transaction,
+  ) => caller.callServerEndpoint<_i14.FinancialTransaction>(
     'transaction',
     'create',
     {'transaction': transaction},
   );
 
-  _i3.Future<_i16.FinancialTransaction> update(
-    _i16.FinancialTransaction transaction,
-  ) => caller.callServerEndpoint<_i16.FinancialTransaction>(
+  _i2.Future<_i14.FinancialTransaction> update(
+    _i14.FinancialTransaction transaction,
+  ) => caller.callServerEndpoint<_i14.FinancialTransaction>(
     'transaction',
     'update',
     {'transaction': transaction},
   );
 
-  _i3.Future<void> delete(int id) => caller.callServerEndpoint<void>(
+  _i2.Future<void> delete(int id) => caller.callServerEndpoint<void>(
     'transaction',
     'delete',
     {'id': id},
@@ -736,13 +511,13 @@ class EndpointTransaction extends _i2.EndpointRef {
   /// - Display name propagates only when [propagateDisplayName] is true.
   /// - When a flag is false the corresponding field on the rule (and
   ///   siblings) is left unchanged from its current value.
-  _i3.Future<_i16.FinancialTransaction> saveWithPropagation(
+  _i2.Future<_i14.FinancialTransaction> saveWithPropagation(
     int transactionId,
     String? categoryName,
     String? displayName,
     bool propagateDisplayName,
     bool propagateCategory,
-  ) => caller.callServerEndpoint<_i16.FinancialTransaction>(
+  ) => caller.callServerEndpoint<_i14.FinancialTransaction>(
     'transaction',
     'saveWithPropagation',
     {
@@ -758,33 +533,22 @@ class EndpointTransaction extends _i2.EndpointRef {
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
-class EndpointGreeting extends _i2.EndpointRef {
-  EndpointGreeting(_i2.EndpointCaller caller) : super(caller);
+class EndpointGreeting extends _i1.EndpointRef {
+  EndpointGreeting(_i1.EndpointCaller caller) : super(caller);
 
   @override
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i22.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i22.Greeting>(
+  _i2.Future<_i20.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i20.Greeting>(
         'greeting',
         'hello',
         {'name': name},
       );
 }
 
-class Modules {
-  Modules(Client client) {
-    serverpod_auth_idp = _i1.Caller(client);
-    serverpod_auth_core = _i4.Caller(client);
-  }
-
-  late final _i1.Caller serverpod_auth_idp;
-
-  late final _i4.Caller serverpod_auth_core;
-}
-
-class Client extends _i2.ServerpodClientShared {
+class Client extends _i1.ServerpodClientShared {
   Client(
     String host, {
     dynamic securityContext,
@@ -795,16 +559,16 @@ class Client extends _i2.ServerpodClientShared {
     Duration? streamingConnectionTimeout,
     Duration? connectionTimeout,
     Function(
-      _i2.MethodCallContext,
+      _i1.MethodCallContext,
       Object,
       StackTrace,
     )?
     onFailedCall,
-    Function(_i2.MethodCallContext)? onSucceededCall,
+    Function(_i1.MethodCallContext)? onSucceededCall,
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i23.Protocol(),
+         _i21.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -813,8 +577,6 @@ class Client extends _i2.ServerpodClientShared {
          disconnectStreamsOnLostInternetConnection:
              disconnectStreamsOnLostInternetConnection,
        ) {
-    emailIdp = EndpointEmailIdp(this);
-    jwtRefresh = EndpointJwtRefresh(this);
     attachment = EndpointAttachment(this);
     bill = EndpointBill(this);
     budget = EndpointBudget(this);
@@ -829,12 +591,7 @@ class Client extends _i2.ServerpodClientShared {
     ofxImport = EndpointOfxImport(this);
     transaction = EndpointTransaction(this);
     greeting = EndpointGreeting(this);
-    modules = Modules(this);
   }
-
-  late final EndpointEmailIdp emailIdp;
-
-  late final EndpointJwtRefresh jwtRefresh;
 
   late final EndpointAttachment attachment;
 
@@ -864,12 +621,8 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointGreeting greeting;
 
-  late final Modules modules;
-
   @override
-  Map<String, _i2.EndpointRef> get endpointRefLookup => {
-    'emailIdp': emailIdp,
-    'jwtRefresh': jwtRefresh,
+  Map<String, _i1.EndpointRef> get endpointRefLookup => {
     'attachment': attachment,
     'bill': bill,
     'budget': budget,
@@ -887,8 +640,5 @@ class Client extends _i2.ServerpodClientShared {
   };
 
   @override
-  Map<String, _i2.ModuleEndpointCaller> get moduleLookup => {
-    'serverpod_auth_idp': modules.serverpod_auth_idp,
-    'serverpod_auth_core': modules.serverpod_auth_core,
-  };
+  Map<String, _i1.ModuleEndpointCaller> get moduleLookup => {};
 }

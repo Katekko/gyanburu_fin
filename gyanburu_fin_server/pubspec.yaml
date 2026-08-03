@@ -10,8 +10,6 @@ resolution: workspace
 
 dependencies:
   serverpod: 3.4.11
-  serverpod_auth_idp_server: 3.4.11
-  mailer: ^7.1.0
   http: ^1.6.0
 
 dev_dependencies:

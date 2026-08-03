@@ -1,10 +1,8 @@
 import 'package:gyanburu_fin_client/gyanburu_fin_client.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:serverpod_flutter/serverpod_flutter.dart';
-import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
-import 'auth/web_local_storage.dart';
+import 'api/token_store.dart';
 import 'shared/chat_panel.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/monthly_overview_screen.dart';
@@ -12,7 +10,7 @@ import 'screens/transaction_history_screen.dart';
 import 'screens/nubank_sync_screen.dart';
 import 'screens/bill_detail_screen.dart';
 import 'screens/budget_screen.dart';
-import 'screens/sign_in_screen.dart';
+import 'screens/token_gate.dart';
 import 'theme/app_theme.dart';
 
 late final Client client;
@@ -32,15 +30,7 @@ void main() async {
 
   client = Client(_serverUrl)
     ..connectivityMonitor = FlutterConnectivityMonitor()
-    ..authSessionManager = FlutterAuthSessionManager(
-      storage: kIsWeb
-          ? KeyValueClientAuthSuccessStorage(
-              keyValueStorage: WebLocalStorageKeyValueStorage(),
-            )
-          : SecureClientAuthSuccessStorage(),
-    );
-
-  client.auth.initialize();
+    ..authKeyProvider = const TokenAuthKeyProvider();
 
   runApp(const GyanburuFinApp());
 }
@@ -54,7 +44,7 @@ class GyanburuFinApp extends StatelessWidget {
       title: 'Gyanburu Fin',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: SignInScreen(child: const AppShell()),
+      home: const TokenGate(child: AppShell()),
     );
   }
 }

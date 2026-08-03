@@ -47,10 +47,6 @@ import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i33;
 import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i34;
 import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i35;
 import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i36;
-import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
-    as _i37;
-import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
-    as _i38;
 export 'account_type.dart';
 export 'attachment.dart';
 export 'attachment_kind.dart';
@@ -327,12 +323,6 @@ class Protocol extends _i1.SerializationManager {
       return (data as List).map((e) => deserialize<_i36.SyncLog>(e)).toList()
           as T;
     }
-    try {
-      return _i37.Protocol().deserialize<T>(data, t);
-    } on _i1.DeserializationTypeNotFoundException catch (_) {}
-    try {
-      return _i38.Protocol().deserialize<T>(data, t);
-    } on _i1.DeserializationTypeNotFoundException catch (_) {}
     return super.deserialize<T>(data, t);
   }
 
@@ -422,14 +412,6 @@ class Protocol extends _i1.SerializationManager {
       case _i23.SyncStatus():
         return 'SyncStatus';
     }
-    className = _i37.Protocol().getClassNameForObject(data);
-    if (className != null) {
-      return 'serverpod_auth_idp.$className';
-    }
-    className = _i38.Protocol().getClassNameForObject(data);
-    if (className != null) {
-      return 'serverpod_auth_core.$className';
-    }
     return null;
   }
 
@@ -505,14 +487,6 @@ class Protocol extends _i1.SerializationManager {
     if (dataClassName == 'SyncStatus') {
       return deserialize<_i23.SyncStatus>(data['data']);
     }
-    if (dataClassName.startsWith('serverpod_auth_idp.')) {
-      data['className'] = dataClassName.substring(19);
-      return _i37.Protocol().deserializeByClassName(data);
-    }
-    if (dataClassName.startsWith('serverpod_auth_core.')) {
-      data['className'] = dataClassName.substring(20);
-      return _i38.Protocol().deserializeByClassName(data);
-    }
     return super.deserializeByClassName(data);
   }
 
@@ -525,12 +499,6 @@ class Protocol extends _i1.SerializationManager {
     if (record == null) {
       return null;
     }
-    try {
-      return _i37.Protocol().mapRecordToJson(record);
-    } catch (_) {}
-    try {
-      return _i38.Protocol().mapRecordToJson(record);
-    } catch (_) {}
     throw Exception('Unsupported record type ${record.runtimeType}');
   }
 }

@@ -61,14 +61,21 @@ class YourEndpoint extends Endpoint {
 
 ## Requiring authentication on an endpoint
 
+This is a single-user app. There is no login, no identity provider and no user
+table — every request carries a shared secret (`apiToken` in `passwords.yaml`)
+which `OwnerAuthentication` resolves to the owner's fixed id (`ownerUserId`).
+Keep `requireLogin => true` on every endpoint: that is what makes Serverpod
+reject requests without a valid token.
+
 ```dart
 class YourEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
 
   Future<YourModel> list(Session session) async {
-    // session.auth.authenticatedUserId is available here
-    final userId = await session.auth.authenticatedUserId;
+    // Always the owner's id, resolved by OwnerAuthentication.
+    final userId =
+        UuidValue.fromString(session.authenticated!.userIdentifier);
     return await YourModel.db.find(
       session,
       where: (t) => t.userId.equals(userId),
@@ -105,4 +112,4 @@ await Transaction.db.deleteRow(session, tx);
 - Migration files are committed to version control — don't delete them.
 - `passwords.yaml` should never be committed with real credentials. Use env vars in production.
 - Redis is disabled by default in `development.yaml`. Enable it only when you need caching or pub/sub.
-- The `serverpod_auth_idp_server` package is included — it supports custom auth flows (no built-in email/Serverpod IDP required, consistent with this project's auth pattern).
+- Auth is a single shared secret (`OwnerAuthentication`), not an identity provider. Keep `requireLogin => true` on endpoints — it is what enforces the token.

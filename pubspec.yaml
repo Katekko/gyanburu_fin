@@ -8,8 +8,7 @@ workspace:
   - gyanburu_fin_client
   - gyanburu_fin_server
   - gyanburu_fin_flutter
-dependency_overrides:
-  flutter_secure_storage: ^10.0.0
+  - gyanburu_fin_cli
 dependencies:
   http: ^1.6.0
 
