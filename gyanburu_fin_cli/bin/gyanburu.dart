@@ -218,7 +218,7 @@ Future<void> _entries(Client client, String month) async {
   });
 
   stdout.writeln('Lançamentos de $month\n');
-  stdout.writeln('  id  tipo     valor        venc.       pg  cf  vr  nome');
+  stdout.writeln('  id  cat  tipo     valor        venc.       pg  cf  vr  nome');
   var income = 0.0;
   var expense = 0.0;
   var openExpense = 0.0;
@@ -231,6 +231,7 @@ Future<void> _entries(Client client, String month) async {
       if (!e.paid) openExpense += e.amount;
     }
     stdout.writeln('  ${_pad(e.id.toString(), 4)}'
+        '${_pad(e.categoryId.toString(), 5)}'
         '${_pad(e.type.name, 9)}'
         '${_pad(_money(e.amount), 13)}'
         '${_pad(_date(e.dueDate), 12)}'
