@@ -119,13 +119,27 @@ void _requireToken() {
 }
 
 void _setToken() {
-  final token = promptHidden('Cole o token (apiToken do passwords.yaml)');
-  if (token.trim().isEmpty) {
+  var token = promptHidden('Cole o token (apiToken do passwords.yaml)').trim();
+  if (token.isEmpty) {
     stderr.writeln('Token vazio, nada foi salvo.');
     exit(1);
   }
+
+  // The prompt doesn't echo, so a double paste is invisible. It produces a
+  // value that is exactly its own first half repeated — catch that here
+  // rather than letting it fail later as an opaque 401.
+  final half = token.length ~/ 2;
+  if (token.length.isEven &&
+      token.substring(0, half) == token.substring(half)) {
+    stdout.writeln('O token veio duplicado (colado duas vezes). '
+        'Usando apenas a primeira metade.');
+    token = token.substring(0, half);
+  }
+
   writeToken(token);
-  stdout.writeln('Token salvo em ${defaultTokenPath()} (permissão 600).');
+  stdout.writeln('Token salvo em ${defaultTokenPath()} '
+      '(${token.length} caracteres, permissão 600).');
+  stdout.writeln('Confira com: gyanburu whoami');
 }
 
 Future<void> _whoami(Client client) async {
