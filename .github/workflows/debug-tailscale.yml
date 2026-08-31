@@ -7,6 +7,23 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
+      # Public repo: this step must only ever print HTTP status codes,
+      # never response bodies or headers.
+      - name: Probe Tailscale API scopes (status codes only)
+        env:
+          TS_KEY: ${{ secrets.TS_AUTHKEY }}
+        run: |
+          probe() {
+            curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$@"
+          }
+          echo "GET /tailnet/-/acl -> HTTP $(probe -u "${TS_KEY}:" \
+            https://api.tailscale.com/api/v2/tailnet/-/acl)"
+          echo "POST /tailnet/-/acl (bogus If-Match, must not apply) -> HTTP $(probe \
+            -u "${TS_KEY}:" -X POST -H 'If-Match: "bogus-etag"' \
+            -d '{}' https://api.tailscale.com/api/v2/tailnet/-/acl)"
+          echo "GET /tailnet/-/devices -> HTTP $(probe -u "${TS_KEY}:" \
+            https://api.tailscale.com/api/v2/tailnet/-/devices)"
+
       - name: Join Tailscale
         uses: tailscale/github-action@v2
         with:
