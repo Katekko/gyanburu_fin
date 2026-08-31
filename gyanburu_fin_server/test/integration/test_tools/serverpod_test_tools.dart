@@ -33,8 +33,10 @@ import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i17;
 import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i18;
 import 'package:gyanburu_fin_server/src/generated/nubank_account.dart' as _i19;
 import 'package:gyanburu_fin_server/src/generated/sync_log.dart' as _i20;
+import 'package:gyanburu_fin_server/src/generated/wallet_summary.dart' as _i21;
+import 'package:gyanburu_fin_server/src/generated/benefit_wallet.dart' as _i22;
 import 'package:gyanburu_fin_server/src/generated/greetings/greeting.dart'
-    as _i21;
+    as _i23;
 import 'package:gyanburu_fin_server/src/generated/protocol.dart';
 import 'package:gyanburu_fin_server/src/generated/endpoints.dart';
 export 'package:serverpod_test/serverpod_test_public_exports.dart';
@@ -175,6 +177,8 @@ class TestEndpoints {
 
   late final _TransactionEndpoint transaction;
 
+  late final _WalletEndpoint wallet;
+
   late final _GreetingEndpoint greeting;
 }
 
@@ -234,6 +238,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     transaction = _TransactionEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    wallet = _WalletEndpoint(
       endpoints,
       serializationManager,
     );
@@ -1903,6 +1911,264 @@ class _TransactionEndpoint {
   }
 }
 
+class _WalletEndpoint {
+  _WalletEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _i2.EndpointDispatch _endpointDispatch;
+
+  final _i2.SerializationManager _serializationManager;
+
+  _i3.Future<List<_i21.WalletSummary>> summaries(
+    _i1.TestSessionBuilder sessionBuilder,
+    DateTime month,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'summaries',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'summaries',
+          parameters: _i1.testObjectToJson({'month': month}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<List<_i21.WalletSummary>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<List<_i15.FinancialTransaction>> monthTransactions(
+    _i1.TestSessionBuilder sessionBuilder,
+    DateTime month,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'monthTransactions',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'monthTransactions',
+          parameters: _i1.testObjectToJson({'month': month}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<List<_i15.FinancialTransaction>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<_i15.FinancialTransaction> spend(
+    _i1.TestSessionBuilder sessionBuilder,
+    String walletSlug,
+    double amount,
+    String merchantName,
+    int? categoryId,
+    DateTime? occurredAt,
+    String? description,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'spend',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'spend',
+          parameters: _i1.testObjectToJson({
+            'walletSlug': walletSlug,
+            'amount': amount,
+            'merchantName': merchantName,
+            'categoryId': categoryId,
+            'occurredAt': occurredAt,
+            'description': description,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i15.FinancialTransaction>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<_i15.FinancialTransaction> topup(
+    _i1.TestSessionBuilder sessionBuilder,
+    String walletSlug,
+    double? amount,
+    DateTime? occurredAt,
+    String? description,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'topup',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'topup',
+          parameters: _i1.testObjectToJson({
+            'walletSlug': walletSlug,
+            'amount': amount,
+            'occurredAt': occurredAt,
+            'description': description,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i15.FinancialTransaction>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<_i22.BenefitWallet> setBalance(
+    _i1.TestSessionBuilder sessionBuilder,
+    String walletSlug,
+    double balance,
+    DateTime? at,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'setBalance',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'setBalance',
+          parameters: _i1.testObjectToJson({
+            'walletSlug': walletSlug,
+            'balance': balance,
+            'at': at,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i22.BenefitWallet>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<_i22.BenefitWallet> setMonthlyTopup(
+    _i1.TestSessionBuilder sessionBuilder,
+    String walletSlug,
+    double? amount,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'setMonthlyTopup',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'setMonthlyTopup',
+          parameters: _i1.testObjectToJson({
+            'walletSlug': walletSlug,
+            'amount': amount,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<_i22.BenefitWallet>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _i3.Future<void> deleteTransaction(
+    _i1.TestSessionBuilder sessionBuilder,
+    int id,
+  ) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'wallet',
+            method: 'deleteTransaction',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'wallet',
+          methodName: 'deleteTransaction',
+          parameters: _i1.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
 class _GreetingEndpoint {
   _GreetingEndpoint(
     this._endpointDispatch,
@@ -1913,7 +2179,7 @@ class _GreetingEndpoint {
 
   final _i2.SerializationManager _serializationManager;
 
-  _i3.Future<_i21.Greeting> hello(
+  _i3.Future<_i23.Greeting> hello(
     _i1.TestSessionBuilder sessionBuilder,
     String name,
   ) async {
@@ -1936,7 +2202,7 @@ class _GreetingEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _i3.Future<_i21.Greeting>);
+                as _i3.Future<_i23.Greeting>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

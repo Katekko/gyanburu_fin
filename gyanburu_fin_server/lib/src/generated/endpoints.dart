@@ -24,18 +24,19 @@ import '../endpoints/monthly_entry_endpoint.dart' as _i11;
 import '../endpoints/nubank_account_endpoint.dart' as _i12;
 import '../endpoints/ofx_import_endpoint.dart' as _i13;
 import '../endpoints/transaction_endpoint.dart' as _i14;
-import '../greetings/greeting_endpoint.dart' as _i15;
-import 'package:gyanburu_fin_server/src/generated/attachment_kind.dart' as _i16;
-import 'package:gyanburu_fin_server/src/generated/bill.dart' as _i17;
-import 'package:gyanburu_fin_server/src/generated/budget_category.dart' as _i18;
-import 'package:gyanburu_fin_server/src/generated/category.dart' as _i19;
-import 'package:gyanburu_fin_server/src/generated/category_rule.dart' as _i20;
-import 'package:gyanburu_fin_server/src/generated/chat_message.dart' as _i21;
-import 'package:gyanburu_fin_server/src/generated/pending_action.dart' as _i22;
-import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i23;
-import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i24;
+import '../endpoints/wallet_endpoint.dart' as _i15;
+import '../greetings/greeting_endpoint.dart' as _i16;
+import 'package:gyanburu_fin_server/src/generated/attachment_kind.dart' as _i17;
+import 'package:gyanburu_fin_server/src/generated/bill.dart' as _i18;
+import 'package:gyanburu_fin_server/src/generated/budget_category.dart' as _i19;
+import 'package:gyanburu_fin_server/src/generated/category.dart' as _i20;
+import 'package:gyanburu_fin_server/src/generated/category_rule.dart' as _i21;
+import 'package:gyanburu_fin_server/src/generated/chat_message.dart' as _i22;
+import 'package:gyanburu_fin_server/src/generated/pending_action.dart' as _i23;
+import 'package:gyanburu_fin_server/src/generated/income_source.dart' as _i24;
+import 'package:gyanburu_fin_server/src/generated/monthly_entry.dart' as _i25;
 import 'package:gyanburu_fin_server/src/generated/financial_transaction.dart'
-    as _i25;
+    as _i26;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -119,7 +120,13 @@ class Endpoints extends _i1.EndpointDispatch {
           'transaction',
           null,
         ),
-      'greeting': _i15.GreetingEndpoint()
+      'wallet': _i15.WalletEndpoint()
+        ..initialize(
+          server,
+          'wallet',
+          null,
+        ),
+      'greeting': _i16.GreetingEndpoint()
         ..initialize(
           server,
           'greeting',
@@ -140,7 +147,7 @@ class Endpoints extends _i1.EndpointDispatch {
             ),
             'kind': _i1.ParameterDescription(
               name: 'kind',
-              type: _i1.getType<_i16.AttachmentKind>(),
+              type: _i1.getType<_i17.AttachmentKind>(),
               nullable: false,
             ),
             'fileName': _i1.ParameterDescription(
@@ -177,7 +184,7 @@ class Endpoints extends _i1.EndpointDispatch {
             ),
             'kind': _i1.ParameterDescription(
               name: 'kind',
-              type: _i1.getType<_i16.AttachmentKind>(),
+              type: _i1.getType<_i17.AttachmentKind>(),
               nullable: false,
             ),
             'path': _i1.ParameterDescription(
@@ -322,7 +329,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'bill': _i1.ParameterDescription(
               name: 'bill',
-              type: _i1.getType<_i17.Bill>(),
+              type: _i1.getType<_i18.Bill>(),
               nullable: false,
             ),
           },
@@ -340,7 +347,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'bill': _i1.ParameterDescription(
               name: 'bill',
-              type: _i1.getType<_i17.Bill>(),
+              type: _i1.getType<_i18.Bill>(),
               nullable: false,
             ),
           },
@@ -419,7 +426,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'category': _i1.ParameterDescription(
               name: 'category',
-              type: _i1.getType<_i18.BudgetCategory>(),
+              type: _i1.getType<_i19.BudgetCategory>(),
               nullable: false,
             ),
           },
@@ -437,7 +444,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'category': _i1.ParameterDescription(
               name: 'category',
-              type: _i1.getType<_i18.BudgetCategory>(),
+              type: _i1.getType<_i19.BudgetCategory>(),
               nullable: false,
             ),
           },
@@ -489,7 +496,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'category': _i1.ParameterDescription(
               name: 'category',
-              type: _i1.getType<_i19.Category>(),
+              type: _i1.getType<_i20.Category>(),
               nullable: false,
             ),
           },
@@ -507,7 +514,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'category': _i1.ParameterDescription(
               name: 'category',
-              type: _i1.getType<_i19.Category>(),
+              type: _i1.getType<_i20.Category>(),
               nullable: false,
             ),
           },
@@ -559,7 +566,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'rule': _i1.ParameterDescription(
               name: 'rule',
-              type: _i1.getType<_i20.CategoryRule>(),
+              type: _i1.getType<_i21.CategoryRule>(),
               nullable: false,
             ),
           },
@@ -578,7 +585,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'rule': _i1.ParameterDescription(
               name: 'rule',
-              type: _i1.getType<_i20.CategoryRule>(),
+              type: _i1.getType<_i21.CategoryRule>(),
               nullable: false,
             ),
           },
@@ -622,7 +629,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'history': _i1.ParameterDescription(
               name: 'history',
-              type: _i1.getType<List<_i21.ChatMessage>>(),
+              type: _i1.getType<List<_i22.ChatMessage>>(),
               nullable: false,
             ),
             'userMessage': _i1.ParameterDescription(
@@ -646,7 +653,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'actions': _i1.ParameterDescription(
               name: 'actions',
-              type: _i1.getType<List<_i22.PendingAction>>(),
+              type: _i1.getType<List<_i23.PendingAction>>(),
               nullable: false,
             ),
           },
@@ -760,7 +767,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'source': _i1.ParameterDescription(
               name: 'source',
-              type: _i1.getType<_i23.IncomeSource>(),
+              type: _i1.getType<_i24.IncomeSource>(),
               nullable: false,
             ),
           },
@@ -778,7 +785,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'source': _i1.ParameterDescription(
               name: 'source',
-              type: _i1.getType<_i23.IncomeSource>(),
+              type: _i1.getType<_i24.IncomeSource>(),
               nullable: false,
             ),
           },
@@ -840,7 +847,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'entry': _i1.ParameterDescription(
               name: 'entry',
-              type: _i1.getType<_i24.MonthlyEntry>(),
+              type: _i1.getType<_i25.MonthlyEntry>(),
               nullable: false,
             ),
           },
@@ -860,7 +867,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'entry': _i1.ParameterDescription(
               name: 'entry',
-              type: _i1.getType<_i24.MonthlyEntry>(),
+              type: _i1.getType<_i25.MonthlyEntry>(),
               nullable: false,
             ),
           },
@@ -1023,7 +1030,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'transaction': _i1.ParameterDescription(
               name: 'transaction',
-              type: _i1.getType<_i25.FinancialTransaction>(),
+              type: _i1.getType<_i26.FinancialTransaction>(),
               nullable: false,
             ),
           },
@@ -1042,7 +1049,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'transaction': _i1.ParameterDescription(
               name: 'transaction',
-              type: _i1.getType<_i25.FinancialTransaction>(),
+              type: _i1.getType<_i26.FinancialTransaction>(),
               nullable: false,
             ),
           },
@@ -1120,6 +1127,208 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
+    connectors['wallet'] = _i1.EndpointConnector(
+      name: 'wallet',
+      endpoint: endpoints['wallet']!,
+      methodConnectors: {
+        'summaries': _i1.MethodConnector(
+          name: 'summaries',
+          params: {
+            'month': _i1.ParameterDescription(
+              name: 'month',
+              type: _i1.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['wallet'] as _i15.WalletEndpoint).summaries(
+                session,
+                params['month'],
+              ),
+        ),
+        'monthTransactions': _i1.MethodConnector(
+          name: 'monthTransactions',
+          params: {
+            'month': _i1.ParameterDescription(
+              name: 'month',
+              type: _i1.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['wallet'] as _i15.WalletEndpoint)
+                  .monthTransactions(
+                    session,
+                    params['month'],
+                  ),
+        ),
+        'spend': _i1.MethodConnector(
+          name: 'spend',
+          params: {
+            'walletSlug': _i1.ParameterDescription(
+              name: 'walletSlug',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'amount': _i1.ParameterDescription(
+              name: 'amount',
+              type: _i1.getType<double>(),
+              nullable: false,
+            ),
+            'merchantName': _i1.ParameterDescription(
+              name: 'merchantName',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'categoryId': _i1.ParameterDescription(
+              name: 'categoryId',
+              type: _i1.getType<int?>(),
+              nullable: true,
+            ),
+            'occurredAt': _i1.ParameterDescription(
+              name: 'occurredAt',
+              type: _i1.getType<DateTime?>(),
+              nullable: true,
+            ),
+            'description': _i1.ParameterDescription(
+              name: 'description',
+              type: _i1.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['wallet'] as _i15.WalletEndpoint).spend(
+                session,
+                params['walletSlug'],
+                params['amount'],
+                params['merchantName'],
+                params['categoryId'],
+                params['occurredAt'],
+                params['description'],
+              ),
+        ),
+        'topup': _i1.MethodConnector(
+          name: 'topup',
+          params: {
+            'walletSlug': _i1.ParameterDescription(
+              name: 'walletSlug',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'amount': _i1.ParameterDescription(
+              name: 'amount',
+              type: _i1.getType<double?>(),
+              nullable: true,
+            ),
+            'occurredAt': _i1.ParameterDescription(
+              name: 'occurredAt',
+              type: _i1.getType<DateTime?>(),
+              nullable: true,
+            ),
+            'description': _i1.ParameterDescription(
+              name: 'description',
+              type: _i1.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['wallet'] as _i15.WalletEndpoint).topup(
+                session,
+                params['walletSlug'],
+                params['amount'],
+                params['occurredAt'],
+                params['description'],
+              ),
+        ),
+        'setBalance': _i1.MethodConnector(
+          name: 'setBalance',
+          params: {
+            'walletSlug': _i1.ParameterDescription(
+              name: 'walletSlug',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'balance': _i1.ParameterDescription(
+              name: 'balance',
+              type: _i1.getType<double>(),
+              nullable: false,
+            ),
+            'at': _i1.ParameterDescription(
+              name: 'at',
+              type: _i1.getType<DateTime?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['wallet'] as _i15.WalletEndpoint).setBalance(
+                    session,
+                    params['walletSlug'],
+                    params['balance'],
+                    params['at'],
+                  ),
+        ),
+        'setMonthlyTopup': _i1.MethodConnector(
+          name: 'setMonthlyTopup',
+          params: {
+            'walletSlug': _i1.ParameterDescription(
+              name: 'walletSlug',
+              type: _i1.getType<String>(),
+              nullable: false,
+            ),
+            'amount': _i1.ParameterDescription(
+              name: 'amount',
+              type: _i1.getType<double?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['wallet'] as _i15.WalletEndpoint).setMonthlyTopup(
+                    session,
+                    params['walletSlug'],
+                    params['amount'],
+                  ),
+        ),
+        'deleteTransaction': _i1.MethodConnector(
+          name: 'deleteTransaction',
+          params: {
+            'id': _i1.ParameterDescription(
+              name: 'id',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['wallet'] as _i15.WalletEndpoint)
+                  .deleteTransaction(
+                    session,
+                    params['id'],
+                  ),
+        ),
+      },
+    );
     connectors['greeting'] = _i1.EndpointConnector(
       name: 'greeting',
       endpoint: endpoints['greeting']!,
@@ -1137,7 +1346,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greeting'] as _i15.GreetingEndpoint).hello(
+              ) async => (endpoints['greeting'] as _i16.GreetingEndpoint).hello(
                 session,
                 params['name'],
               ),

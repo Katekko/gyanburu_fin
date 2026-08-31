@@ -1,0 +1,10 @@
+class: BenefitWallet
+table: benefit_wallet
+fields:
+  userId: UuidValue
+  provider: String
+  slug: String
+  name: String
+  anchorBalance: double
+  anchorDate: DateTime
+  monthlyTopupAmount: double?

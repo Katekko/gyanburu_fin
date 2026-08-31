@@ -16,3 +16,4 @@ fields:
   billingMonth: String?
   source: String?
   kind: String?
+  walletId: int?

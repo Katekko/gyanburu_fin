@@ -31,9 +31,11 @@ import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i16;
 import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i17;
 import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i18;
 import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i19;
+import 'package:gyanburu_fin_client/src/protocol/wallet_summary.dart' as _i20;
+import 'package:gyanburu_fin_client/src/protocol/benefit_wallet.dart' as _i21;
 import 'package:gyanburu_fin_client/src/protocol/greetings/greeting.dart'
-    as _i20;
-import 'protocol.dart' as _i21;
+    as _i22;
+import 'protocol.dart' as _i23;
 
 /// Manages payment documents (boletos and receipts) attached to a
 /// [MonthlyEntry]. Files live in Serverpod's built-in `private` cloud storage
@@ -530,6 +532,110 @@ class EndpointTransaction extends _i1.EndpointRef {
   );
 }
 
+/// Manual tracking of benefit wallets (Caju), which have no OFX export.
+///
+/// Each wallet stores an anchor: a balance known to be correct at
+/// [BenefitWallet.anchorDate]. The current balance is that anchor plus every
+/// wallet transaction that occurred strictly after it, so reconciling with
+/// the real Caju app is just moving the anchor — history stays untouched.
+/// {@category Endpoint}
+class EndpointWallet extends _i1.EndpointRef {
+  EndpointWallet(_i1.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'wallet';
+
+  _i2.Future<List<_i20.WalletSummary>> summaries(DateTime month) =>
+      caller.callServerEndpoint<List<_i20.WalletSummary>>(
+        'wallet',
+        'summaries',
+        {'month': month},
+      );
+
+  _i2.Future<List<_i14.FinancialTransaction>> monthTransactions(
+    DateTime month,
+  ) => caller.callServerEndpoint<List<_i14.FinancialTransaction>>(
+    'wallet',
+    'monthTransactions',
+    {'month': month},
+  );
+
+  _i2.Future<_i14.FinancialTransaction> spend(
+    String walletSlug,
+    double amount,
+    String merchantName,
+    int? categoryId,
+    DateTime? occurredAt,
+    String? description,
+  ) => caller.callServerEndpoint<_i14.FinancialTransaction>(
+    'wallet',
+    'spend',
+    {
+      'walletSlug': walletSlug,
+      'amount': amount,
+      'merchantName': merchantName,
+      'categoryId': categoryId,
+      'occurredAt': occurredAt,
+      'description': description,
+    },
+  );
+
+  /// Records a top-up. When [amount] is null, falls back to the wallet's
+  /// configured [BenefitWallet.monthlyTopupAmount].
+  _i2.Future<_i14.FinancialTransaction> topup(
+    String walletSlug,
+    double? amount,
+    DateTime? occurredAt,
+    String? description,
+  ) => caller.callServerEndpoint<_i14.FinancialTransaction>(
+    'wallet',
+    'topup',
+    {
+      'walletSlug': walletSlug,
+      'amount': amount,
+      'occurredAt': occurredAt,
+      'description': description,
+    },
+  );
+
+  /// Reconciles the wallet with the balance shown in the Caju app.
+  ///
+  /// Transactions recorded with an occurredAt after [at] (default: now) keep
+  /// counting toward the balance; everything before is covered by the anchor.
+  _i2.Future<_i21.BenefitWallet> setBalance(
+    String walletSlug,
+    double balance,
+    DateTime? at,
+  ) => caller.callServerEndpoint<_i21.BenefitWallet>(
+    'wallet',
+    'setBalance',
+    {
+      'walletSlug': walletSlug,
+      'balance': balance,
+      'at': at,
+    },
+  );
+
+  /// Sets the default top-up amount used by [topup] when none is given.
+  _i2.Future<_i21.BenefitWallet> setMonthlyTopup(
+    String walletSlug,
+    double? amount,
+  ) => caller.callServerEndpoint<_i21.BenefitWallet>(
+    'wallet',
+    'setMonthlyTopup',
+    {
+      'walletSlug': walletSlug,
+      'amount': amount,
+    },
+  );
+
+  _i2.Future<void> deleteTransaction(int id) => caller.callServerEndpoint<void>(
+    'wallet',
+    'deleteTransaction',
+    {'id': id},
+  );
+}
+
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
 /// {@category Endpoint}
@@ -540,8 +646,8 @@ class EndpointGreeting extends _i1.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i2.Future<_i20.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i20.Greeting>(
+  _i2.Future<_i22.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i22.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -568,7 +674,7 @@ class Client extends _i1.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i21.Protocol(),
+         _i23.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -590,6 +696,7 @@ class Client extends _i1.ServerpodClientShared {
     nubankAccount = EndpointNubankAccount(this);
     ofxImport = EndpointOfxImport(this);
     transaction = EndpointTransaction(this);
+    wallet = EndpointWallet(this);
     greeting = EndpointGreeting(this);
   }
 
@@ -619,6 +726,8 @@ class Client extends _i1.ServerpodClientShared {
 
   late final EndpointTransaction transaction;
 
+  late final EndpointWallet wallet;
+
   late final EndpointGreeting greeting;
 
   @override
@@ -636,6 +745,7 @@ class Client extends _i1.ServerpodClientShared {
     'nubankAccount': nubankAccount,
     'ofxImport': ofxImport,
     'transaction': transaction,
+    'wallet': wallet,
     'greeting': greeting,
   };
 

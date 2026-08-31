@@ -108,7 +108,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   /// Spending by category from imported transactions (expenses only)
   List<FinancialTransaction> get _expenseTransactions => _transactions
-      .where((t) => t.kind != 'income' && t.kind != 'fatura_payment')
+      .where((t) =>
+          t.kind != 'income' &&
+          t.kind != 'fatura_payment' &&
+          t.kind != 'topup')
       .toList();
 
   double get _totalExpenseSpending =>

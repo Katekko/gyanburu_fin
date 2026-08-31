@@ -30,6 +30,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     this.billingMonth,
     this.source,
     this.kind,
+    this.walletId,
   });
 
   factory FinancialTransaction({
@@ -49,6 +50,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     String? billingMonth,
     String? source,
     String? kind,
+    int? walletId,
   }) = _FinancialTransactionImpl;
 
   factory FinancialTransaction.fromJson(
@@ -77,6 +79,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       billingMonth: jsonSerialization['billingMonth'] as String?,
       source: jsonSerialization['source'] as String?,
       kind: jsonSerialization['kind'] as String?,
+      walletId: jsonSerialization['walletId'] as int?,
     );
   }
 
@@ -115,6 +118,8 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
 
   String? kind;
 
+  int? walletId;
+
   /// Returns a shallow copy of this [FinancialTransaction]
   /// with some or all fields replaced by the given arguments.
   @_i1.useResult
@@ -135,6 +140,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
     String? billingMonth,
     String? source,
     String? kind,
+    int? walletId,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -156,6 +162,7 @@ abstract class FinancialTransaction implements _i1.SerializableModel {
       if (billingMonth != null) 'billingMonth': billingMonth,
       if (source != null) 'source': source,
       if (kind != null) 'kind': kind,
+      if (walletId != null) 'walletId': walletId,
     };
   }
 
@@ -185,6 +192,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     String? billingMonth,
     String? source,
     String? kind,
+    int? walletId,
   }) : super._(
          id: id,
          userId: userId,
@@ -202,6 +210,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
          billingMonth: billingMonth,
          source: source,
          kind: kind,
+         walletId: walletId,
        );
 
   /// Returns a shallow copy of this [FinancialTransaction]
@@ -225,6 +234,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
     Object? billingMonth = _Undefined,
     Object? source = _Undefined,
     Object? kind = _Undefined,
+    Object? walletId = _Undefined,
   }) {
     return FinancialTransaction(
       id: id is int? ? id : this.id,
@@ -249,6 +259,7 @@ class _FinancialTransactionImpl extends FinancialTransaction {
       billingMonth: billingMonth is String? ? billingMonth : this.billingMonth,
       source: source is String? ? source : this.source,
       kind: kind is String? ? kind : this.kind,
+      walletId: walletId is int? ? walletId : this.walletId,
     );
   }
 }

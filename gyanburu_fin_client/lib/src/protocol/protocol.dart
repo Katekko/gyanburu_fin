@@ -15,42 +15,46 @@ import 'account_type.dart' as _i2;
 import 'attachment.dart' as _i3;
 import 'attachment_kind.dart' as _i4;
 import 'attachment_upload_ticket.dart' as _i5;
-import 'bill.dart' as _i6;
-import 'bill_status.dart' as _i7;
-import 'budget_category.dart' as _i8;
-import 'category.dart' as _i9;
-import 'category_rule.dart' as _i10;
-import 'chat_message.dart' as _i11;
-import 'chat_response.dart' as _i12;
-import 'entry_type.dart' as _i13;
-import 'financial_transaction.dart' as _i14;
-import 'greetings/greeting.dart' as _i15;
-import 'import_history.dart' as _i16;
-import 'income_source.dart' as _i17;
-import 'income_type.dart' as _i18;
-import 'monthly_entry.dart' as _i19;
-import 'nubank_account.dart' as _i20;
-import 'pending_action.dart' as _i21;
-import 'sync_log.dart' as _i22;
-import 'sync_status.dart' as _i23;
-import 'package:gyanburu_fin_client/src/protocol/attachment.dart' as _i24;
-import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i25;
-import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i26;
-import 'package:gyanburu_fin_client/src/protocol/category.dart' as _i27;
-import 'package:gyanburu_fin_client/src/protocol/category_rule.dart' as _i28;
-import 'package:gyanburu_fin_client/src/protocol/chat_message.dart' as _i29;
-import 'package:gyanburu_fin_client/src/protocol/pending_action.dart' as _i30;
+import 'benefit_wallet.dart' as _i6;
+import 'bill.dart' as _i7;
+import 'bill_status.dart' as _i8;
+import 'budget_category.dart' as _i9;
+import 'category.dart' as _i10;
+import 'category_rule.dart' as _i11;
+import 'chat_message.dart' as _i12;
+import 'chat_response.dart' as _i13;
+import 'entry_type.dart' as _i14;
+import 'financial_transaction.dart' as _i15;
+import 'greetings/greeting.dart' as _i16;
+import 'import_history.dart' as _i17;
+import 'income_source.dart' as _i18;
+import 'income_type.dart' as _i19;
+import 'monthly_entry.dart' as _i20;
+import 'nubank_account.dart' as _i21;
+import 'pending_action.dart' as _i22;
+import 'sync_log.dart' as _i23;
+import 'sync_status.dart' as _i24;
+import 'wallet_summary.dart' as _i25;
+import 'package:gyanburu_fin_client/src/protocol/attachment.dart' as _i26;
+import 'package:gyanburu_fin_client/src/protocol/bill.dart' as _i27;
+import 'package:gyanburu_fin_client/src/protocol/budget_category.dart' as _i28;
+import 'package:gyanburu_fin_client/src/protocol/category.dart' as _i29;
+import 'package:gyanburu_fin_client/src/protocol/category_rule.dart' as _i30;
+import 'package:gyanburu_fin_client/src/protocol/chat_message.dart' as _i31;
+import 'package:gyanburu_fin_client/src/protocol/pending_action.dart' as _i32;
 import 'package:gyanburu_fin_client/src/protocol/financial_transaction.dart'
-    as _i31;
-import 'package:gyanburu_fin_client/src/protocol/import_history.dart' as _i32;
-import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i33;
-import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i34;
-import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i35;
-import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i36;
+    as _i33;
+import 'package:gyanburu_fin_client/src/protocol/import_history.dart' as _i34;
+import 'package:gyanburu_fin_client/src/protocol/income_source.dart' as _i35;
+import 'package:gyanburu_fin_client/src/protocol/monthly_entry.dart' as _i36;
+import 'package:gyanburu_fin_client/src/protocol/nubank_account.dart' as _i37;
+import 'package:gyanburu_fin_client/src/protocol/sync_log.dart' as _i38;
+import 'package:gyanburu_fin_client/src/protocol/wallet_summary.dart' as _i39;
 export 'account_type.dart';
 export 'attachment.dart';
 export 'attachment_kind.dart';
 export 'attachment_upload_ticket.dart';
+export 'benefit_wallet.dart';
 export 'bill.dart';
 export 'bill_status.dart';
 export 'budget_category.dart';
@@ -69,6 +73,7 @@ export 'nubank_account.dart';
 export 'pending_action.dart';
 export 'sync_log.dart';
 export 'sync_status.dart';
+export 'wallet_summary.dart';
 export 'client.dart';
 
 class Protocol extends _i1.SerializationManager {
@@ -117,59 +122,65 @@ class Protocol extends _i1.SerializationManager {
     if (t == _i5.AttachmentUploadTicket) {
       return _i5.AttachmentUploadTicket.fromJson(data) as T;
     }
-    if (t == _i6.Bill) {
-      return _i6.Bill.fromJson(data) as T;
+    if (t == _i6.BenefitWallet) {
+      return _i6.BenefitWallet.fromJson(data) as T;
     }
-    if (t == _i7.BillStatus) {
-      return _i7.BillStatus.fromJson(data) as T;
+    if (t == _i7.Bill) {
+      return _i7.Bill.fromJson(data) as T;
     }
-    if (t == _i8.BudgetCategory) {
-      return _i8.BudgetCategory.fromJson(data) as T;
+    if (t == _i8.BillStatus) {
+      return _i8.BillStatus.fromJson(data) as T;
     }
-    if (t == _i9.Category) {
-      return _i9.Category.fromJson(data) as T;
+    if (t == _i9.BudgetCategory) {
+      return _i9.BudgetCategory.fromJson(data) as T;
     }
-    if (t == _i10.CategoryRule) {
-      return _i10.CategoryRule.fromJson(data) as T;
+    if (t == _i10.Category) {
+      return _i10.Category.fromJson(data) as T;
     }
-    if (t == _i11.ChatMessage) {
-      return _i11.ChatMessage.fromJson(data) as T;
+    if (t == _i11.CategoryRule) {
+      return _i11.CategoryRule.fromJson(data) as T;
     }
-    if (t == _i12.ChatResponse) {
-      return _i12.ChatResponse.fromJson(data) as T;
+    if (t == _i12.ChatMessage) {
+      return _i12.ChatMessage.fromJson(data) as T;
     }
-    if (t == _i13.EntryType) {
-      return _i13.EntryType.fromJson(data) as T;
+    if (t == _i13.ChatResponse) {
+      return _i13.ChatResponse.fromJson(data) as T;
     }
-    if (t == _i14.FinancialTransaction) {
-      return _i14.FinancialTransaction.fromJson(data) as T;
+    if (t == _i14.EntryType) {
+      return _i14.EntryType.fromJson(data) as T;
     }
-    if (t == _i15.Greeting) {
-      return _i15.Greeting.fromJson(data) as T;
+    if (t == _i15.FinancialTransaction) {
+      return _i15.FinancialTransaction.fromJson(data) as T;
     }
-    if (t == _i16.ImportHistory) {
-      return _i16.ImportHistory.fromJson(data) as T;
+    if (t == _i16.Greeting) {
+      return _i16.Greeting.fromJson(data) as T;
     }
-    if (t == _i17.IncomeSource) {
-      return _i17.IncomeSource.fromJson(data) as T;
+    if (t == _i17.ImportHistory) {
+      return _i17.ImportHistory.fromJson(data) as T;
     }
-    if (t == _i18.IncomeType) {
-      return _i18.IncomeType.fromJson(data) as T;
+    if (t == _i18.IncomeSource) {
+      return _i18.IncomeSource.fromJson(data) as T;
     }
-    if (t == _i19.MonthlyEntry) {
-      return _i19.MonthlyEntry.fromJson(data) as T;
+    if (t == _i19.IncomeType) {
+      return _i19.IncomeType.fromJson(data) as T;
     }
-    if (t == _i20.NubankAccount) {
-      return _i20.NubankAccount.fromJson(data) as T;
+    if (t == _i20.MonthlyEntry) {
+      return _i20.MonthlyEntry.fromJson(data) as T;
     }
-    if (t == _i21.PendingAction) {
-      return _i21.PendingAction.fromJson(data) as T;
+    if (t == _i21.NubankAccount) {
+      return _i21.NubankAccount.fromJson(data) as T;
     }
-    if (t == _i22.SyncLog) {
-      return _i22.SyncLog.fromJson(data) as T;
+    if (t == _i22.PendingAction) {
+      return _i22.PendingAction.fromJson(data) as T;
     }
-    if (t == _i23.SyncStatus) {
-      return _i23.SyncStatus.fromJson(data) as T;
+    if (t == _i23.SyncLog) {
+      return _i23.SyncLog.fromJson(data) as T;
+    }
+    if (t == _i24.SyncStatus) {
+      return _i24.SyncStatus.fromJson(data) as T;
+    }
+    if (t == _i25.WalletSummary) {
+      return _i25.WalletSummary.fromJson(data) as T;
     }
     if (t == _i1.getType<_i2.AccountType?>()) {
       return (data != null ? _i2.AccountType.fromJson(data) : null) as T;
@@ -184,102 +195,108 @@ class Protocol extends _i1.SerializationManager {
       return (data != null ? _i5.AttachmentUploadTicket.fromJson(data) : null)
           as T;
     }
-    if (t == _i1.getType<_i6.Bill?>()) {
-      return (data != null ? _i6.Bill.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i6.BenefitWallet?>()) {
+      return (data != null ? _i6.BenefitWallet.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i7.BillStatus?>()) {
-      return (data != null ? _i7.BillStatus.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i7.Bill?>()) {
+      return (data != null ? _i7.Bill.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i8.BudgetCategory?>()) {
-      return (data != null ? _i8.BudgetCategory.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i8.BillStatus?>()) {
+      return (data != null ? _i8.BillStatus.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i9.Category?>()) {
-      return (data != null ? _i9.Category.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i9.BudgetCategory?>()) {
+      return (data != null ? _i9.BudgetCategory.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i10.CategoryRule?>()) {
-      return (data != null ? _i10.CategoryRule.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i10.Category?>()) {
+      return (data != null ? _i10.Category.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i11.ChatMessage?>()) {
-      return (data != null ? _i11.ChatMessage.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i11.CategoryRule?>()) {
+      return (data != null ? _i11.CategoryRule.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i12.ChatResponse?>()) {
-      return (data != null ? _i12.ChatResponse.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i12.ChatMessage?>()) {
+      return (data != null ? _i12.ChatMessage.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i13.EntryType?>()) {
-      return (data != null ? _i13.EntryType.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i13.ChatResponse?>()) {
+      return (data != null ? _i13.ChatResponse.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i14.FinancialTransaction?>()) {
-      return (data != null ? _i14.FinancialTransaction.fromJson(data) : null)
+    if (t == _i1.getType<_i14.EntryType?>()) {
+      return (data != null ? _i14.EntryType.fromJson(data) : null) as T;
+    }
+    if (t == _i1.getType<_i15.FinancialTransaction?>()) {
+      return (data != null ? _i15.FinancialTransaction.fromJson(data) : null)
           as T;
     }
-    if (t == _i1.getType<_i15.Greeting?>()) {
-      return (data != null ? _i15.Greeting.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i16.Greeting?>()) {
+      return (data != null ? _i16.Greeting.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i16.ImportHistory?>()) {
-      return (data != null ? _i16.ImportHistory.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i17.ImportHistory?>()) {
+      return (data != null ? _i17.ImportHistory.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i17.IncomeSource?>()) {
-      return (data != null ? _i17.IncomeSource.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i18.IncomeSource?>()) {
+      return (data != null ? _i18.IncomeSource.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i18.IncomeType?>()) {
-      return (data != null ? _i18.IncomeType.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i19.IncomeType?>()) {
+      return (data != null ? _i19.IncomeType.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i19.MonthlyEntry?>()) {
-      return (data != null ? _i19.MonthlyEntry.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i20.MonthlyEntry?>()) {
+      return (data != null ? _i20.MonthlyEntry.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i20.NubankAccount?>()) {
-      return (data != null ? _i20.NubankAccount.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i21.NubankAccount?>()) {
+      return (data != null ? _i21.NubankAccount.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i21.PendingAction?>()) {
-      return (data != null ? _i21.PendingAction.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i22.PendingAction?>()) {
+      return (data != null ? _i22.PendingAction.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i22.SyncLog?>()) {
-      return (data != null ? _i22.SyncLog.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i23.SyncLog?>()) {
+      return (data != null ? _i23.SyncLog.fromJson(data) : null) as T;
     }
-    if (t == _i1.getType<_i23.SyncStatus?>()) {
-      return (data != null ? _i23.SyncStatus.fromJson(data) : null) as T;
+    if (t == _i1.getType<_i24.SyncStatus?>()) {
+      return (data != null ? _i24.SyncStatus.fromJson(data) : null) as T;
     }
-    if (t == List<_i21.PendingAction>) {
+    if (t == _i1.getType<_i25.WalletSummary?>()) {
+      return (data != null ? _i25.WalletSummary.fromJson(data) : null) as T;
+    }
+    if (t == List<_i22.PendingAction>) {
       return (data as List)
-              .map((e) => deserialize<_i21.PendingAction>(e))
+              .map((e) => deserialize<_i22.PendingAction>(e))
               .toList()
           as T;
     }
-    if (t == List<_i24.Attachment>) {
-      return (data as List).map((e) => deserialize<_i24.Attachment>(e)).toList()
+    if (t == List<_i26.Attachment>) {
+      return (data as List).map((e) => deserialize<_i26.Attachment>(e)).toList()
           as T;
     }
     if (t == List<int>) {
       return (data as List).map((e) => deserialize<int>(e)).toList() as T;
     }
-    if (t == List<_i25.Bill>) {
-      return (data as List).map((e) => deserialize<_i25.Bill>(e)).toList() as T;
+    if (t == List<_i27.Bill>) {
+      return (data as List).map((e) => deserialize<_i27.Bill>(e)).toList() as T;
     }
-    if (t == List<_i26.BudgetCategory>) {
+    if (t == List<_i28.BudgetCategory>) {
       return (data as List)
-              .map((e) => deserialize<_i26.BudgetCategory>(e))
+              .map((e) => deserialize<_i28.BudgetCategory>(e))
               .toList()
           as T;
     }
-    if (t == List<_i27.Category>) {
-      return (data as List).map((e) => deserialize<_i27.Category>(e)).toList()
+    if (t == List<_i29.Category>) {
+      return (data as List).map((e) => deserialize<_i29.Category>(e)).toList()
           as T;
     }
-    if (t == List<_i28.CategoryRule>) {
+    if (t == List<_i30.CategoryRule>) {
       return (data as List)
-              .map((e) => deserialize<_i28.CategoryRule>(e))
+              .map((e) => deserialize<_i30.CategoryRule>(e))
               .toList()
           as T;
     }
-    if (t == List<_i29.ChatMessage>) {
+    if (t == List<_i31.ChatMessage>) {
       return (data as List)
-              .map((e) => deserialize<_i29.ChatMessage>(e))
+              .map((e) => deserialize<_i31.ChatMessage>(e))
               .toList()
           as T;
     }
-    if (t == List<_i30.PendingAction>) {
+    if (t == List<_i32.PendingAction>) {
       return (data as List)
-              .map((e) => deserialize<_i30.PendingAction>(e))
+              .map((e) => deserialize<_i32.PendingAction>(e))
               .toList()
           as T;
     }
@@ -289,38 +306,44 @@ class Protocol extends _i1.SerializationManager {
           )
           as T;
     }
-    if (t == List<_i31.FinancialTransaction>) {
+    if (t == List<_i33.FinancialTransaction>) {
       return (data as List)
-              .map((e) => deserialize<_i31.FinancialTransaction>(e))
+              .map((e) => deserialize<_i33.FinancialTransaction>(e))
               .toList()
           as T;
     }
-    if (t == List<_i32.ImportHistory>) {
+    if (t == List<_i34.ImportHistory>) {
       return (data as List)
-              .map((e) => deserialize<_i32.ImportHistory>(e))
+              .map((e) => deserialize<_i34.ImportHistory>(e))
               .toList()
           as T;
     }
-    if (t == List<_i33.IncomeSource>) {
+    if (t == List<_i35.IncomeSource>) {
       return (data as List)
-              .map((e) => deserialize<_i33.IncomeSource>(e))
+              .map((e) => deserialize<_i35.IncomeSource>(e))
               .toList()
           as T;
     }
-    if (t == List<_i34.MonthlyEntry>) {
+    if (t == List<_i36.MonthlyEntry>) {
       return (data as List)
-              .map((e) => deserialize<_i34.MonthlyEntry>(e))
+              .map((e) => deserialize<_i36.MonthlyEntry>(e))
               .toList()
           as T;
     }
-    if (t == List<_i35.NubankAccount>) {
+    if (t == List<_i37.NubankAccount>) {
       return (data as List)
-              .map((e) => deserialize<_i35.NubankAccount>(e))
+              .map((e) => deserialize<_i37.NubankAccount>(e))
               .toList()
           as T;
     }
-    if (t == List<_i36.SyncLog>) {
-      return (data as List).map((e) => deserialize<_i36.SyncLog>(e)).toList()
+    if (t == List<_i38.SyncLog>) {
+      return (data as List).map((e) => deserialize<_i38.SyncLog>(e)).toList()
+          as T;
+    }
+    if (t == List<_i39.WalletSummary>) {
+      return (data as List)
+              .map((e) => deserialize<_i39.WalletSummary>(e))
+              .toList()
           as T;
     }
     return super.deserialize<T>(data, t);
@@ -332,24 +355,26 @@ class Protocol extends _i1.SerializationManager {
       _i3.Attachment => 'Attachment',
       _i4.AttachmentKind => 'AttachmentKind',
       _i5.AttachmentUploadTicket => 'AttachmentUploadTicket',
-      _i6.Bill => 'Bill',
-      _i7.BillStatus => 'BillStatus',
-      _i8.BudgetCategory => 'BudgetCategory',
-      _i9.Category => 'Category',
-      _i10.CategoryRule => 'CategoryRule',
-      _i11.ChatMessage => 'ChatMessage',
-      _i12.ChatResponse => 'ChatResponse',
-      _i13.EntryType => 'EntryType',
-      _i14.FinancialTransaction => 'FinancialTransaction',
-      _i15.Greeting => 'Greeting',
-      _i16.ImportHistory => 'ImportHistory',
-      _i17.IncomeSource => 'IncomeSource',
-      _i18.IncomeType => 'IncomeType',
-      _i19.MonthlyEntry => 'MonthlyEntry',
-      _i20.NubankAccount => 'NubankAccount',
-      _i21.PendingAction => 'PendingAction',
-      _i22.SyncLog => 'SyncLog',
-      _i23.SyncStatus => 'SyncStatus',
+      _i6.BenefitWallet => 'BenefitWallet',
+      _i7.Bill => 'Bill',
+      _i8.BillStatus => 'BillStatus',
+      _i9.BudgetCategory => 'BudgetCategory',
+      _i10.Category => 'Category',
+      _i11.CategoryRule => 'CategoryRule',
+      _i12.ChatMessage => 'ChatMessage',
+      _i13.ChatResponse => 'ChatResponse',
+      _i14.EntryType => 'EntryType',
+      _i15.FinancialTransaction => 'FinancialTransaction',
+      _i16.Greeting => 'Greeting',
+      _i17.ImportHistory => 'ImportHistory',
+      _i18.IncomeSource => 'IncomeSource',
+      _i19.IncomeType => 'IncomeType',
+      _i20.MonthlyEntry => 'MonthlyEntry',
+      _i21.NubankAccount => 'NubankAccount',
+      _i22.PendingAction => 'PendingAction',
+      _i23.SyncLog => 'SyncLog',
+      _i24.SyncStatus => 'SyncStatus',
+      _i25.WalletSummary => 'WalletSummary',
       _ => null,
     };
   }
@@ -375,42 +400,46 @@ class Protocol extends _i1.SerializationManager {
         return 'AttachmentKind';
       case _i5.AttachmentUploadTicket():
         return 'AttachmentUploadTicket';
-      case _i6.Bill():
+      case _i6.BenefitWallet():
+        return 'BenefitWallet';
+      case _i7.Bill():
         return 'Bill';
-      case _i7.BillStatus():
+      case _i8.BillStatus():
         return 'BillStatus';
-      case _i8.BudgetCategory():
+      case _i9.BudgetCategory():
         return 'BudgetCategory';
-      case _i9.Category():
+      case _i10.Category():
         return 'Category';
-      case _i10.CategoryRule():
+      case _i11.CategoryRule():
         return 'CategoryRule';
-      case _i11.ChatMessage():
+      case _i12.ChatMessage():
         return 'ChatMessage';
-      case _i12.ChatResponse():
+      case _i13.ChatResponse():
         return 'ChatResponse';
-      case _i13.EntryType():
+      case _i14.EntryType():
         return 'EntryType';
-      case _i14.FinancialTransaction():
+      case _i15.FinancialTransaction():
         return 'FinancialTransaction';
-      case _i15.Greeting():
+      case _i16.Greeting():
         return 'Greeting';
-      case _i16.ImportHistory():
+      case _i17.ImportHistory():
         return 'ImportHistory';
-      case _i17.IncomeSource():
+      case _i18.IncomeSource():
         return 'IncomeSource';
-      case _i18.IncomeType():
+      case _i19.IncomeType():
         return 'IncomeType';
-      case _i19.MonthlyEntry():
+      case _i20.MonthlyEntry():
         return 'MonthlyEntry';
-      case _i20.NubankAccount():
+      case _i21.NubankAccount():
         return 'NubankAccount';
-      case _i21.PendingAction():
+      case _i22.PendingAction():
         return 'PendingAction';
-      case _i22.SyncLog():
+      case _i23.SyncLog():
         return 'SyncLog';
-      case _i23.SyncStatus():
+      case _i24.SyncStatus():
         return 'SyncStatus';
+      case _i25.WalletSummary():
+        return 'WalletSummary';
     }
     return null;
   }
@@ -433,59 +462,65 @@ class Protocol extends _i1.SerializationManager {
     if (dataClassName == 'AttachmentUploadTicket') {
       return deserialize<_i5.AttachmentUploadTicket>(data['data']);
     }
+    if (dataClassName == 'BenefitWallet') {
+      return deserialize<_i6.BenefitWallet>(data['data']);
+    }
     if (dataClassName == 'Bill') {
-      return deserialize<_i6.Bill>(data['data']);
+      return deserialize<_i7.Bill>(data['data']);
     }
     if (dataClassName == 'BillStatus') {
-      return deserialize<_i7.BillStatus>(data['data']);
+      return deserialize<_i8.BillStatus>(data['data']);
     }
     if (dataClassName == 'BudgetCategory') {
-      return deserialize<_i8.BudgetCategory>(data['data']);
+      return deserialize<_i9.BudgetCategory>(data['data']);
     }
     if (dataClassName == 'Category') {
-      return deserialize<_i9.Category>(data['data']);
+      return deserialize<_i10.Category>(data['data']);
     }
     if (dataClassName == 'CategoryRule') {
-      return deserialize<_i10.CategoryRule>(data['data']);
+      return deserialize<_i11.CategoryRule>(data['data']);
     }
     if (dataClassName == 'ChatMessage') {
-      return deserialize<_i11.ChatMessage>(data['data']);
+      return deserialize<_i12.ChatMessage>(data['data']);
     }
     if (dataClassName == 'ChatResponse') {
-      return deserialize<_i12.ChatResponse>(data['data']);
+      return deserialize<_i13.ChatResponse>(data['data']);
     }
     if (dataClassName == 'EntryType') {
-      return deserialize<_i13.EntryType>(data['data']);
+      return deserialize<_i14.EntryType>(data['data']);
     }
     if (dataClassName == 'FinancialTransaction') {
-      return deserialize<_i14.FinancialTransaction>(data['data']);
+      return deserialize<_i15.FinancialTransaction>(data['data']);
     }
     if (dataClassName == 'Greeting') {
-      return deserialize<_i15.Greeting>(data['data']);
+      return deserialize<_i16.Greeting>(data['data']);
     }
     if (dataClassName == 'ImportHistory') {
-      return deserialize<_i16.ImportHistory>(data['data']);
+      return deserialize<_i17.ImportHistory>(data['data']);
     }
     if (dataClassName == 'IncomeSource') {
-      return deserialize<_i17.IncomeSource>(data['data']);
+      return deserialize<_i18.IncomeSource>(data['data']);
     }
     if (dataClassName == 'IncomeType') {
-      return deserialize<_i18.IncomeType>(data['data']);
+      return deserialize<_i19.IncomeType>(data['data']);
     }
     if (dataClassName == 'MonthlyEntry') {
-      return deserialize<_i19.MonthlyEntry>(data['data']);
+      return deserialize<_i20.MonthlyEntry>(data['data']);
     }
     if (dataClassName == 'NubankAccount') {
-      return deserialize<_i20.NubankAccount>(data['data']);
+      return deserialize<_i21.NubankAccount>(data['data']);
     }
     if (dataClassName == 'PendingAction') {
-      return deserialize<_i21.PendingAction>(data['data']);
+      return deserialize<_i22.PendingAction>(data['data']);
     }
     if (dataClassName == 'SyncLog') {
-      return deserialize<_i22.SyncLog>(data['data']);
+      return deserialize<_i23.SyncLog>(data['data']);
     }
     if (dataClassName == 'SyncStatus') {
-      return deserialize<_i23.SyncStatus>(data['data']);
+      return deserialize<_i24.SyncStatus>(data['data']);
+    }
+    if (dataClassName == 'WalletSummary') {
+      return deserialize<_i25.WalletSummary>(data['data']);
     }
     return super.deserializeByClassName(data);
   }

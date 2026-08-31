@@ -18,7 +18,7 @@ class TransactionHistoryScreen extends StatefulWidget {
       _TransactionHistoryScreenState();
 }
 
-enum _SourceFilter { all, card, bank, income }
+enum _SourceFilter { all, card, bank, income, caju }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   List<FinancialTransaction> _transactions = [];
@@ -90,6 +90,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         break;
       case _SourceFilter.income:
         list = list.where((t) => t.kind == 'income').toList();
+        break;
+      case _SourceFilter.caju:
+        list = list.where((t) => t.source == 'caju').toList();
         break;
     }
 
@@ -440,6 +443,7 @@ class _SourceFilterBar extends StatelessWidget {
         chip(_SourceFilter.card, 'Card', Icons.credit_card),
         chip(_SourceFilter.bank, 'Bank', Icons.account_balance),
         chip(_SourceFilter.income, 'Income', Icons.trending_up),
+        chip(_SourceFilter.caju, 'Caju', Icons.restaurant),
       ],
     );
   }
@@ -453,16 +457,20 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // fatura_payment is informational only — exclude from both totals.
+    // fatura_payment and topup are informational only — exclude from totals.
     final income = transactions
         .where((t) => t.kind == 'income')
         .fold(0.0, (sum, t) => sum + t.amount);
     final expenses = transactions
-        .where((t) => t.kind != 'income' && t.kind != 'fatura_payment')
+        .where((t) =>
+            t.kind != 'income' &&
+            t.kind != 'fatura_payment' &&
+            t.kind != 'topup')
         .fold(0.0, (sum, t) => sum + t.amount);
     final net = income - expenses;
     final uncategorized = transactions
-        .where((t) => t.kind != 'income' && t.category.isEmpty)
+        .where((t) =>
+            t.kind != 'income' && t.kind != 'topup' && t.category.isEmpty)
         .length;
 
     Widget cell(String label, double value, Color color) {
@@ -705,6 +713,10 @@ class _SourceBadge extends StatelessWidget {
       icon = Icons.account_balance;
       color = AppColors.vibrantOrange;
       label = 'Bank';
+    } else if (tx.source == 'caju') {
+      icon = Icons.restaurant;
+      color = AppColors.positive;
+      label = 'Caju';
     } else {
       // Legacy rows with no source stamped.
       icon = Icons.receipt_long;

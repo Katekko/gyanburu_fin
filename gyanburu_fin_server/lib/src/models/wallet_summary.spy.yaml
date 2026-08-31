@@ -1,0 +1,7 @@
+class: WalletSummary
+fields:
+  wallet: BenefitWallet
+  balance: double
+  month: String
+  monthSpent: double
+  monthToppedUp: double

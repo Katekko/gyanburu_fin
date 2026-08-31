@@ -59,5 +59,13 @@ transaction:
   - update:
   - delete:
   - saveWithPropagation:
+wallet:
+  - summaries:
+  - monthTransactions:
+  - spend:
+  - topup:
+  - setBalance:
+  - setMonthlyTopup:
+  - deleteTransaction:
 greeting:
   - hello:

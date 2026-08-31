@@ -10,6 +10,7 @@ import 'screens/transaction_history_screen.dart';
 import 'screens/nubank_sync_screen.dart';
 import 'screens/bill_detail_screen.dart';
 import 'screens/budget_screen.dart';
+import 'screens/caju_screen.dart';
 import 'screens/token_gate.dart';
 import 'theme/app_theme.dart';
 
@@ -159,6 +160,11 @@ class _AppShellState extends State<AppShell> {
                 selectedIcon: Icon(Icons.pie_chart),
                 label: Text('Budget'),
               ),
+              NavigationRailDestination(
+                icon: Icon(Icons.restaurant_outlined),
+                selectedIcon: Icon(Icons.restaurant),
+                label: Text('Caju'),
+              ),
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),
@@ -202,6 +208,7 @@ class _AppShellState extends State<AppShell> {
       3 => const TransactionHistoryScreen(),
       4 => const NubankSyncScreen(),
       5 => const BudgetScreen(),
+      6 => const CajuScreen(),
       _ => const SizedBox.shrink(),
     };
   }

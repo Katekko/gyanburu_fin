@@ -31,6 +31,36 @@ Future<void> main(List<String> args) async {
     ..addFlag('confirmed', defaultsTo: true)
     ..addFlag('paid', defaultsTo: false);
 
+  parser.addCommand('caju');
+  parser.addCommand('caju-delete');
+
+  const walletSlugs = ['comida', 'home-office', 'home'];
+
+  parser.addCommand('caju-spend')
+    ..addOption('wallet', allowed: walletSlugs, mandatory: true)
+    ..addOption('amount', mandatory: true)
+    ..addOption('name', help: 'Estabelecimento', mandatory: true)
+    ..addOption('category-id')
+    ..addOption('date', help: 'Data do gasto (YYYY-MM-DD, default: hoje)')
+    ..addOption('desc');
+
+  parser.addCommand('caju-topup')
+    ..addOption('wallet', allowed: walletSlugs, mandatory: true)
+    ..addOption('amount', help: 'Default: recarga mensal configurada')
+    ..addOption('date', help: 'Data da recarga (YYYY-MM-DD, default: hoje)')
+    ..addOption('desc');
+
+  parser.addCommand('caju-set-balance')
+    ..addOption('wallet', allowed: walletSlugs, mandatory: true)
+    ..addOption('amount', mandatory: true)
+    ..addOption('date',
+        help: 'Dia do saldo informado (YYYY-MM-DD, âncora no fim do dia; '
+            'default: agora)');
+
+  parser.addCommand('caju-set-topup')
+    ..addOption('wallet', allowed: walletSlugs, mandatory: true)
+    ..addOption('amount', help: 'Valor da recarga mensal (vazio p/ limpar)');
+
   parser.addCommand('entry-set')
     ..addOption('month', help: 'Mês do lançamento (YYYY-MM)', mandatory: true)
     ..addOption('id', help: 'Id do lançamento', mandatory: true)
@@ -93,6 +123,18 @@ Future<void> main(List<String> args) async {
         );
       case 'imports':
         await _imports(client);
+      case 'caju':
+        await _caju(client, command.rest);
+      case 'caju-spend':
+        await _cajuSpend(client, command);
+      case 'caju-topup':
+        await _cajuTopup(client, command);
+      case 'caju-set-balance':
+        await _cajuSetBalance(client, command);
+      case 'caju-set-topup':
+        await _cajuSetTopup(client, command);
+      case 'caju-delete':
+        await _cajuDelete(client, command.rest);
     }
   } on StateError catch (e) {
     stderr.writeln(e.message);
@@ -123,6 +165,14 @@ Comandos:
   transactions <YYYY-MM>     Lista as transações do mês
   uncategorized [YYYY-MM]    Transações sem categoria
   imports                    Histórico de importações
+  caju [YYYY-MM]             Saldos e lançamentos das carteiras Caju
+  caju-spend                 Gasto no Caju (--wallet --amount --name)
+  caju-topup                 Recarga no Caju (--wallet, --amount opcional)
+  caju-set-balance           Reconcilia o saldo com o app da Caju
+  caju-set-topup             Configura a recarga mensal padrão da carteira
+  caju-delete <id>           Remove um lançamento do Caju
+
+Carteiras Caju (--wallet): comida (Refeição+Alimentação) | home-office
 
 Flags de entry-set:
   --amount --name --due --paid/--no-paid --variable/--no-variable
@@ -353,7 +403,9 @@ Future<void> _transactions(
       : await client.transaction.listByMonth(DateTime.parse('$month-01'));
 
   final filtered = onlyUncategorized
-      ? txns.where((t) => t.category.trim().isEmpty).toList()
+      ? txns
+          .where((t) => t.category.trim().isEmpty && t.kind != 'topup')
+          .toList()
       : txns;
 
   if (filtered.isEmpty) {
@@ -389,6 +441,131 @@ Future<void> _imports(Client client) async {
         '${_pad('${h.skippedDuplicates} dup', 10)}'
         '${h.fileName}');
   }
+}
+
+String _walletSlug(ArgResults cmd) {
+  final slug = cmd['wallet'] as String;
+  return slug == 'home' ? 'home-office' : slug;
+}
+
+DateTime? _dayOption(ArgResults cmd, {bool endOfDay = false}) {
+  final raw = cmd['date'] as String?;
+  if (raw == null) return null;
+  final day = DateTime.parse(raw);
+  return endOfDay
+      ? DateTime(day.year, day.month, day.day, 23, 59, 59)
+      : day;
+}
+
+Future<void> _caju(Client client, List<String> rest) async {
+  final now = DateTime.now();
+  final month = rest.isEmpty
+      ? '${now.year.toString().padLeft(4, '0')}-'
+          '${now.month.toString().padLeft(2, '0')}'
+      : _month(rest);
+  final monthDate = DateTime.parse('$month-01');
+
+  final summaries = await client.wallet.summaries(monthDate);
+  final walletNames = {
+    for (final s in summaries) s.wallet.id: s.wallet.name,
+  };
+
+  stdout.writeln('Caju — $month\n');
+  var totalBalance = 0.0;
+  for (final s in summaries) {
+    totalBalance += s.balance;
+    final topupInfo = s.wallet.monthlyTopupAmount == null
+        ? ''
+        : ' · recarga padrão ${_money(s.wallet.monthlyTopupAmount!)}';
+    stdout.writeln('  ${s.wallet.name} (${s.wallet.slug})');
+    stdout.writeln('    saldo ............ ${_money(s.balance)}');
+    stdout.writeln('    gasto no mês ..... ${_money(s.monthSpent)}');
+    stdout.writeln('    recarregado ...... ${_money(s.monthToppedUp)}'
+        '$topupInfo');
+  }
+  stdout.writeln('  total ${_money(totalBalance)}');
+
+  final txns = await client.wallet.monthTransactions(monthDate);
+  if (txns.isEmpty) {
+    stdout.writeln('\nNenhum lançamento em $month.');
+    return;
+  }
+  stdout.writeln('');
+  for (final t in txns.reversed) {
+    final signed = t.kind == 'expense' ? -t.amount : t.amount;
+    stdout.writeln('  ${_pad(t.id.toString(), 6)}'
+        '${_pad(_date(t.occurredAt), 12)}'
+        '${_pad(_money(signed), 13)}'
+        '${_pad(walletNames[t.walletId] ?? '?', 18)}'
+        '${_pad(t.category.isEmpty ? '-' : t.category, 15)}'
+        '${t.displayName ?? t.merchantName}');
+  }
+}
+
+Future<void> _cajuSpend(Client client, ArgResults cmd) async {
+  final categoryRaw = cmd['category-id'] as String?;
+  int? categoryId;
+  if (categoryRaw != null) {
+    categoryId = int.tryParse(categoryRaw);
+    if (categoryId == null) throw StateError('--category-id inválido.');
+  }
+
+  final tx = await client.wallet.spend(
+    _walletSlug(cmd),
+    _parseAmount(cmd['amount'] as String, 'amount'),
+    cmd['name'] as String,
+    categoryId,
+    _dayOption(cmd),
+    cmd['desc'] as String?,
+  );
+  stdout.writeln('Gasto #${tx.id}: ${_money(tx.amount)} '
+      '${tx.displayName ?? tx.merchantName} '
+      '(${tx.category.isEmpty ? 'sem categoria' : tx.category}) '
+      'em ${_date(tx.occurredAt)}');
+}
+
+Future<void> _cajuTopup(Client client, ArgResults cmd) async {
+  final amountRaw = cmd['amount'] as String?;
+  final tx = await client.wallet.topup(
+    _walletSlug(cmd),
+    amountRaw == null ? null : _parseAmount(amountRaw, 'amount'),
+    _dayOption(cmd),
+    cmd['desc'] as String?,
+  );
+  stdout.writeln('Recarga #${tx.id}: ${_money(tx.amount)} '
+      'em ${_date(tx.occurredAt)}');
+}
+
+Future<void> _cajuSetBalance(Client client, ArgResults cmd) async {
+  final wallet = await client.wallet.setBalance(
+    _walletSlug(cmd),
+    _parseAmount(cmd['amount'] as String, 'amount'),
+    _dayOption(cmd, endOfDay: true),
+  );
+  stdout.writeln('${wallet.name}: saldo ancorado em '
+      '${_money(wallet.anchorBalance)} '
+      '(${_date(wallet.anchorDate)}). Lançamentos posteriores à âncora '
+      'continuam contando.');
+}
+
+Future<void> _cajuSetTopup(Client client, ArgResults cmd) async {
+  final amountRaw = cmd['amount'] as String?;
+  final wallet = await client.wallet.setMonthlyTopup(
+    _walletSlug(cmd),
+    amountRaw == null ? null : _parseAmount(amountRaw, 'amount'),
+  );
+  stdout.writeln(wallet.monthlyTopupAmount == null
+      ? '${wallet.name}: recarga mensal padrão removida.'
+      : '${wallet.name}: recarga mensal padrão de '
+          '${_money(wallet.monthlyTopupAmount!)}.');
+}
+
+Future<void> _cajuDelete(Client client, List<String> rest) async {
+  if (rest.isEmpty) throw StateError('Informe o id do lançamento.');
+  final id = int.tryParse(rest.first);
+  if (id == null) throw StateError('Id inválido.');
+  await client.wallet.deleteTransaction(id);
+  stdout.writeln('Lançamento $id removido.');
 }
 
 double _parseAmount(String raw, String field) {
