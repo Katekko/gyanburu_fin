@@ -48,15 +48,16 @@ class OfxImportEndpoint extends Endpoint {
     );
     final ruleMap = {for (final r in rules) r.merchantPattern: r};
 
-    // Get existing external IDs to deduplicate
+    // Keys of rows already imported, to deduplicate (see [_dedupKey]).
     final existingTransactions = await FinancialTransaction.db.find(
       session,
       where: (t) =>
           t.userId.equals(userId) & t.externalId.notEquals(null),
     );
-    final existingFitIds = {
+    final existingKeys = {
       for (final t in existingTransactions)
-        if (t.externalId != null) t.externalId,
+        if (t.externalId != null)
+          _dedupKey(t.externalId!, t.installmentCurrent, t.amount),
     };
 
     // Credit-card OFX → stamp billingMonth derived from DTEND
@@ -79,16 +80,21 @@ class OfxImportEndpoint extends Endpoint {
           continue;
         }
 
-        // Skip duplicates
-        if (existingFitIds.contains(txn.fitId)) {
-          skippedDuplicates++;
-          continue;
-        }
-
         // Parse merchant name and installments.
         final merchantInfo = parsed.isCreditCard
             ? _parseCardMemo(txn.memo)
             : _parseBankMemo(txn.memo);
+
+        // Skip duplicates
+        final key = _dedupKey(
+          txn.fitId,
+          merchantInfo.installmentCurrent,
+          txn.amount,
+        );
+        if (existingKeys.contains(key)) {
+          skippedDuplicates++;
+          continue;
+        }
 
         // Decide transaction kind.
         // Card: always expense. Bank: CREDIT=income, DEBIT=expense unless
@@ -136,6 +142,7 @@ class OfxImportEndpoint extends Endpoint {
         );
 
         await FinancialTransaction.db.insertRow(session, transaction);
+        existingKeys.add(key);
         newCount++;
       } catch (_) {
         // Skip malformed individual transactions
@@ -158,6 +165,18 @@ class OfxImportEndpoint extends Endpoint {
     return ImportHistory.db.insertRow(session, history);
   }
 }
+
+/// Identity of an imported row. The FITID alone is not unique: Nubank's card
+/// OFX repeats the purchase FITID on every installment and on the
+/// "IOF de compra internacional" row of that purchase. The installment number
+/// tells the installments apart and the amount (in cents) tells a purchase
+/// from its IOF.
+(String, int?, int) _dedupKey(
+  String fitId,
+  int? installmentCurrent,
+  double amount,
+) =>
+    (fitId, installmentCurrent, (amount.abs() * 100).round());
 
 // ── OFX Parser ──────────────────────────────────────────────────────────────
 

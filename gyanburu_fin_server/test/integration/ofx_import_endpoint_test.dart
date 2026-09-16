@@ -319,5 +319,170 @@ void main() {
         // Reaches here without throwing; both imports accepted immediately.
       });
     });
+
+    // Nubank's card OFX repeats the purchase FITID on every installment and
+    // on the "IOF de compra internacional" row of an international purchase.
+    group('Card rows sharing a FITID', () {
+      late TestSessionBuilder a;
+
+      setUp(() {
+        a = sessionBuilder.copyWith(
+          authentication: AuthenticationOverride.authenticationInfo(
+              const Uuid().v4(), {}),
+        );
+      });
+
+      test('imports each installment of a purchase from successive faturas',
+          () async {
+        final august = _buildOfx(
+          dtStart: '20260731',
+          dtEnd: '20260831',
+          transactions: [
+            _txn(
+              fitId: 'PURCHASE-1',
+              date: '20260731',
+              amount: '-80.00',
+              memo: 'Loja de Informatica - Parcela 13/15',
+            ),
+          ],
+        );
+        final september = _buildOfx(
+          dtStart: '20260831',
+          dtEnd: '20260930',
+          transactions: [
+            _txn(
+              fitId: 'PURCHASE-1',
+              date: '20260831',
+              amount: '-80.00',
+              memo: 'Loja de Informatica - Parcela 14/15',
+            ),
+          ],
+        );
+
+        await endpoints.ofxImport.importOfx(a, august, 'agosto.ofx');
+        final result =
+            await endpoints.ofxImport.importOfx(a, september, 'setembro.ofx');
+
+        expect(result.newTransactions, 1);
+        expect(result.skippedDuplicates, 0);
+
+        final augustRows =
+            await endpoints.transaction.listByMonth(a, DateTime(2026, 8));
+        final septemberRows =
+            await endpoints.transaction.listByMonth(a, DateTime(2026, 9));
+        expect(augustRows.single.installmentCurrent, 13);
+        expect(septemberRows.single.installmentCurrent, 14);
+        expect(septemberRows.single.externalId, 'PURCHASE-1');
+      });
+
+      test('re-importing the same fatura adds nothing', () async {
+        final fatura = _buildOfx(
+          dtStart: '20260831',
+          dtEnd: '20260930',
+          transactions: [
+            _txn(
+              fitId: 'INTL-1',
+              date: '20260910',
+              amount: '-1.40',
+              memo: 'IOF de compra internacional',
+            ),
+            _txn(
+              fitId: 'INTL-1',
+              date: '20260910',
+              amount: '-40.00',
+              memo: 'Game Store',
+            ),
+            _txn(
+              fitId: 'PURCHASE-2',
+              date: '20260831',
+              amount: '-25.00',
+              memo: 'Loja de Roupas - Parcela 2/4',
+            ),
+            _txn(
+              fitId: 'SINGLE-1',
+              date: '20260905',
+              amount: '-12.50',
+              memo: 'Padaria',
+            ),
+          ],
+        );
+
+        final first =
+            await endpoints.ofxImport.importOfx(a, fatura, 'setembro.ofx');
+        final second = await endpoints.ofxImport
+            .importOfx(a, fatura, 'setembro (1).ofx');
+
+        expect(first.newTransactions, 4);
+        expect(second.newTransactions, 0);
+        expect(second.skippedDuplicates, 4);
+        expect(
+          await endpoints.transaction.listByMonth(a, DateTime(2026, 9)),
+          hasLength(4),
+        );
+      });
+
+      test(
+          'imports an international purchase and its IOF row once each, '
+          'even when the IOF only shows up in a later export', () async {
+        final purchase = _txn(
+          fitId: 'INTL-2',
+          date: '20260916',
+          amount: '-15.00',
+          memo: 'Game Store',
+        );
+        final iof = _txn(
+          fitId: 'INTL-2',
+          date: '20260916',
+          amount: '-0.53',
+          memo: 'IOF de compra internacional',
+        );
+        final beforeIof = _buildOfx(
+          dtStart: '20260831',
+          dtEnd: '20260930',
+          transactions: [purchase],
+        );
+        final withIof = _buildOfx(
+          dtStart: '20260831',
+          dtEnd: '20260930',
+          transactions: [iof, purchase],
+        );
+
+        await endpoints.ofxImport.importOfx(a, beforeIof, 'setembro.ofx');
+        final second = await endpoints.ofxImport
+            .importOfx(a, withIof, 'setembro (1).ofx');
+        final third = await endpoints.ofxImport
+            .importOfx(a, withIof, 'setembro (2).ofx');
+
+        expect(second.newTransactions, 1);
+        expect(second.skippedDuplicates, 1);
+        expect(third.newTransactions, 0);
+        expect(third.skippedDuplicates, 2);
+
+        final rows =
+            await endpoints.transaction.listByMonth(a, DateTime(2026, 9));
+        expect(rows.map((t) => t.externalId), everyElement('INTL-2'));
+        expect(rows.map((t) => t.amount), unorderedEquals([15.00, 0.53]));
+      });
+
+      test('imports a row repeated within the same file once', () async {
+        final row = _txn(
+          fitId: 'SINGLE-2',
+          date: '20260905',
+          amount: '-30.00',
+          memo: 'Mercado',
+        );
+        final fatura = _buildOfx(
+          dtStart: '20260831',
+          dtEnd: '20260930',
+          transactions: [row, row],
+        );
+
+        final result =
+            await endpoints.ofxImport.importOfx(a, fatura, 'setembro.ofx');
+
+        expect(result.newTransactions, 1);
+        expect(result.skippedDuplicates, 1);
+      });
+    });
   });
 }
